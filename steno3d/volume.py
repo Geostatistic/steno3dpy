@@ -121,7 +121,7 @@ class _VolumeBinder(properties.PropertyClass):
         required=True,
         choices={
             'CC': ('CELLCENTER'),
-            'N': ('NODE', 'VERTEX', 'CORNER')
+            # 'N': ('NODE', 'VERTEX', 'CORNER')
         }
     )
     data = properties.Pointer(
@@ -156,7 +156,7 @@ class Volume(CompositeResource):
     def validate(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):
-            assert dat.location in ('N', 'CC')
+            assert dat.location == 'CC'  # in ('N', 'CC')
             valid_length = (
                 self.mesh.nC if dat.location == 'CC'
                 else self.mesh.nN

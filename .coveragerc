@@ -1,0 +1,3 @@
+[html]
+directory = cover
+extra_css = .coverage.css

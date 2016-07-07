@@ -7,7 +7,12 @@ Steno3D
 Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
 by `3point Science <https://www.3ptscience.com>`_.
 
-If you have not yet installed Steno3d, all you need to do is
+.. image:: /docs/images/steno3dpy_screenshot.png
+    :width: 100%
+    :align: center
+    :target: https://steno3d.com/
+
+If you have not yet installed Steno3D, simply
 
 .. code:: bash
 

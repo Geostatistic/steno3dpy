@@ -65,10 +65,10 @@ class UserContent(properties.PropertyClass):
                     self._get_dirty_files(force=True)
                 )
             else:
-                self._put(
-                    self._get_dirty_data(),
-                    self._get_dirty_files()
-                )
+                dirty_data = self._get_dirty_data()
+                dirty_files = self._get_dirty_files()
+                if len(dirty_data) > 0 or len(dirty_files) > 0:
+                    self._put(dirty_data, dirty_files)
             self._mark_clean(recurse=False)
             self._sync = sync
         except Exception as err:

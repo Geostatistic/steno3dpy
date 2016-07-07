@@ -133,7 +133,7 @@ and define the Z locations of the mesh.
 
     >> X, Y = np.meshgrid(x,y)
     >> Z = topo(X, Y)
-    >> mesh2d.Z = Z.flatten(order = 'F')
+    >> mesh2d.Z = Z.flatten(order = 'C')
 
 Right now, we have a 2D mesh. You may want to put data on the mesh. In this
 case, we assign topography (same as the Z-locations of the mesh) as data on the nodes of the mesh

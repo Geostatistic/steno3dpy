@@ -12,7 +12,7 @@ by `3point Science <https://www.3ptscience.com>`_.
     :align: center
     :target: https://steno3d.com/
 
-If you have not yet installed Steno3D, all you need to do is
+If you have not yet installed Steno3D, simply
 
 .. code:: bash
 

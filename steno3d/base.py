@@ -52,9 +52,7 @@ class BaseResource(UserContent):
 
 
 class CompositeResource(BaseResource):
-    """A composite resource that stores references to lower-level
-    objects, and may also grant access to them through ACL delegation.
-    """
+    """A composite resource that stores references to lower-level objects."""
     project = properties.Pointer(
         'Project',
         ptype='Project',
@@ -92,16 +90,13 @@ class CompositeResource(BaseResource):
                                  'resources that point to them.')
 
     @needs_login
-    def upload(self, sync=True, print_url=True):
+    def upload(self, sync=False, print_url=True):
         """Upload the resource through its containing project(s)"""
-        # self.validate()
         for proj in self.project:
             proj.upload(sync, False)
         if print_url:
-            try:
-                print(self._url)
-            except:
-                print('URL error: Upload may have failed')
+            print(self._url)
+        return self._url
 
 
 
@@ -129,8 +124,6 @@ class CompositeResource(BaseResource):
 
     def _upload_dirty(self):
         dirty = self._dirty
-        # if 'project' in dirty:
-        #     [p._upload() for p in self.project]
         if 'mesh' in dirty:
             self.mesh._upload()
         if 'data' in dirty:
@@ -169,16 +162,16 @@ class CompositeResource(BaseResource):
     def url(self):
         """steno3d.com url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
-            print('Resource not uploaded')
-            return
-        print(self._url)
+            raise Exception('Resource not uploaded: Please upload() '
+                            'before accessing the URL.')
+        return self._url
 
     @needs_login
     def plot(self):
         """Display the 3D representation of the content"""
         if getattr(self, '_upload_data', None) is None:
-            raise Exception("Plotting failed: Resource's project not "
-                            'uploaded - please upload() first.')
+            raise Exception('Resource not uploaded: Please upload() '
+                            'before plotting.')
         return plot(self._url)
 
 

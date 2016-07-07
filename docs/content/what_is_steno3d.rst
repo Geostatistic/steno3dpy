@@ -15,12 +15,14 @@ visual overview of this library.
     - :ref:`projects`
     - :ref:`resources`
 
+.. image:: ../images/Steno3DAPI.png
+
 .. _projects:
 
 Projects
 ========
 
-:ref:`Projects <projects>` are groupings of associated
+:ref:`Projects <projects_api>` are groupings of associated
 resources. Viewing a project allows the user to interact with multiple
 resources at once.
 

@@ -52,9 +52,7 @@ class BaseResource(UserContent):
 
 
 class CompositeResource(BaseResource):
-    """A composite resource that stores references to lower-level
-    objects, and may also grant access to them through ACL delegation.
-    """
+    """A composite resource that stores references to lower-level objects."""
     project = properties.Pointer(
         'Project',
         ptype='Project',
@@ -94,7 +92,6 @@ class CompositeResource(BaseResource):
     @needs_login
     def upload(self, sync=False, print_url=True):
         """Upload the resource through its containing project(s)"""
-        # self.validate()
         for proj in self.project:
             proj.upload(sync, False)
         if print_url:
@@ -127,8 +124,6 @@ class CompositeResource(BaseResource):
 
     def _upload_dirty(self):
         dirty = self._dirty
-        # if 'project' in dirty:
-        #     [p._upload() for p in self.project]
         if 'mesh' in dirty:
             self.mesh._upload()
         if 'data' in dirty:

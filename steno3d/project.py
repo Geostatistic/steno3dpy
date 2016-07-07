@@ -51,9 +51,8 @@ class Project(UserContent):
         """Upload the project"""
         self._upload(sync)
         if print_url:
-            return self.url
-        else:
-            return self._url
+            print(self._url)
+        return self._url
 
     @properties.validator
     def validate(self):
@@ -151,18 +150,9 @@ class Project(UserContent):
     def url(self):
         """steno3d.com url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
-            print('Project not uploaded')
-            return
-        print(self._url)
+            raise Exception('Project not uploaded: Please upload() '
+                            'before accessing the URL.')
         return self._url
-
-    @needs_login
-    def plot(self):
-        """Display the 3D representation of the content"""
-        if getattr(self, '_upload_data', None) is None:
-            raise Exception('Plotting failed: Project not uploaded - '
-                            'please upload() first.')
-        return plot(self._url)
 
 
 __all__ = ['Project']

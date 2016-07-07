@@ -99,7 +99,7 @@ Your version of steno3d is out of date.
 {your_version}
 {current_version}
 
-Please update steno3d with `pip install --upgrade steno3d` to continue.
+Please update steno3d with `pip install --upgrade steno3d`.
 
 """
 
@@ -217,17 +217,24 @@ class _Comms(object):
             raise Exception(NOT_CONNECTED)
         if resp.status_code == 200:
             resp_json = resp.json()
-            if (not resp_json['valid'] and
-                    not resp_json['current_version'] == '0.0.0'):
+            your_ver = resp_json['your_version']
+            curr_ver = resp_json['current_version']
+            if resp_json['valid'] or curr_ver == '0.0.0':
+                pass
+            elif (your_ver.split('.')[0] == curr_ver.split('.')[0] and
+                  your_ver.split('.')[1] == curr_ver.split('.')[1]):
+                print(INVALID_VERSION.format(
+                    your_version='Your version: ' + your_ver,
+                    current_version='Current version: ' + curr_ver
+                ))
+            else:
                 raise Exception(INVALID_VERSION.format(
-                    your_version=('Your version: ' +
-                                  resp_json['your_version']),
-                    current_version=('Required version: ' +
-                                     resp_json['current_version'])
+                    your_version='Your version: ' + your_ver,
+                    current_version='Required version: ' + curr_ver
                 ))
         elif resp.status_code == 400:
             resp_json = resp.json()
-            raise Exception(INVALID_VERSION.format(
+            print(INVALID_VERSION.format(
                 your_version='Your version: ' + __version__,
                 current_version='Error: ' + resp_json['reason']
             ))

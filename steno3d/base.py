@@ -98,10 +98,9 @@ class CompositeResource(BaseResource):
         for proj in self.project:
             proj.upload(sync, False)
         if print_url:
-            try:
-                print(self._url)
-            except:
-                print('URL error: Upload may have failed')
+            return self.url
+        else:
+            return self._url
 
 
 
@@ -172,6 +171,7 @@ class CompositeResource(BaseResource):
             print('Resource not uploaded')
             return
         print(self._url)
+        return self._url
 
     @needs_login
     def plot(self):

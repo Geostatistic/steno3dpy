@@ -51,10 +51,9 @@ class Project(UserContent):
         """Upload the project"""
         self._upload(sync)
         if print_url:
-            try:
-                print(self._url_view_from_uid(self._upload_data['uid']))
-            except:
-                print('URL error: Upload may have failed')
+            return self.url
+        else:
+            return self._url
 
     @properties.validator
     def validate(self):
@@ -155,6 +154,7 @@ class Project(UserContent):
             print('Project not uploaded')
             return
         print(self._url)
+        return self._url
 
     @needs_login
     def plot(self):

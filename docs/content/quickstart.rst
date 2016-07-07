@@ -116,7 +116,7 @@ Here, we will create a topographic surface of a sinc function. We will use `nump
 
 .. code:: python
 
-    >> import numpy
+    >> import numpy as np
     >> topo = lambda X, Y: 50*np.sinc(np.sqrt(X**2. + Y**2.)/20.)
 
 Next, we define our x,y coordinates to make the mesh.

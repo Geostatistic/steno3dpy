@@ -47,7 +47,7 @@ class Project(UserContent):
         return sum(r.nbytes() for r in self.resources)
 
     @needs_login
-    def upload(self, sync=True, print_url=True):
+    def upload(self, sync=False, print_url=True):
         """Upload the project"""
         self._upload(sync)
         if print_url:

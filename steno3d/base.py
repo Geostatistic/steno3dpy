@@ -92,7 +92,7 @@ class CompositeResource(BaseResource):
                                  'resources that point to them.')
 
     @needs_login
-    def upload(self, sync=True, print_url=True):
+    def upload(self, sync=False, print_url=True):
         """Upload the resource through its containing project(s)"""
         # self.validate()
         for proj in self.project:

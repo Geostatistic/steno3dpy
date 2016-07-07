@@ -112,22 +112,25 @@ We start by creating a project
                               description='My first project',
                               public=True)
 
-Here, we will create a topographic surface of a sinc function. We will use `numpy <http://docs.scipy.org/doc/numpy/reference/>`_ to do this.
+Here, we will create a topographic surface of a sinc function. We will
+use `numpy <http://docs.scipy.org/doc/numpy/reference/>`_ to do this.
 
 .. code:: python
 
     >> import numpy as np
     >> topo = lambda X, Y: 50*np.sinc(np.sqrt(X**2. + Y**2.)/20.)
 
-Next, we define our x,y coordinates to make the mesh.
+Next, we define our x and y coordinates to make the mesh
 
 .. code:: python
 
     >> x = np.linspace(-100, 100., num=100.)
     >> y = np.linspace(-100., 100., num=100.)
-    >> mesh2d = steno3d.Mesh2DGrid(h1=np.diff(x), h2=np.diff(y), x0=np.r_[-100.,-100.,0.])
+    >> mesh2d = steno3d.Mesh2DGrid(h1=np.diff(x),
+                                   h2=np.diff(y),
+                                   x0=np.r_[-100.,-100.,0.])
 
-and define the Z locations of the mesh.
+and define the Z vertex topography of the mesh.
 
 .. code:: python
 
@@ -135,21 +138,21 @@ and define the Z locations of the mesh.
     >> Z = topo(X, Y)
     >> mesh2d.Z = Z.flatten(order = 'C')
 
-Right now, we have a 2D mesh. You may want to put data on the mesh. In this
-case, we assign topography (same as the Z-locations of the mesh) as data on the nodes of the mesh
+Right now, we have a 2D mesh. Let's create a surface with this mesh geometry.
 
 .. code:: python
 
     >> surface = steno3d.Surface(project = proj, mesh = mesh2d)
-    >> surface.data = dict(location='N',
-                           data=mesh2d.Z)
+    >> surface.title = 'Topo'
+    >> surface.description = 'This is a sinc function'
 
-and add a title and description
+You may want to put data on the mesh. In this case, we assign topography
+(same as the Z-values of the mesh) as data on the nodes of the mesh
 
 .. code:: python
 
-    >> surface.title = 'Topo'
-    >> surface.description = 'This is a sinc function'
+    >> surface.data = dict(location='N',
+                           data=mesh2d.Z)
 
 
 .. _first_project_upload:
@@ -159,7 +162,7 @@ Upload
 
 In order to use Steno3D_ to view our 3D data, we need to upload the model.
 Prior to uploading, you can check that all required parameters are set and
-valid using :code:`validate`
+valid
 
 .. code:: python
 
@@ -185,23 +188,19 @@ Explore
     :target: http://mybinder.org/3ptscience/steno3dpy
 
 There are two options for viewing, if you are using the jupyter notebook you
-can plot the surface inline
+can plot the surface inline. This allows you to inspect it and make sure
+it is constructed correctly.
 
 .. code:: python
 
     >> surface.plot()
 
-or entire project inline
+Once you are happy with your upload, use the project URL to view, explore,
+and share the project on `steno3d.com <https://steno3d.com>`_.
 
 .. code:: python
 
-    >> proj.plot()
-
-or get the url to view the project in your browser
-
-.. code:: python
-
-    >> proj.url
+    >> print(proj.url)
 
 
 

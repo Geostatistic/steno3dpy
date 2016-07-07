@@ -18,7 +18,8 @@ class DataArray(BaseData):
     array = properties.Array(
         'Data, unique values at every point in the mesh',
         shape=('*',),
-        dtype=(float, int)
+        dtype=(float, int),
+        required=True
     )
 
     def __init__(self, array=None, **kwargs):

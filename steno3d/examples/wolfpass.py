@@ -79,15 +79,15 @@ class Wolfpass(BaseExample):
             'xsect_v.xsurf.npy',
         ]
 
-    # Borehole Collar Points:
-    def collar_vertices(self):
-        """collar point vertices"""
+    # Borehole drill Points:
+    def drill_vertices(self):
+        """drill point vertices"""
         return npload(Wolfpass.fetch_data(filename='drill_loc_v.point.npy',
                                           download_if_missing=False,
                                           verbose=False))
 
-    def collar_data(self):
-        """collar raw data
+    def drill_data(self):
+        """drill location raw data
 
         list of dicts of 'location' and 'data' with 'title' and 'array'
         """
@@ -108,15 +108,15 @@ class Wolfpass(BaseExample):
             )]
         return raw_data
 
-    def collar_points(self):
-        """Steno3D point resource for borehole collars"""
+    def drill_points(self):
+        """Steno3D point resource for borehole drill locations"""
         return Point(
             project=self._dummy_project,
             mesh=Mesh0D(
-                vertices=self.collar_vertices
+                vertices=self.drill_vertices
             ),
-            data=self.collar_data,
-            title='Borehole Collar Locations'
+            data=self.drill_data,
+            title='Borehole Drill Locations'
         )
 
     # Borehole Lines:
@@ -132,11 +132,8 @@ class Wolfpass(BaseExample):
                                           download_if_missing=False,
                                           verbose=False))
 
-    def borehole_data(self):
-        """borehole raw data
-
-        list of dicts of 'location' and 'data' with 'title' and 'array'
-        """
+    def borehole_raw_data(self):
+        """list of title/array dictionaries for borehole data"""
         raw_data = []
         for npyfile in self.filenames:
             if not npyfile.endswith('.line.npy'):
@@ -145,15 +142,29 @@ class Wolfpass(BaseExample):
                     npyfile.endswith('_s.line.npy')):
                 continue
             raw_data += [dict(
-                location='CC',
-                data=DataArray(
-                    title=npyfile.split('.')[0],
-                    array=npload(Wolfpass.fetch_data(filename=npyfile,
-                                                     download_if_missing=False,
-                                                     verbose=False))
-                )
+                title=npyfile.split('.')[0],
+                array=npload(Wolfpass.fetch_data(filename=npyfile,
+                                                 download_if_missing=False,
+                                                 verbose=False))
             )]
         return raw_data
+
+
+    def borehole_data(self):
+        """borehole raw data
+
+        list of dicts of 'location' and 'data' with 'title' and 'array'
+        """
+        data = []
+        for raw_data in self.borehole_raw_data:
+            data += [dict(
+                location='CC',
+                data=DataArray(
+                    title=raw_data['title'],
+                    array=raw_data['array']
+                )
+            )]
+        return data
 
     def borehole_lines(self):
         """Steno3D line resource for boreholes"""
@@ -237,6 +248,18 @@ class Wolfpass(BaseExample):
             )
         )
 
+    def lith_dacite_vertices(self):
+        """vertices for only the dacite surface"""
+        for i, pre in enumerate(self.lith_prefixes):
+            if pre[-6:] == 'dacite':
+                return self.lith_vertices[i]
+
+    def lith_dacite_triangles(self):
+        """triangles for only the dacite surface"""
+        for i, pre in enumerate(self.lith_prefixes):
+            if pre[-6:] == 'dacite':
+                return self.lith_triangles[i]
+
     def lith_surfaces(self):
         """tuple of  Steno3D surface resources for each CU percent range"""
         lith_surfs = tuple()
@@ -269,15 +292,27 @@ class Wolfpass(BaseExample):
                                           download_if_missing=False,
                                           verbose=False))
 
+    def topo_image(self):
+        """surface image"""
+        return Wolfpass.fetch_data(filename='topography.png',
+                                   download_if_missing=False,
+                                   verbose=False)
+
+    def topo_image_orientation(self):
+        """surface image O, U, and V"""
+        return dict(
+            O=[443200, 491750, 0],
+            U=[4425, 0, 0],
+            V=[0, 3690, 0]
+        )
+
     def topo_texture(self):
         """topography surface image texture"""
         return Texture2DImage(
-            O=[443200, 491750, 0],
-            U=[4425, 0, 0],
-            V=[0, 3690, 0],
-            image=Wolfpass.fetch_data(filename='topography.png',
-                                      download_if_missing=False,
-                                      verbose=False)
+            O=self.topo_image_orientation['O'],
+            U=self.topo_image_orientation['U'],
+            V=self.topo_image_orientation['V'],
+            image=self.topo_image
         )
 
     def topo_data(self):
@@ -413,7 +448,7 @@ class Wolfpass(BaseExample):
 
     def get_resources(self):
         """get a copy of the Wolfpass resources"""
-        res = (self.collar_points, self.borehole_lines,)
+        res = (self.drill_points, self.borehole_lines,)
         res += self.cu_surfaces
         res += self.lith_surfaces
         res += (self.topo_surface, self.xsect_surface, self.lith_volume)
@@ -428,12 +463,12 @@ class Wolfpass(BaseExample):
         return proj
 
     def get_project_topo(self):
-        res = (self.collar_points, self.topo_surface,)
+        res = (self.drill_points, self.topo_surface,)
         proj = self.project
         proj.resources = res
         proj.title = 'Topography'
         proj.description = ('Topography, surface imagery, '
-                            'and borehole collar locations')
+                            'and borehole drill locations')
         for r in proj.resources:
             r.project = proj
         return proj

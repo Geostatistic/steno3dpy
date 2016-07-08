@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -292,7 +292,7 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(self, *args, **kwargs):
-        if Comms.devel_key is None:
+        if Comms.get_user() is None:
             print("Please login: 'steno3d.login()'")
         else:
             return func(self, *args, **kwargs)

@@ -7,7 +7,7 @@ Steno3D
 Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
 by `3point Science <https://www.3ptscience.com>`_.
 
-.. image:: /docs/images/steno3dpy_screenshot.png
+.. image:: https://raw.githubusercontent.com/3ptscience/steno3dpy/master/docs/images/steno3dpy_screenshot.png
     :width: 100%
     :align: center
     :target: https://steno3d.com/

@@ -22,15 +22,15 @@ class User(properties.PropertyClass):
 
     file_size_limit = properties.Int(
         'Inidividual file limit',
-        default=10000000
+        default=5000000
     )
     project_size_limit = properties.Int(
         'Project size limit',
-        default=1000000000
+        default=25000000
     )
     project_resource_limit = properties.Int(
         'Maximum resources in a project',
-        default=25
+        default=15
     )
 
     def __init__(self, **kwargs):

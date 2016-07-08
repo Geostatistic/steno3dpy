@@ -12,7 +12,6 @@ from builtins import super
 import properties
 
 from .client import needs_login
-from .client import plot
 from .client import Comms
 from .content import UserContent
 

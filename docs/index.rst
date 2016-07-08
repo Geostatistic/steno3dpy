@@ -29,7 +29,8 @@ Explore and collaborate on your 3D data using Steno3D_.
 The Steno3D_ library is designed for creating, importing and uploading your 3D
 data so that you can explore it in 3D. Data can be points, lines, surfaces,
 volumes or textures. Check out the :ref:`quickstart` to generate and explore
-examples.
+examples, or download the `notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_
+to start using Steno3D_ yourself.
 
 .. image:: /images/steno3dsinc.png
     :width: 100%

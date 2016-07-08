@@ -21,7 +21,9 @@ Try Steno3D
 To give you a flavor of Steno3D_, you can
 
 - `Explore public Steno3D projects <https://steno3d.com/explore>`_
-- or `create a demo project in a jupyter notebook, no installation required <http://mybinder.org/3ptscience/steno3dpy>`_
+- or `work on demo projects in a Jupyter notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
+
+.. - or `create a demo project in a jupyter notebook, no installation required <http://mybinder.org/3ptscience/steno3dpy>`_
 
 
 .. TODO: replace this image with one of image of steno3D public explore page
@@ -58,7 +60,7 @@ or install from `source <https://github.com/3ptscience/steno3dpy>`_
 A First Project
 ---------------
 
-The following example is available in a `notebook <http://mybinder.org/3ptscience/steno3dpy>`_
+The following example is available in a `notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
 
 Here, we will create a public project containing a topographic surface of a
 sinc function, upload it, and explore it with Steno3D_!

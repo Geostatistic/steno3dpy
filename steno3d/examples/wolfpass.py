@@ -132,11 +132,8 @@ class Wolfpass(BaseExample):
                                           download_if_missing=False,
                                           verbose=False))
 
-    def borehole_data(self):
-        """borehole raw data
-
-        list of dicts of 'location' and 'data' with 'title' and 'array'
-        """
+    def borehole_raw_data(self):
+        """list of title/array dictionaries for borehole data"""
         raw_data = []
         for npyfile in self.filenames:
             if not npyfile.endswith('.line.npy'):
@@ -145,15 +142,29 @@ class Wolfpass(BaseExample):
                     npyfile.endswith('_s.line.npy')):
                 continue
             raw_data += [dict(
-                location='CC',
-                data=DataArray(
-                    title=npyfile.split('.')[0],
-                    array=npload(Wolfpass.fetch_data(filename=npyfile,
-                                                     download_if_missing=False,
-                                                     verbose=False))
-                )
+                title=npyfile.split('.')[0],
+                array=npload(Wolfpass.fetch_data(filename=npyfile,
+                                                 download_if_missing=False,
+                                                 verbose=False))
             )]
         return raw_data
+
+
+    def borehole_data(self):
+        """borehole raw data
+
+        list of dicts of 'location' and 'data' with 'title' and 'array'
+        """
+        data = []
+        for raw_data in self.borehole_raw_data:
+            data += [dict(
+                location='CC',
+                data=DataArray(
+                    title=raw_data['title'],
+                    array=raw_data['array']
+                )
+            )]
+        return data
 
     def borehole_lines(self):
         """Steno3D line resource for boreholes"""
@@ -236,6 +247,18 @@ class Wolfpass(BaseExample):
                 )
             )
         )
+
+    def lith_dacite_vertices(self):
+        """vertices for only the dacite surface"""
+        for i, pre in enumerate(self.lith_prefixes):
+            if pre[-6:] == 'dacite':
+                return self.lith_vertices[i]
+
+    def lith_dacite_triangles(self):
+        """triangles for only the dacite surface"""
+        for i, pre in enumerate(self.lith_prefixes):
+            if pre[-6:] == 'dacite':
+                return self.lith_triangles[i]
 
     def lith_surfaces(self):
         """tuple of  Steno3D surface resources for each CU percent range"""

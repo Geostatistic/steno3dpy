@@ -60,7 +60,7 @@ or install from `source <https://github.com/3ptscience/steno3dpy>`_
 A First Project
 ---------------
 
-The following example is available in a `notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
+The following example is available in a `notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_.
 
 Here, we will create a public project containing a topographic surface of a
 sinc function, upload it, and explore it with Steno3D_!

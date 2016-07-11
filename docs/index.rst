@@ -24,15 +24,18 @@ Explore and collaborate on your 3D data using Steno3D_.
 .. image:: https://img.shields.io/badge/download-PyPI-yellow.svg
     :target: https://pypi.python.org/pypi/steno3d
 
+.. image:: http://mybinder.org/badge.svg
+    :target: http://mybinder.org/repo/3ptscience/steno3dpy-notebooks
+
 |
 
-The Steno3D_ library is designed for creating, importing and uploading your 3D
-data so that you can explore it in 3D. Data can be points, lines, surfaces,
-volumes or textures. Check out the :ref:`quickstart` to generate and explore
-examples, or download the `notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_
+The Steno3D_ library is designed for creating, importing, and uploading your
+data so that you can explore it in 3D. Data can be points, lines, surfaces, or
+volumes. Check out the :ref:`quickstart` to explore
+examples, or try the `online notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
 to start using Steno3D_ yourself.
 
-.. image:: /images/steno3dsinc.png
+.. image:: /images/steno3dpy_screenshot.png
     :width: 100%
     :align: center
     :target: https://steno3d.com/

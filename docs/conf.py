@@ -311,6 +311,8 @@ intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://docs.scipy.org/doc/scipy/reference/': None,
                        'http://propertiespy.readthedocs.io/en/latest/': None}
 
+linkcheck_ignore = ['http://mybinder.org/repo/3ptscience/steno3dpy-notebooks']
+
 
 import sphinx.environment
 from docutils.utils import get_source_line

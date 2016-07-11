@@ -3,56 +3,27 @@
 Quickstart
 ==========
 
-Get up and running with Steno3D_! This page contains resources for trying
-Steno3D_ starting in demo jupyter notebooks, instructions for installing
-Steno3D_ and a sample first project.
+Get up and running with Steno3D_! This page contains resources for exploring
+public projects, trying out a sample project yourself, and installing
+Steno3D_.
 
 - :ref:`try_steno3d`
-- :ref:`install_steno3d`
 - :ref:`a_first_project`
+- :ref:`install_steno3d`
 
-If you run into issues: `report it on github <https://github.com/3ptscience/steno3dpy/issues/new>`_.
+If you run into issues: `report them on github <https://github.com/3ptscience/steno3dpy/issues/new>`_.
 
 .. _try_steno3d:
 
-Try Steno3D
------------
+Explore Steno3D
+---------------
 
-To give you a flavor of Steno3D_, you can
+To give you a flavor of Steno3D_, you can first `explore public Steno3D projects <https://steno3d.com/explore>`_
 
-- `Explore public Steno3D projects <https://steno3d.com/explore>`_
-- or `work on demo projects in a Jupyter notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
-
-.. - or `create a demo project in a jupyter notebook, no installation required <http://mybinder.org/3ptscience/steno3dpy>`_
-
-
-.. TODO: replace this image with one of image of steno3D public explore page
-.. TODO: activate steno3dpy github links once public (with _ at the end) here and in index.rst
-
-
-.. image:: /images/first_project_in_notebook.png
+.. image:: /images/steno3d_explore.png
     :width: 80%
     :align: center
     :target: https://steno3d.com/explore
-
-
-.. _install_steno3d:
-
-Install Steno3D
----------------
-
-Steno3D_ is on `pip <https://pypi.python.org/pypi/steno3d>`_:
-
-.. code::
-
-    pip install steno3d
-
-or install from `source <https://github.com/3ptscience/steno3dpy>`_
-
-.. code::
-
-    git clone https://github.com/3ptscience/steno3dpy.git
-    python setup.py install
 
 
 .. _a_first_project:
@@ -60,17 +31,18 @@ or install from `source <https://github.com/3ptscience/steno3dpy>`_
 A First Project
 ---------------
 
-The following example is available in a `notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_.
+Let's get started using Steno3D_. The following demo project is available
+`online in a Jupyter notebook, no installation required <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/1.%20My%20First%20Project%20in%20Steno3D.ipynb>`_.
 
-Here, we will create a public project containing a topographic surface of a
-sinc function, upload it, and explore it with Steno3D_!
+Here, we will create a public project containing a surface, upload it, and explore it with Steno3D_!
 
-.. image:: /images/steno3dsinc.png
+.. image:: /images/steno3dpy_screenshot.png
     :width: 80%
     :align: center
-    :target: http://mybinder.org/3ptscience/steno3dpy
+    :target: http://mybinder.org/3ptscience/steno3dpy-notebooks
 
-Once Steno3D_ is :ref:`installed <install_steno3d>`, you should be able to import it
+Start by importing Steno3D_. If you are using the `online notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
+your environment should already be set up; otherwise, Steno3D_ is :ref:`easy to install <install_steno3d>`.
 
 .. code:: python
 
@@ -114,7 +86,7 @@ We start by creating a project
                               description='My first project',
                               public=True)
 
-Here, we will create a topographic surface of a sinc function. We will
+Here, we will create a topographic surface of a `sinc function <https://en.wikipedia.org/wiki/Sinc_function>`_. We will
 use `numpy <http://docs.scipy.org/doc/numpy/reference/>`_ to do this.
 
 .. code:: python
@@ -187,7 +159,7 @@ Explore
 .. image:: /images/first_project_in_notebook.png
     :width: 80%
     :align: center
-    :target: http://mybinder.org/3ptscience/steno3dpy
+    :target: http://mybinder.org/repo/3ptscience/steno3dpy-notebooks
 
 There are two options for viewing, if you are using the jupyter notebook you
 can plot the surface inline. This allows you to inspect it and make sure
@@ -204,6 +176,31 @@ and share the project on `steno3d.com <https://steno3d.com>`_.
 
     >> print(proj.url)
 
+
+.. _install_steno3d:
+
+Install Steno3D
+---------------
+
+Want to start using Steno3D_ with your own data? It is available on
+`pip <https://pypi.python.org/pypi/steno3d>`_:
+
+.. code::
+
+    pip install steno3d
+
+or install from `source <https://github.com/3ptscience/steno3dpy>`_
+
+.. code::
+
+    git clone https://github.com/3ptscience/steno3dpy.git
+    python setup.py install
+
+The example Jupyter notebooks can also be `cloned <https://github.com/3ptscience/steno3dpy-notebooks>`_
+
+.. code::
+
+    git clone https://github.com/3ptscience/steno3dpy-noteboks.git
 
 
 .. _Steno3D: https://steno3d.com

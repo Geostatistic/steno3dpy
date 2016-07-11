@@ -39,7 +39,7 @@ Here, we will create a public project containing a surface, upload it, and explo
 .. image:: /images/steno3dpy_screenshot.png
     :width: 80%
     :align: center
-    :target: http://mybinder.org/3ptscience/steno3dpy-notebooks
+    :target: http://mybinder.org/repo/3ptscience/steno3dpy-notebooks
 
 Start by importing Steno3D_. If you are using the `online notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
 your environment should already be set up; otherwise, Steno3D_ is :ref:`easy to install <install_steno3d>`.

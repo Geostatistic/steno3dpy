@@ -51,14 +51,17 @@ class UserContent(properties.PropertyClass):
             )
         return cls.__model_api_location
 
-    def _upload(self, sync=True):
+    def _upload(self, sync=False, verbose=True, tab_level=''):
         if getattr(self, '_uploading', False):
             return
         try:
+            if verbose:
+                print(tab_level + 'Uploading ' + self._resource_class +
+                      ': ' + self.title)
             self._uploading = True
             pause()
             assert self.validate()
-            self._upload_dirty()
+            self._upload_dirty(sync, verbose, tab_level + '    ')
             if getattr(self, '_upload_data', None) is None:
                 self._post(
                     self._get_dirty_data(force=True),
@@ -71,6 +74,8 @@ class UserContent(properties.PropertyClass):
                     self._put(dirty_data, dirty_files)
             self._mark_clean(recurse=False)
             self._sync = sync
+            if verbose:
+                print(tab_level + '... Complete!')
         except Exception as err:
             if self._sync:
                 print('Upload failed, turning off syncing. To restart '
@@ -93,12 +98,12 @@ class UserContent(properties.PropertyClass):
     def _get_dirty_files(self, force=False):
         return {}
 
-    def _upload_dirty(self):
+    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         pass
 
     def _on_property_change(self, name, pre, post):
         if getattr(self, '_sync', False):
-            self._upload()
+            self._upload(self._sync)
 
     def _post(self, datadict=None, files=None):
         self._client_upload(post, self._model_api_location,

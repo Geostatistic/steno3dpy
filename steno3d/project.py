@@ -46,9 +46,9 @@ class Project(UserContent):
         return sum(r.nbytes() for r in self.resources)
 
     @needs_login
-    def upload(self, sync=False, print_url=True):
+    def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the project"""
-        self._upload(sync)
+        self._upload(sync, verbose)
         if print_url:
             print(self._url)
         return self._url
@@ -103,16 +103,18 @@ class Project(UserContent):
                 self.resources = post_post
         super()._on_property_change(name, pre, post)
 
-    def _upload(self, sync=True):
+    def _upload(self, sync=False, verbose=True, tab_level=''):
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
-            print('Uploading ' + ('public ' if self.public else 'private ') +
-                  'project: ' + self.title)
-            if self.public:
-                print('This project will be viewable by everyone.')
+            if verbose:
+                print('Initializing ' +
+                      ('public ' if self.public else 'private ') +
+                      'project: ' + self.title)
+                if self.public:
+                    print('This project will be viewable by everyone.')
             self._post(self._get_dirty_data(force=True, initialize=True))
             self._public_online = self.public
-        else:
+        elif verbose:
             print('Uploading changes to ' +
                   ('public ' if self._public_online else 'private ') +
                   'project: ' + self.title)
@@ -121,12 +123,12 @@ class Project(UserContent):
                       'projects that are already uploaded. To make '
                       'these changes, please use the dashboard on '
                       'steno3d.com.')
-        super()._upload(sync)
+        super()._upload(sync, verbose, tab_level)
 
-    def _upload_dirty(self):
+    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         dirty = self._dirty
         if 'resources' in dirty:
-            [r._upload() for r in self.resources]
+            [r._upload(sync, verbose, tab_level) for r in self.resources]
 
     def _get_dirty_data(self, force=False, initialize=False):
         datadict = super()._get_dirty_data(force)

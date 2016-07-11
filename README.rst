@@ -4,6 +4,16 @@ Steno3D
 .. image:: https://travis-ci.org/3ptscience/steno3dpy.svg?branch=master
     :target: https://travis-ci.org/3ptscience/steno3dpy
 
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+    :alt: MIT License
+    :target: https://github.com/3ptscience/steno3dpy/blob/master/LICENSE
+
+.. image:: https://img.shields.io/badge/download-PyPI-yellow.svg
+    :target: https://pypi.python.org/pypi/steno3d
+
+.. image:: http://mybinder.org/badge.svg
+    :target: http://mybinder.org/repo/3ptscience/steno3dpy-notebooks
+
 Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
 by `3point Science <https://www.3ptscience.com>`_.
 
@@ -13,7 +23,7 @@ by `3point Science <https://www.3ptscience.com>`_.
     :alt: Steno3D in action
     :target: https://steno3d.com/
 
-If you have not yet installed Steno3D, simply
+If you have not yet installed `Steno3D <https://www.steno3d.com>`_, simply
 
 .. code:: bash
 

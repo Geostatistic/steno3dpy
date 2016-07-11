@@ -189,8 +189,8 @@ class Mesh2DGrid(BaseMesh):
         if ('h1' in dirty or 'h2' in dirty or 'x0' in dirty) or force:
             datadict['OUV'] = dumps(dict(
                 O=self.x0.tolist()[0],
-                U=[self.h1.sum(), 0, 0],
-                V=[0, self.h2.sum(), 0],
+                U=[self.h1.sum().astype(float), 0, 0],
+                V=[0, self.h2.sum().astype(float), 0],
             ))
         return datadict
 

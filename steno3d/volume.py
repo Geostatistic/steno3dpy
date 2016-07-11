@@ -107,9 +107,9 @@ class Mesh3DGrid(BaseMesh):
                      'x0' in dirty):
             datadict['OUVZ'] = dumps(dict(
                 O=self.x0.tolist()[0],
-                U=[self.h1.sum(), 0, 0],
-                V=[0, self.h2.sum(), 0],
-                Z=[0, 0, self.h3.sum()]
+                U=[self.h1.sum().astype(float), 0, 0],
+                V=[0, self.h2.sum().astype(float), 0],
+                Z=[0, 0, self.h3.sum().astype(float)]
             ))
         return datadict
 

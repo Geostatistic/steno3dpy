@@ -56,7 +56,7 @@ class Mesh1D(BaseMesh):
 
     def nbytes(self, name=None):
         if name in ('segments', 'vertices'):
-            return getattr(self, name).nbytes
+            return getattr(self, name).astype('f4').nbytes
         elif name is None:
             return self.nbytes('segments') + self.nbytes('vertices')
         raise ValueError('Mesh1D cannot calculate the number of '

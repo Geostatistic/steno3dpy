@@ -61,9 +61,9 @@ class Mesh2D(BaseMesh):
 
     def nbytes(self, name=None):
         if name in ('vertices', 'triangles'):
-            return getattr(self, name).nbytes
+            return getattr(self, name).astype('f4').nbytes
         elif name is None:
-            return self.vertices.nbytes + self.triangles.nbytes
+            return self.nbytes('vertices') + self.nbytes('triangles')
         raise ValueError('Mesh2D cannot calculate the number of '
                          'bytes of {}'.format(name))
 
@@ -144,9 +144,9 @@ class Mesh2DGrid(BaseMesh):
         if name in filenames:
             if getattr(self, name, None) is None:
                 return 0
-            return getattr(self, name).nbytes
+            return getattr(self, name).astype('f4').nbytes
         if name is None:
-            return sum(self.nbytes(name=fn) for fn in filenames)
+            return sum(self.nbytes(fn) for fn in filenames)
         raise ValueError('Mesh2DGrid cannot calculate the number of '
                          'bytes of {}'.format(name))
 

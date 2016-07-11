@@ -67,9 +67,9 @@ class Mesh3DGrid(BaseMesh):
     def nbytes(self, name=None):
         filenames = ('h1', 'h2', 'h3', 'x0')
         if name in filenames:
-            return getattr(self, name).nbytes
+            return getattr(self, name).astype('f4').nbytes
         elif name is None:
-            return sum(getattr(self, fn).nbytes for fn in filenames)
+            return sum(self.nbytes(fn) for fn in filenames)
         raise ValueError('Mesh3DGrid cannot calculate the number of '
                          'bytes of {}'.format(name))
 

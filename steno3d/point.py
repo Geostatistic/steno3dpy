@@ -43,7 +43,7 @@ class Mesh0D(BaseMesh):
 
     def nbytes(self, name=None):
         if name is None or name == 'vertices':
-            return self.vertices.nbytes
+            return self.vertices.astype('f4').nbytes
         raise ValueError('Mesh0D cannot calculate the number of '
                          'bytes of {}'.format(name))
 

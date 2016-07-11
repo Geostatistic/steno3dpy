@@ -3,6 +3,10 @@
 Volume
 ******
 
+.. image:: /images/steno3d_volume.png
+    :width: 80%
+    :align: center
+
 .. autoclass:: steno3d.volume.Volume
 
 Meshes

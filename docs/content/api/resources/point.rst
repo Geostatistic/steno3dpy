@@ -3,6 +3,10 @@
 Point
 *****
 
+.. image:: /images/steno3d_point.png
+    :width: 80%
+    :align: center
+
 .. autoclass:: steno3d.point.Point
 
 Meshes

@@ -48,6 +48,23 @@ class Project(UserContent):
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the project"""
+        if getattr(self, '_upload_data', None) is None:
+            assert self.validate()
+            if verbose:
+                print('Initializing ' +
+                      ('public ' if self.public else 'private ') +
+                      'project: ' + self.title)
+                if self.public:
+                    print('This project will be viewable by everyone.')
+            self._post(self._get_dirty_data(force=True, initialize=True))
+            self._public_online = self.public
+        elif verbose and self._public_online:
+            print('This project is PUBLIC. It is viewable by everyone.')
+        if verbose and not self._public_online == self.public:
+            print('Local privacy changes cannot be applied to '
+                  'projects that are already uploaded. To make '
+                  'these changes, please use the dashboard on '
+                  'steno3d.com.')
         self._upload(sync, verbose)
         if print_url:
             print(self._url)
@@ -89,10 +106,10 @@ class Project(UserContent):
             if post is None:
                 post = []
             for res in post:
-                if res not in pre:
+                if res not in pre and self not in res.project:
                     res.project += [self]
             for res in pre:
-                if res not in post:
+                if res not in post and self in res.project:
                     res.project = [p for p in res.project
                                    if p is not self]
             if len(set(post)) != len(post):
@@ -102,28 +119,6 @@ class Project(UserContent):
                         post_post += [r]
                 self.resources = post_post
         super()._on_property_change(name, pre, post)
-
-    def _upload(self, sync=False, verbose=True, tab_level=''):
-        if getattr(self, '_upload_data', None) is None:
-            assert self.validate()
-            if verbose:
-                print('Initializing ' +
-                      ('public ' if self.public else 'private ') +
-                      'project: ' + self.title)
-                if self.public:
-                    print('This project will be viewable by everyone.')
-            self._post(self._get_dirty_data(force=True, initialize=True))
-            self._public_online = self.public
-        elif verbose:
-            print('Uploading changes to ' +
-                  ('public ' if self._public_online else 'private ') +
-                  'project: ' + self.title)
-            if not self._public_online == self.public:
-                print('Local privacy changes cannot be applied to '
-                      'projects that are already uploaded. To make '
-                      'these changes, please use the dashboard on '
-                      'steno3d.com.')
-        super()._upload(sync, verbose, tab_level)
 
     def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         dirty = self._dirty

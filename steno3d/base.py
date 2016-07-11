@@ -138,10 +138,10 @@ class CompositeResource(BaseResource):
             if post is None:
                 post = []
             for proj in post:
-                if proj not in pre:
+                if proj not in pre and self not in proj.resources:
                     proj.resources += [self]
             for proj in pre:
-                if proj not in post:
+                if proj not in post and self in proj.resources:
                     proj.resources = [r for r in proj.resources
                                       if r is not self]
             if len(set(post)) != len(post):

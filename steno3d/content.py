@@ -56,8 +56,12 @@ class UserContent(properties.PropertyClass):
             return
         try:
             if verbose:
-                print(tab_level + 'Uploading ' + self._resource_class +
-                      ': ' + self.title)
+                print(
+                    tab_level + ('Uploading '
+                                 if getattr(self, '_upload_data', None) is None
+                                 else 'Updating ') +
+                    self._resource_class + ': ' + self.title
+                )
             self._uploading = True
             pause()
             assert self.validate()

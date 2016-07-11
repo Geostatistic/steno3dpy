@@ -30,7 +30,7 @@ At that point, you can
     steno3d.login()
 
 then start building your 3D project. API documentation is available on
-`Read the Docs <http://steno3d.readthedocs.io/en/latest>`_. Tutorials and
+`online <https://python.steno3d.com>`_. Tutorials and
 Examples are available as `notebooks <http://mybinder.org/3ptscience/steno3dpy>`_.
 Steno3D is built with tab-completion in mind for interactive environments like
 the Jupyter Notebook. Class documentation can also be accessed in the python environment

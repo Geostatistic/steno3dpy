@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -114,7 +114,6 @@ class _Comms(object):
         self._user = None
         self._me = None
         self._base_url = PRODUCTION_BASE_URL
-        self._hard_devel_key = None
 
     @property
     def host(self):
@@ -149,7 +148,6 @@ class _Comms(object):
     @property
     def devel_key(self):
         """developer key acquired from steno3d.com"""
-        self._user = None
         if getattr(self, '_hard_devel_key', None) is not None:
             return self._hard_devel_key
 
@@ -167,10 +165,11 @@ class _Comms(object):
 
     @devel_key.deleter
     def devel_key(self):
+        self._hard_devel_key = None
         try:
             keyring.delete_password('steno3d', self.host)
-        except keyring.errors.PasswordDeleteError:
-            # Happens when the key does not exist
+        except (keyring.errors.PasswordDeleteError, RuntimeError):
+            # Happens when the key or keychain does not exist
             pass
 
     def get_user(self):
@@ -205,6 +204,15 @@ class _Comms(object):
                             keychain
             endpoint      - target site, default is steno3d.com
         """
+        try:
+            keyring.get_password('steno3d', self.host)
+        except RuntimeError:
+            print('Unable to access keychain. Proceeding to login with '
+                  '`skip_keychain=True`. That means you will need to '
+                  'reenter your developer API key every time you '
+                  'restart the kernel.')
+            self.login(devel_key, True, endpoint)
+            return
         if endpoint is not None:
             self.base_url = str(endpoint)
         # Check client version first.
@@ -244,7 +252,8 @@ class _Comms(object):
                 self._hard_devel_key = devel_key
             else:
                 self.devel_key = devel_key
-        if self.devel_key is None:
+        if ((skip_keychain and self._hard_devel_key is None) or
+                self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:
                 devel_key = raw_input(WELCOME_HEADER + DEVKEY_PROMPT)

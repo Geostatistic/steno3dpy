@@ -114,6 +114,7 @@ class _Comms(object):
         self._user = None
         self._me = None
         self._base_url = PRODUCTION_BASE_URL
+        self._hard_devel_key = None
 
     @property
     def host(self):
@@ -253,7 +254,8 @@ class _Comms(object):
                 self._hard_devel_key = devel_key
             else:
                 self.devel_key = devel_key
-        if ((skip_keychain and self._hard_devel_key is None) or
+        if ((skip_keychain and
+             getattr(self, '_hard_devel_key', None) is None) or
                 self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:

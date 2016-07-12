@@ -312,6 +312,7 @@ intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://propertiespy.readthedocs.io/en/latest/': None}
 
 linkcheck_ignore = ['http://mybinder.org/repo/3ptscience/steno3dpy-notebooks']
+linkcheck_retries = 5
 
 
 import sphinx.environment

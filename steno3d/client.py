@@ -204,15 +204,16 @@ class _Comms(object):
                             keychain
             endpoint      - target site, default is steno3d.com
         """
-        try:
-            keyring.get_password('steno3d', self.host)
-        except RuntimeError:
-            print('Unable to access keychain. Proceeding to login with '
-                  '`skip_keychain=True`. That means you will need to '
-                  'reenter your developer API key every time you '
-                  'restart the kernel.')
-            self.login(devel_key, True, endpoint)
-            return
+        if not skip_keychain:
+            try:
+                keyring.get_password('steno3d', self.host)
+            except RuntimeError:
+                print('Unable to access keychain. Proceeding to login with '
+                      '`skip_keychain=True`.\nYou will need to '
+                      'reenter your developer API key every time you '
+                      'restart the kernel.')
+                self.login(devel_key, True, endpoint)
+                return
         if endpoint is not None:
             self.base_url = str(endpoint)
         # Check client version first.

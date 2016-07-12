@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -204,15 +204,16 @@ class _Comms(object):
                             keychain
             endpoint      - target site, default is steno3d.com
         """
-        try:
-            keyring.get_password('steno3d', self.host)
-        except RuntimeError:
-            print('Unable to access keychain. Proceeding to login with '
-                  '`skip_keychain=True`. That means you will need to '
-                  'reenter your developer API key every time you '
-                  'restart the kernel.')
-            self.login(devel_key, True, endpoint)
-            return
+        if not skip_keychain:
+            try:
+                keyring.get_password('steno3d', self.host)
+            except RuntimeError:
+                print('Unable to access keychain. Proceeding to login with '
+                      '`skip_keychain=True`.\nYou will need to '
+                      'reenter your developer API key every time you '
+                      'restart the kernel.')
+                self.login(devel_key, True, endpoint)
+                return
         if endpoint is not None:
             self.base_url = str(endpoint)
         # Check client version first.

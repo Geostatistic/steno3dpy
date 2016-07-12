@@ -3,6 +3,10 @@
 Surface
 *******
 
+.. image:: /images/steno3d_surface.png
+    :width: 80%
+    :align: center
+
 .. autoclass:: steno3d.surface.Surface
 
 Meshes

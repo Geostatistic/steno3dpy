@@ -3,6 +3,10 @@
 Line
 ****
 
+.. image:: /images/steno3d_line.png
+    :width: 80%
+    :align: center
+
 .. autoclass:: steno3d.line.Line
 
 Meshes

@@ -90,3 +90,6 @@ ENV/
 
 # Credentials
 /credentials
+
+# mac files
+.DS_store

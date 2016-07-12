@@ -90,10 +90,10 @@ class CompositeResource(BaseResource):
                                  'resources that point to them.')
 
     @needs_login
-    def upload(self, sync=False, print_url=True):
+    def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the resource through its containing project(s)"""
         for proj in self.project:
-            proj.upload(sync, False)
+            proj.upload(sync, verbose, False)
         if print_url:
             print(self._url)
         return self._url
@@ -122,14 +122,14 @@ class CompositeResource(BaseResource):
             ])
         return datadict
 
-    def _upload_dirty(self):
+    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         dirty = self._dirty
         if 'mesh' in dirty:
-            self.mesh._upload()
+            self.mesh._upload(sync, verbose, tab_level)
         if 'data' in dirty:
-            [d.data._upload() for d in self.data]
+            [d.data._upload(sync, verbose, tab_level) for d in self.data]
         if 'textures' in dirty:
-            [t._upload() for t in self.textures]
+            [t._upload(sync, verbose, tab_level) for t in self.textures]
 
     def _on_property_change(self, name, pre, post):
         if name == 'project':
@@ -138,10 +138,10 @@ class CompositeResource(BaseResource):
             if post is None:
                 post = []
             for proj in post:
-                if proj not in pre:
+                if proj not in pre and self not in proj.resources:
                     proj.resources += [self]
             for proj in pre:
-                if proj not in post:
+                if proj not in post and self in proj.resources:
                     proj.resources = [r for r in proj.resources
                                       if r is not self]
             if len(set(post)) != len(post):

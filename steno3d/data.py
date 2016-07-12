@@ -29,7 +29,7 @@ class DataArray(BaseData):
 
     def nbytes(self, name=None):
         if name is None or name == 'array':
-            return self.array.nbytes
+            return self.array.astype('f4').nbytes
         raise ValueError('DataArray cannot calculate the number of '
                          'bytes of {}'.format(name))
 

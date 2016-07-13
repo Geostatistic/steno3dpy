@@ -7,8 +7,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import str
 from builtins import input
+from builtins import str
 from functools import wraps
 from time import sleep
 
@@ -111,8 +111,7 @@ class _Comms(object):
     """
 
     def __init__(self):
-        self._user = None
-        self._me = None
+        self.user = User()
         self._base_url = PRODUCTION_BASE_URL
 
     @property
@@ -172,28 +171,6 @@ class _Comms(object):
             # Happens when the key or keychain does not exist
             pass
 
-    def get_user(self):
-        if getattr(self, '_me', None) is not None:
-            return self._me
-        elif getattr(self, '_user', None) is None:
-            return None
-        else:
-            username = self._user['uid']
-            email = self._user['email']
-            name = self._user['name']
-            url = self._user['url']
-            affiliation = self._user['affiliation']
-            location = self._user['location']
-            self._me = User(
-                username=username if username is not None else 'None',
-                email=email if email is not None else 'None',
-                name=name if name is not None else 'None',
-                url=url if url is not None else 'None',
-                affiliation=affiliation if affiliation is not None else 'None',
-                location=location if location is not None else 'None',
-            )
-            return self._me
-
     def login(self, devel_key=None, skip_keychain=False, endpoint=None):
         """Login to steno3d.com to allow uploading resources
 
@@ -211,7 +188,7 @@ class _Comms(object):
                 print('Unable to access keychain. Proceeding to login with '
                       '`skip_keychain=True`.\nYou will need to '
                       'reenter your developer API key every time you '
-                      'restart the kernel.')
+                      'restart the kernel.\n')
                 self.login(devel_key, True, endpoint)
                 return
         if endpoint is not None:
@@ -269,7 +246,7 @@ class _Comms(object):
             else:
                 self.devel_key = devel_key
         # Check user
-        if getattr(self, '_user', None) is None:
+        if not self.user.logged_in:
             try:
                 resp = requests.get(
                     self.url + 'me',
@@ -278,21 +255,20 @@ class _Comms(object):
             except requests.ConnectionError:
                 raise Exception(NOT_CONNECTED)
             if resp.status_code is not 200:
-                self.devel_key = None
+                self.logout()
                 raise Exception(LOGIN_FAILED)
-            self._user = resp.json()
+            self.user._login(resp.json())
         # Success
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
-                name=self.get_user().username
+                name=self.user.username
             )
         )
 
     def logout(self):
         """Logout current user and remove API key from keyring"""
         self.devel_key = None
-        self._me = None
-        self._user = None
+        self.user._logout()
 
 
 Comms = _Comms()
@@ -302,7 +278,7 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(self, *args, **kwargs):
-        if Comms.get_user() is None:
+        if not Comms.user.logged_in:
             print("Please login: 'steno3d.login()'")
         else:
             return func(self, *args, **kwargs)

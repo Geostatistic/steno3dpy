@@ -88,7 +88,7 @@ logged in to steno3d.com; the developer key and your website login are separate.
 
         >> steno3d.login()
 
-If you ever lose your key, you can generate a new one at https://steno3d.com/settings/developer.
+If you ever lose your key, you can always `generate a new one <https://steno3d.com/settings/developer>`_.
 
 
 .. _first_project_create_resources:

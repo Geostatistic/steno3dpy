@@ -32,7 +32,7 @@ A First Project
 ---------------
 
 Let's get started using Steno3D_. The following demo project is available
-`online in a Jupyter notebook, no installation required <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/1.%20My%20First%20Project%20in%20Steno3D.ipynb>`_.
+`online in a Jupyter notebook, no installation required <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/>`_.
 
 Here, we will create a public project containing a surface, upload it, and explore it with Steno3D_!
 
@@ -196,7 +196,7 @@ The example Jupyter notebooks can also be `cloned <https://github.com/3ptscience
 
 .. code::
 
-    git clone https://github.com/3ptscience/steno3dpy-noteboks.git
+    git clone https://github.com/3ptscience/steno3dpy-notebooks.git
 
 
 .. _Steno3D: https://steno3d.com

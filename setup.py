@@ -31,7 +31,7 @@ setup(
                         'six',
                         'requests[security]',
                         'keyring',
-                        'properties>=0.1.4',
+                        'properties>=0.1.5',
                        ],
     author = '3point Science',
     author_email = 'info@3ptscience.com',

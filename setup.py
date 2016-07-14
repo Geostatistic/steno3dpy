@@ -29,7 +29,7 @@ setup(
     install_requires = ['numpy>=1.7',
                         'future',
                         'six',
-                        'requests',
+                        'requests[security]',
                         'keyring',
                         'properties>=0.1.4',
                        ],

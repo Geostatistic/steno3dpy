@@ -3,7 +3,7 @@
 Project API
 ***********
 
-Steno3D_ projects organize :ref:`resources <resources_api>` so they can viewed.
+Steno3D_ projects organize :ref:`resources <resources_api>` so they can be viewed.
 
 .. image:: /images/steno3d_project.png
     :width: 80%

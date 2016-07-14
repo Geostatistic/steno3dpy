@@ -32,7 +32,7 @@ resources at once.
 Resources
 =========
 
-Within Steno3D_, any object that can be created and uploaded is a resource.
+Within Steno3D, any object that can be created and uploaded is a resource.
 This includes basic component structures such as data, meshes, and textures as
 well as more complex objects like points, lines, surfaces, and volumes.
 Once in the database, resources are static.

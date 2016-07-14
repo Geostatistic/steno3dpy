@@ -15,13 +15,9 @@ from os.path import realpath
 from os.path import sep
 
 from future.utils import with_metaclass
+from requests import get
 from six import string_types
 from zipfile import ZipFile
-
-from future.standard_library import install_aliases
-install_aliases()
-from urllib.request import urlretrieve                          # nopep8
-
 
 
 class exampleproperty(object):
@@ -162,7 +158,16 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
                 if verbose:
                     print('        Downloading archive...')
                 url = '/'.join([cls.data_url, cls.sub_directory + '.zip'])
-                urlretrieve(url, archive)
+                resp = get(url, stream=True)
+                if resp.status_code != 200:
+                    raise IOError('Error downloading {exclass} data: '
+                                  '{archfile}'.format(
+                                    exclass=cls.example_name,
+                                    archfile=archive
+                                  ))
+                with open(archive, 'wb') as arch:
+                    for chunk in resp:
+                        arch.write(chunk)
                 if verbose:
                     print('        Archive downloaded successfully')
             if exists(archive):

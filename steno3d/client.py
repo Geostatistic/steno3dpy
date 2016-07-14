@@ -72,8 +72,13 @@ Oh no! We could not connect to the Steno3D server.
 
 Please ensure that you are:
 
-1) connected to the Internet!
+1) Connected to the Internet!
 2) Can connect to Steno3D on  https://steno3d.com
+
+If you are getting an InsecurePlatformWarning try:
+
+1) Upgrading to Python 2.7.9 or above
+2) or `pip install requests[security]`
 
 If the issue persists please:
 

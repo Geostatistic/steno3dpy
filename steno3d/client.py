@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.5'
+__version__ = '0.1.7'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -72,8 +72,13 @@ Oh no! We could not connect to the Steno3D server.
 
 Please ensure that you are:
 
-1) connected to the Internet!
-2) Can connect to Steno3D on  https://steno3d.com
+1) Connected to the Internet
+2) Can connect to Steno3D at https://steno3d.com
+
+If you are getting an InsecurePlatformWarning try:
+
+1) Upgrading to Python 2.7.9 or above
+2) or `pip install requests[security]`
 
 If the issue persists please:
 
@@ -113,6 +118,7 @@ class _Comms(object):
     def __init__(self):
         self.user = User()
         self._base_url = PRODUCTION_BASE_URL
+        self._hard_devel_key = None
 
     @property
     def host(self):
@@ -230,7 +236,8 @@ class _Comms(object):
                 self._hard_devel_key = devel_key
             else:
                 self.devel_key = devel_key
-        if ((skip_keychain and self._hard_devel_key is None) or
+        if ((skip_keychain and
+             getattr(self, '_hard_devel_key', None) is None) or
                 self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:

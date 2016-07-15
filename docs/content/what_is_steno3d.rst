@@ -7,7 +7,7 @@ What is Steno3D
 
 Steno3D_ is designed for you to explore and share your 3D data. Below is a
 visual overview of this library. An interactive tutorial is also available
-online as a `Jupyter notebook <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/2.%20Steno3D%20Resources.ipynb>`_
+online as a `Jupyter notebook <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
 
 .. TODO: structure image and some explanation
 
@@ -32,7 +32,7 @@ resources at once.
 Resources
 =========
 
-Within Steno3D_, any object that can be created and uploaded is a resource.
+Within Steno3D, any object that can be created and uploaded is a resource.
 This includes basic component structures such as data, meshes, and textures as
 well as more complex objects like points, lines, surfaces, and volumes.
 Once in the database, resources are static.

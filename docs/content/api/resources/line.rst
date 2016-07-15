@@ -7,6 +7,10 @@ Line
     :width: 80%
     :align: center
 
+Steno3D Lines are 1D resources. The steps to construct the line resource
+pictured above can be found online in the
+`example notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_.
+
 .. autoclass:: steno3d.line.Line
 
 Meshes

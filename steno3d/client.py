@@ -257,27 +257,20 @@ class _Comms(object):
                 current_version='Error: ' + resp_json['reason']
             ))
         # Set devel key next
-        if devel_key is not None:
-            if skip_keychain:
-                self._hard_devel_key = devel_key
-            else:
-                self.devel_key = devel_key
-        if ((skip_keychain and
-             getattr(self, '_hard_devel_key', None) is None) or
-                self.devel_key is None):
+        if devel_key is None and (skip_keychain or self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:
                 devel_key = raw_input(DEVKEY_PROMPT)
             except NameError:
                 devel_key = input(DEVKEY_PROMPT)
-            split_key = devel_key.split('//')
-            if len(split_key) is not 2 or len(split_key[1]) is not 36:
-                self.devel_key = None
-                raise Exception(BAD_API_KEY.format(base_url=self.base_url))
-            if skip_keychain:
-                self._hard_devel_key = devel_key
-            else:
-                self.devel_key = devel_key
+        split_key = devel_key.split('//')
+        if len(split_key) is not 2 or len(split_key[1]) is not 36:
+            self.devel_key = None
+            raise Exception(BAD_API_KEY.format(base_url=self.base_url))
+        if skip_keychain:
+            self._hard_devel_key = devel_key
+        else:
+            self.devel_key = devel_key
         try:
             resp = requests.get(
                 self.url + 'me',

@@ -72,8 +72,8 @@ Oh no! We could not connect to the Steno3D server.
 
 Please ensure that you are:
 
-1) Connected to the Internet!
-2) Can connect to Steno3D on  https://steno3d.com
+1) Connected to the Internet
+2) Can connect to Steno3D at https://steno3d.com
 
 If you are getting an InsecurePlatformWarning try:
 

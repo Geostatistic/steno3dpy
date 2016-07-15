@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'

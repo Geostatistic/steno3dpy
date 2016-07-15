@@ -264,7 +264,7 @@ class _Comms(object):
             if resp.status_code is not 200:
                 self.logout()
                 raise Exception(LOGIN_FAILED)
-            self.user._login(resp.json())
+            self.user.login(resp.json())
         # Success
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
@@ -275,7 +275,7 @@ class _Comms(object):
     def logout(self):
         """Logout current user and remove API key from keyring"""
         self.devel_key = None
-        self.user._logout()
+        self.user.logout()
 
 
 Comms = _Comms()

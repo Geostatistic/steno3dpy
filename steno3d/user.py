@@ -40,7 +40,7 @@ class User(properties.PropertyClass):
             setattr(self, '_p_' + prop, pre)
 
 
-    def _login(self, login_json):
+    def login(self, login_json):
         setattr(self, '_p_username', login_json['uid'])
         setattr(self, '_p_email', login_json['email'])
         setattr(self, '_p_name', login_json['name'])
@@ -48,9 +48,18 @@ class User(properties.PropertyClass):
         setattr(self, '_p_affiliation', login_json['affiliation'])
         setattr(self, '_p_location', login_json['location'])
 
+    def logout(self):
+        setattr(self, '_p_username', None)
+        setattr(self, '_p_email', None)
+        setattr(self, '_p_name', None)
+        setattr(self, '_p_url', None)
+        setattr(self, '_p_affiliation', None)
+        setattr(self, '_p_location', None)
+
+
     @property
     def logged_in(self):
-        return True
+        return self.username is not None
 
 
 

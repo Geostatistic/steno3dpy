@@ -214,8 +214,9 @@ class _Comms(object):
         """
         # Check user
         if getattr(self, '_user', None) is not None:
-            raise Exception('You are already logged in. To log in as a '
-                            'different user please `steno3d.logout()` first.')
+            print('You are already logged in. To log in as a '
+                  'different user please `steno3d.logout()` first.')
+            return
         if not skip_keychain:
             try:
                 keyring.get_password('steno3d', self.host)
@@ -263,14 +264,15 @@ class _Comms(object):
                 devel_key = raw_input(DEVKEY_PROMPT)
             except NameError:
                 devel_key = input(DEVKEY_PROMPT)
-        split_key = devel_key.split('//')
-        if len(split_key) is not 2 or len(split_key[1]) is not 36:
-            self.devel_key = None
-            raise Exception(BAD_API_KEY.format(base_url=self.base_url))
-        if skip_keychain:
-            self._hard_devel_key = devel_key
-        else:
-            self.devel_key = devel_key
+        if devel_key is not None:
+            split_key = devel_key.split('//')
+            if len(split_key) is not 2 or len(split_key[1]) is not 36:
+                self.devel_key = None
+                raise Exception(BAD_API_KEY.format(base_url=self.base_url))
+            if skip_keychain:
+                self._hard_devel_key = devel_key
+            else:
+                self.devel_key = devel_key
         try:
             resp = requests.get(
                 self.url + 'me',

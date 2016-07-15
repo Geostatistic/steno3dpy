@@ -47,7 +47,7 @@ A First Project
 ---------------
 
 Let's get started using Steno3D. The following demo project is available
-`online in a Jupyter notebook, no installation required <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/>`_.
+`online in a Jupyter notebook at mybinder.org, no installation required <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_.
 
 Here, we will create a public project containing a surface, upload it, and explore it with Steno3D!
 

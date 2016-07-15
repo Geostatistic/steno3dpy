@@ -9,7 +9,7 @@ Volume
 
 Steno3D Volumes are 3D resources. The steps to construct the volume resource
 pictured above can be found online in the
-`example notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks/>`_.
+`example notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_.
 
 .. autoclass:: steno3d.volume.Volume
 

@@ -26,15 +26,11 @@ PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
 SLEEP_TIME = .75
 
-WELCOME_HEADER = """
-
-Welcome to the Python client library for Steno3D!
-
-"""
-
 DEVKEY_PROMPT = "If you have a Steno3D developer key, please enter it here > "
 
 WELCOME_MESSAGE = """
+
+Welcome to the Python client library for Steno3D!
 
 If you do not have a Steno3D developer key, you need to request
 one from the Steno3D website in order to access the API. Please
@@ -53,9 +49,8 @@ prompt by calling steno3d.login().
 
 LOGIN_FAILED = """
 
-Oh no! We could not log you in.
-
-The API developer key that you provided could not be validated. You could:
+Oh no! We could not log you in. The API developer key that you provided
+could not be validated. You could:
 
 1) Clear your keychain with `steno3d.logout()` and try again
 2) Restart your Python kernel and try again
@@ -68,22 +63,15 @@ The API developer key that you provided could not be validated. You could:
 
 NOT_CONNECTED = """
 
-Oh no! We could not connect to the Steno3D server.
-
-Please ensure that you are:
+Oh no! We could not connect to the Steno3D server. Please ensure that you are:
 
 1) Connected to the Internet
 2) Can connect to Steno3D at https://steno3d.com
-
-If you are getting an InsecurePlatformWarning try:
-
-1) Upgrading to Python 2.7.9 or above
-2) or `pip install requests[security]`
-
-If the issue persists please:
-
-1) Ask for <help@steno3d.com>
-2) Open an issue https://github.com/3ptscience/steno3dpy/issues
+3) If you are getting an InsecurePlatformWarning while using pip try:
+    a) Upgrading to Python 2.7.9 or above
+    b) Or `pip install --upgrade requests[security]`
+4) Ask for <help@steno3d.com>
+5) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """
 
@@ -105,6 +93,20 @@ Your version of steno3d is out of date.
 {current_version}
 
 Please update steno3d with `pip install --upgrade steno3d`.
+
+"""
+
+KEYRING_ERROR = """
+
+Unable to access keychain. Proceeding to login with `skip_keychain=True`.
+You will need to reenter your developer API key every time you restart
+the kernel. This is expected for the online notebooks. However, if you
+are getting this message on your own computer and would like to set up
+keychain access you can
+
+1) Try installing one of the recommended keyring backends
+   listed at https://pypi.python.org/pypi/keyring
+2) Or you can try `pip install keyrings.alt`
 
 """
 
@@ -214,10 +216,7 @@ class _Comms(object):
             try:
                 keyring.get_password('steno3d', self.host)
             except RuntimeError:
-                print('Unable to access keychain. Proceeding to login with '
-                      '`skip_keychain=True`.\nYou will need to '
-                      'reenter your developer API key every time you '
-                      'restart the kernel.')
+                print(KEYRING_ERROR)
                 self.login(devel_key, True, endpoint)
                 return
         if endpoint is not None:
@@ -264,9 +263,9 @@ class _Comms(object):
                 self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:
-                devel_key = raw_input(WELCOME_HEADER + DEVKEY_PROMPT)
+                devel_key = raw_input(DEVKEY_PROMPT)
             except NameError:
-                devel_key = input(WELCOME_HEADER + DEVKEY_PROMPT)
+                devel_key = input(DEVKEY_PROMPT)
             split_key = devel_key.split('//')
             if len(split_key) is not 2 or len(split_key[1]) is not 36:
                 self.devel_key = None

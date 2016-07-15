@@ -29,11 +29,11 @@ Explore and collaborate on your 3D data using Steno3D_.
 
 |
 
-The Steno3D_ library is designed for creating, importing, and uploading your
+The Steno3D library is designed for creating, importing, and uploading your
 data so that you can explore it in 3D. Data can be points, lines, surfaces, or
 volumes. Check out the :ref:`quickstart` to explore
 examples, or try the `online notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
-to start using Steno3D_ yourself.
+to start using Steno3D yourself.
 
 .. image:: /images/steno3dpy_screenshot.png
     :width: 100%

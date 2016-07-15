@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -72,8 +72,13 @@ Oh no! We could not connect to the Steno3D server.
 
 Please ensure that you are:
 
-1) connected to the Internet!
-2) Can connect to Steno3D on  https://steno3d.com
+1) Connected to the Internet
+2) Can connect to Steno3D at https://steno3d.com
+
+If you are getting an InsecurePlatformWarning try:
+
+1) Upgrading to Python 2.7.9 or above
+2) or `pip install requests[security]`
 
 If the issue persists please:
 

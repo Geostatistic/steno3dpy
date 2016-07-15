@@ -212,6 +212,10 @@ class _Comms(object):
                             keychain
             endpoint      - target site, default is steno3d.com
         """
+        # Check user
+        if getattr(self, '_user', None) is not None:
+            raise Exception('You are already logged in. To log in as a '
+                            'different user please `steno3d.logout()` first.')
         if not skip_keychain:
             try:
                 keyring.get_password('steno3d', self.host)
@@ -274,19 +278,17 @@ class _Comms(object):
                 self._hard_devel_key = devel_key
             else:
                 self.devel_key = devel_key
-        # Check user
-        if getattr(self, '_user', None) is None:
-            try:
-                resp = requests.get(
-                    self.url + 'me',
-                    headers={'sshKey': self.devel_key}
-                )
-            except requests.ConnectionError:
-                raise Exception(NOT_CONNECTED)
-            if resp.status_code is not 200:
-                self.devel_key = None
-                raise Exception(LOGIN_FAILED)
-            self._user = resp.json()
+        try:
+            resp = requests.get(
+                self.url + 'me',
+                headers={'sshKey': self.devel_key}
+            )
+        except requests.ConnectionError:
+            raise Exception(NOT_CONNECTED)
+        if resp.status_code is not 200:
+            self.devel_key = None
+            raise Exception(LOGIN_FAILED)
+        self._user = resp.json()
         # Success
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(

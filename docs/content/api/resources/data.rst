@@ -17,7 +17,10 @@ the surface contains a mesh with 5 vertices.
     >> ...
     >> my_surface = steno3d.Surface(...)
     >> ...
-    >> my_data = steno3d.DataArray([0.0, 1.0, 2.0, 3.0, 4.0])
+    >> my_data = steno3d.DataArray(
+           title='Six Numbers',
+           array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+       )
     >> my_surface.data = dict(
            location='N',
            data=my_data

@@ -200,7 +200,7 @@ and share the project on `steno3d.com <https://steno3d.com>`_.
 
 .. code:: python
 
-    >> print(proj.url)
+    >> print(my_proj.url)
 
 
 .. _try_steno3d:

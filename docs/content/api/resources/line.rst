@@ -34,10 +34,10 @@ containing location (either nodes/vertices, 'N', or cell centers/segments,
            title='Six Numbers',
            array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
        )
-    >> my_line.data = dict(
+    >> my_line.data = [dict(
            location='N',
            data=my_data
-       )
+       )]
 
 Under the surface, this dictionary becomes a `_LineBinder`.
 

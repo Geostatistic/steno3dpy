@@ -154,10 +154,10 @@ You may want to put data on the mesh. In this case, we assign topography
            title='Sinc function topography',
            array=my_mesh.Z
        )
-    >> my_surf.data = dict(
+    >> my_surf.data = [dict(
            location='N',
            data=my_topo_data
-       )
+       )]
 
 
 .. _first_project_upload:

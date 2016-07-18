@@ -100,9 +100,11 @@ We start by creating a project
 
 .. code:: python
 
-    >> my_proj = steno3d.Project(title='Demo Project',
-                                 description='My first project',
-                                 public=True)
+    >> my_proj = steno3d.Project(
+           title='Demo Project',
+           description='My first project',
+           public=True
+       )
 
 Here, we will create a topographic surface of a `sinc function <https://en.wikipedia.org/wiki/Sinc_function>`_. We will
 use `numpy <http://docs.scipy.org/doc/numpy/reference/>`_ to do this.
@@ -118,9 +120,11 @@ Next, we define our x and y coordinates to make the mesh
 
     >> x = np.linspace(-100, 100., num=100.)
     >> y = np.linspace(-100., 100., num=100.)
-    >> my_mesh = steno3d.Mesh2DGrid(h1=np.diff(x),
-                                    h2=np.diff(y),
-                                    x0=np.r_[-100.,-100.,0.])
+    >> my_mesh = steno3d.Mesh2DGrid(
+           h1=np.diff(x),
+           h2=np.diff(y),
+           x0=np.r_[-100.,-100.,0.]
+       )
 
 and define the Z vertex topography of the mesh.
 
@@ -134,8 +138,10 @@ Right now, we have a 2D mesh. Let's create a surface with this mesh geometry.
 
 .. code:: python
 
-    >> my_surf = steno3d.Surface(project=my_proj,
-                                 mesh=my_mesh)
+    >> my_surf = steno3d.Surface(
+           project=my_proj,
+           mesh=my_mesh
+       )
     >> my_surf.title = 'Sinc Surface'
     >> my_surf.description = '3D rendering of sinc function in Steno3D'
 
@@ -144,8 +150,14 @@ You may want to put data on the mesh. In this case, we assign topography
 
 .. code:: python
 
-    >> my_surf.data = dict(location='N',
-                           data=my_mesh.Z)
+    >> my_topo_data = steno3d.DataArray(
+           title='Sinc function topography',
+           array=my_mesh.Z
+       )
+    >> my_surf.data = dict(
+           location='N',
+           data=my_topo_data
+       )
 
 
 .. _first_project_upload:

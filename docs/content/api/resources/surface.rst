@@ -35,10 +35,10 @@ and data, a :ref:`DataArray <resources_data>`.
            title='Six Numbers',
            array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
        )
-    >> my_surf.data = dict(
+    >> my_surf.data = [dict(
            location='N',
            data=my_data
-       )
+       )]
 
 Under the surface, this dictionary becomes a `_SurfaceBinder`.
 

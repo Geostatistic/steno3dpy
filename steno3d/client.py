@@ -107,7 +107,7 @@ Please update steno3d with `pip install --upgrade steno3d`.
 
 ALREADY_LOGGED_IN = """
 You are already logged in as @{user}. To log in as a different user
-please `steno3d.logout()` first, then login specifying a different
+please `steno3d.logout()`, then login specifying a different
 username or API developer key.
 
 """

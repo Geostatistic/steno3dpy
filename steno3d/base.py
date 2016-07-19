@@ -39,8 +39,8 @@ class BaseResource(UserContent):
 
 
     def _validate_file_size(self, name):
-        if Comms.get_user() is not None:
-            file_limit = Comms.get_user().file_size_limit
+        if Comms.user.logged_in:
+            file_limit = Comms.user.file_size_limit
             if self.nbytes(name) > file_limit:
                 raise ValueError(
                     '{name} file size ({file} bytes) exceeds limit: '

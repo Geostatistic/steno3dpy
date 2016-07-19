@@ -30,7 +30,6 @@ setup(
                         'future',
                         'six',
                         'requests',
-                        'keyring',
                         'properties>=0.1.5',
                        ],
     author = '3point Science',

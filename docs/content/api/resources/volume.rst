@@ -21,10 +21,45 @@ Meshes
 Data
 ----
 
+The intended method of binding data to volumes is simply using a dictionary
+containing location (cell centers, 'CC', is the only available location for
+volumes) and data, a :ref:`DataArray <resources_data>`.
+
+.. code:: python
+
+    >> ...
+    >> my_volume = steno3d.Volume(...)
+    >> ...
+    >> my_data = steno3d.DataArray(
+           title='Six Numbers',
+           array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+       )
+    >> my_volume.data = [dict(
+           location='N',
+           data=my_data
+       )]
+
+Under the surface, this dictionary becomes a `_VolumeBinder`.
+
 .. autoclass:: steno3d.volume._VolumeBinder
 
 Options
 -------
+
+Similar to data, options are intended to be constructed simply as a
+dictionary.
+
+.. code:: python
+
+    >> ...
+    >> my_volume = steno3d.Volume(...)
+    >> ...
+    >> my_volume.opts = dict(
+           color='red',
+           opacity=0.75
+       )
+
+This dictionary then becomes `_VolumeOptions`.
 
 .. autoclass:: steno3d.volume._VolumeOptions
 .. autoclass:: steno3d.volume._Mesh3DOptions

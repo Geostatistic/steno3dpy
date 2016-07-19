@@ -7,8 +7,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import str
 from builtins import input
+from builtins import str
 from functools import wraps
 from os import mkdir
 from os.path import expanduser
@@ -106,8 +106,7 @@ class _Comms(object):
     """
 
     def __init__(self):
-        self._user = None
-        self._me = None
+        self.user = User()
         self._base_url = PRODUCTION_BASE_URL
         self._hard_devel_key = None
 
@@ -168,32 +167,11 @@ class _Comms(object):
             # Happens when the key or keychain does not exist
             pass
 
-    def get_user(self):
-        if getattr(self, '_me', None) is not None:
-            return self._me
-        elif getattr(self, '_user', None) is None:
-            return None
-        else:
-            username = self._user['uid']
-            email = self._user['email']
-            name = self._user['name']
-            url = self._user['url']
-            affiliation = self._user['affiliation']
-            location = self._user['location']
-            self._me = User(
-                username=username if username is not None else 'None',
-                email=email if email is not None else 'None',
-                name=name if name is not None else 'None',
-                url=url if url is not None else 'None',
-                affiliation=affiliation if affiliation is not None else 'None',
-                location=location if location is not None else 'None',
-            )
-            return self._me
 
     def login(self, devel_key=None, credentials_file=None,
               save_credentials=True, endpoint=None):
         """Login to steno3d.com to allow uploading resources. Devel keys
-        will be saved locally, unless save_credentials=False,
+        will be saved locally, unless save_credentials=False.
 
         Optional arguments:
             devel_key        - API key from steno3d.com. Prompt will appear if
@@ -206,8 +184,9 @@ class _Comms(object):
                                to the credentials file
             endpoint         - Target site, default is steno3d.com
         """
+
         # Check user
-        if getattr(self, '_user', None) is not None:
+        if self.user.logged_in:
             print('You are already logged in as @{user}. To log in as a '
                   'different user please `steno3d.logout()` first, then '
                   'steno3d.login("other_user") or '
@@ -248,6 +227,7 @@ class _Comms(object):
                 current_version='Error: ' + resp_json['reason']
             ))
 
+        # Determine credentials file
         if credentials_file is None:
             credentials_file = sep.join([expanduser('~'),
                                          '.steno3d_client',
@@ -285,29 +265,30 @@ class _Comms(object):
                 self._hard_devel_key = devel_key
             else:
                 self.devel_key = devel_key
-        try:
-            resp = requests.get(
-                self.url + 'me',
-                headers={'sshKey': self.devel_key}
-            )
-        except requests.ConnectionError:
-            raise Exception(NOT_CONNECTED)
-        if resp.status_code is not 200:
-            self.devel_key = None
-            raise Exception(LOGIN_FAILED)
-        self._user = resp.json()
+        # Check user
+        if not self.user.logged_in:
+            try:
+                resp = requests.get(
+                    self.url + 'me',
+                    headers={'sshKey': self.devel_key}
+                )
+            except requests.ConnectionError:
+                raise Exception(NOT_CONNECTED)
+            if resp.status_code is not 200:
+                self.logout()
+                raise Exception(LOGIN_FAILED)
+            self.user.login(resp.json())
         # Success
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
-                name=self.get_user().username
+                name=self.user.username
             )
         )
 
     def logout(self):
         """Logout current user and remove API key from keyring"""
         self.devel_key = None
-        self._me = None
-        self._user = None
+        self.user.logout()
 
 
 Comms = _Comms()
@@ -317,7 +298,7 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(self, *args, **kwargs):
-        if Comms.get_user() is None:
+        if not Comms.user.logged_in:
             print("Please login: 'steno3d.login()'")
         else:
             return func(self, *args, **kwargs)

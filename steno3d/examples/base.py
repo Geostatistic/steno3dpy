@@ -182,20 +182,21 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
                     if filename is not None:
                         return destination_file
                 except KeyError:
-                    raise IOError('Required file(s) not found in '
-                                  'archive. Archive file may be out of '
-                                  'date. Please delete archive and '
-                                  '{exclass}.fetch_data() again: '
-                                  '{archfile}'.format(
-                                    exclass=cls.example_name,
-                                    archfile=archive
-                                  ))
+                    raise IOError(
+                        """Required file(s) not found in archive. Archive file
+                        may be out of date. Please delete archive and
+                        {exclass}.fetch_data() again: {archfile}""".format(
+                            exclass=cls.example_name,
+                            archfile=archive
+                        )
+                    )
                 continue
-            raise IOError('Required file(s) not found - please call '
-                          '{exclass}.fetch_data() to download and '
-                          'save to a default folder in your home '
-                          'directory or {exclass}.'
-                          'fetch_data(directory=your_local_directory) '
-                          'to set an alternative local directory.'.format(
-                            exclass=cls.example_name
-                          ))
+            raise IOError(
+                """Required file(s) not found - please call
+                {exclass}.fetch_data() to download and save to a default
+                folder in your home directory or
+                {exclass}.fetch_data(directory=your_local_directory)
+                to set an alternative local directory.""".format(
+                    exclass=cls.example_name
+                )
+            )

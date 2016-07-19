@@ -10,9 +10,12 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import input
 from functools import wraps
+from os import mkdir
+from os.path import expanduser
+from os.path import realpath
+from os.path import sep
 from time import sleep
 
-import keyring
 import requests
 from six import string_types
 from six.moves.urllib.parse import urlparse
@@ -95,21 +98,6 @@ Your version of steno3d is out of date.
 Please update steno3d with `pip install --upgrade steno3d`.
 
 """
-
-KEYRING_ERROR = """
-
-Unable to access keychain. Proceeding to login with `skip_keychain=True`.
-You will need to reenter your developer API key every time you restart
-the kernel. This is expected for the online notebooks. However, if you
-are getting this message on your own computer and would like to set up
-keychain access you can
-
-1) Try installing one of the recommended keyring backends
-   listed at https://pypi.python.org/pypi/keyring
-2) Or you can try `pip install keyrings.alt`
-
-"""
-
 
 
 class _Comms(object):
@@ -202,30 +190,32 @@ class _Comms(object):
             )
             return self._me
 
-    def login(self, devel_key=None, skip_keychain=False, endpoint=None):
-        """Login to steno3d.com to allow uploading resources
+    def login(self, devel_key=None, credentials_file=None,
+              save_credentials=True, endpoint=None):
+        """Login to steno3d.com to allow uploading resources. Devel keys
+        will be saved locally, unless save_credentials=False,
 
         Optional arguments:
-            devel_key     - API key from steno3d.com. Prompt will appear if
-                            this is not provided or saved on the keychain
-            skip_keychain - Prevents loading or saving API key on the
-                            keychain
-            endpoint      - target site, default is steno3d.com
+            devel_key        - API key from steno3d.com. Prompt will appear if
+                               this is not provided or saved on the keychain.
+                               This may also be a user ID only if their devel
+                               key is saved in the credentials file
+            credentials_file - Local file where devel keys are stored.
+                               Default: ~/.steno3d_client/credentials
+            save_credentials - If true, devel key will be written locally
+                               to the credentials file
+            endpoint         - Target site, default is steno3d.com
         """
         # Check user
         if getattr(self, '_user', None) is not None:
-            print('You are already logged in. To log in as a '
-                  'different user please `steno3d.logout()` first.')
+            print('You are already logged in as @{user}. To log in as a '
+                  'different user please `steno3d.logout()` first, then '
+                  'steno3d.login("other_user") or '
+                  'steno3d.login("NEW-UNSAVED-DEVEL-KEY") '.format(
+                    user=self.get_user().username
+                  ))
             return
-        if not skip_keychain:
-            try:
-                keyring.get_password('steno3d', self.host)
-            except RuntimeError:
-                print(KEYRING_ERROR)
-                self.login(devel_key, True, endpoint)
-                return
-        if endpoint is not None:
-            self.base_url = str(endpoint)
+
         # Check client version first.
         try:
             resp = requests.post(
@@ -257,6 +247,28 @@ class _Comms(object):
                 your_version='Your version: ' + __version__,
                 current_version='Error: ' + resp_json['reason']
             ))
+
+        if credentials_file is None:
+            credentials_file = sep.join([expanduser('~'),
+                                         '.steno3d_client',
+                                         'credentials'])
+        elif isinstance(credentials_file, string_types):
+            credentials_file = realpath(expanduser(credentials_file))
+        else:
+            raise ValueError('credentials_file: must be the name of a file')
+
+
+
+        if not save_credentials:
+            try:
+                keyring.get_password('steno3d', self.host)
+            except RuntimeError:
+                print(KEYRING_ERROR)
+                self.login(devel_key, True, endpoint)
+                return
+        if endpoint is not None:
+            self.base_url = str(endpoint)
+
         # Set devel key next
         if devel_key is None and (skip_keychain or self.devel_key is None):
             print(WELCOME_MESSAGE.format(base_url=self.base_url))

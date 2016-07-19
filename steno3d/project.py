@@ -146,8 +146,8 @@ class Project(UserContent):
     def url(self):
         """steno3d.com url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
-            raise Exception('Project not uploaded: Please upload() '
-                            'before accessing the URL.')
+            print('Project not uploaded: Please upload() '
+                  'before accessing the URL.')
         return self._url
 
 

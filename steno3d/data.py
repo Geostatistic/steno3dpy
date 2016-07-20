@@ -22,6 +22,16 @@ class DataArray(BaseData):
         required=True
     )
 
+    order = properties.String(
+        'Data array order, for data on grid meshes',
+        choices={
+            'C': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
+            'F': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
+        },
+        default='C',
+        lowercase=True
+    )
+
     def __init__(self, array=None, **kwargs):
         super().__init__(**kwargs)
         if array is not None:
@@ -48,6 +58,13 @@ class DataArray(BaseData):
         """Check if content is built correctly"""
         self._validate_file_size('array')
         return True
+
+    def _get_dirty_data(self, force=False):
+        datadict = super()._get_dirty_data(force)
+        dirty = self._dirty_props
+        if ('order' in dirty) or force:
+            datadict['order'] = self.order
+        return datadict
 
     def _get_dirty_files(self, force=False):
         dirty = self._dirty_props

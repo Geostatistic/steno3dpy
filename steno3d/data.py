@@ -28,7 +28,8 @@ class DataArray(BaseData):
             'C': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
             'F': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
         },
-        default='C'
+        default='C',
+        lowercase=True
     )
 
     def __init__(self, array=None, **kwargs):

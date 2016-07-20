@@ -280,7 +280,8 @@ class _Comms(object):
             try:
                 resp = requests.get(
                     self.url + 'me',
-                    headers={'sshKey': self.devel_key}
+                    headers={'sshKey': self.devel_key,
+                             'client': 'steno3dpy:{}'.format(__version__)}
                 )
             except requests.ConnectionError:
                 raise Exception(NOT_CONNECTED)
@@ -350,7 +351,8 @@ def upload(request_fcn, url, data, files):
         Comms.url + url,
         data=data,
         files=filedict,
-        headers={'sshKey': Comms.devel_key}
+        headers={'sshKey': Comms.devel_key,
+                 'client': 'steno3dpy:{}'.format(__version__)}
     )
     for key in files:
         files[key].file.close()

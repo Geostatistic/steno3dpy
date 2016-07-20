@@ -7,12 +7,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import str
 from builtins import input
+from builtins import str
 from functools import wraps
+from os import mkdir
+from os import path
 from time import sleep
 
-import keyring
 import requests
 from six import string_types
 from six.moves.urllib.parse import urlparse
@@ -26,15 +27,11 @@ PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
 SLEEP_TIME = .75
 
-WELCOME_HEADER = """
-
-Welcome to the Python client library for Steno3D!
-
-"""
-
 DEVKEY_PROMPT = "If you have a Steno3D developer key, please enter it here > "
 
 WELCOME_MESSAGE = """
+
+Welcome to the Python client library for Steno3D!
 
 If you do not have a Steno3D developer key, you need to request
 one from the Steno3D website in order to access the API. Please
@@ -53,44 +50,44 @@ prompt by calling steno3d.login().
 
 LOGIN_FAILED = """
 
-Oh no! We could not log you in.
+Oh no! We could not log you in. The API developer key that you provided
+could not be validated. If your current API key has been lost or
+invalidated, please request a new one at:
 
-The API developer key that you provided could not be validated. You could:
+{base_url}settings/developer
 
-1) Clear your keychain with `steno3d.logout()` and try again
-2) Restart your Python kernel and try again
-3) Check that you have the correct API key
-4) Update steno3d with `pip install --upgrade steno3d`
-5) Ask for <help@steno3d.com>
-6) Open an issue https://github.com/3ptscience/steno3dpy/issues
+Then, try `steno3d.login('YOUR-NEW-DEVEL-KEY')`
+
+If the problem persists:
+
+1) Restart your Python kernel and try again
+2) Update steno3d with `pip install --upgrade steno3d`
+3) Ask for <help@steno3d.com>
+4) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """
 
 NOT_CONNECTED = """
 
-Oh no! We could not connect to the Steno3D server.
-
-Please ensure that you are:
+Oh no! We could not connect to the Steno3D server. Please ensure that you are:
 
 1) Connected to the Internet
 2) Can connect to Steno3D at https://steno3d.com
-
-If you are getting an InsecurePlatformWarning try:
-
-1) Upgrading to Python 2.7.9 or above
-2) or `pip install requests[security]`
-
-If the issue persists please:
-
-1) Ask for <help@steno3d.com>
-2) Open an issue https://github.com/3ptscience/steno3dpy/issues
+3) If you are getting an InsecurePlatformWarning while using pip try:
+    a) Upgrading to Python 2.7.9 or above
+    b) Or `pip install --upgrade requests[security]`
+4) Ask for <help@steno3d.com>
+5) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """
 
 BAD_API_KEY = """
 
-The API developer key should be your username followed by '//' then 36
-characters. If you have not requested an API key or if you have lost
+Oh no! Your API developer key format is incorrect.
+
+It should be your username followed by '//' then 36 characters.
+You may also use only your username if you have access to local saved
+credentials. If you have not requested an API key or if you have lost
 your API key, please request a new one at:
 
 {base_url}settings/developer
@@ -108,6 +105,13 @@ Please update steno3d with `pip install --upgrade steno3d`.
 
 """
 
+ALREADY_LOGGED_IN = """
+You are already logged in as @{user}. To log in as a different user
+please `steno3d.logout()`, then login specifying a different
+username or API developer key.
+
+"""
+
 
 
 class _Comms(object):
@@ -116,8 +120,7 @@ class _Comms(object):
     """
 
     def __init__(self):
-        self._user = None
-        self._me = None
+        self.user = User()
         self._base_url = PRODUCTION_BASE_URL
         self._hard_devel_key = None
 
@@ -151,78 +154,113 @@ class _Comms(object):
 
         self._base_url = value
 
-    @property
-    def devel_key(self):
-        """developer key acquired from steno3d.com"""
-        if getattr(self, '_hard_devel_key', None) is not None:
-            return self._hard_devel_key
+    def login(self, devel_key=None, credentials_file=None,
+              skip_credentials=False, endpoint=None):
+        """Login to steno3d.com to allow uploading resources. To obtain an
+        API developer key, you need a Steno3D account:
 
-        key = keyring.get_password('steno3d', self.host)
-        if key in {None, 'None'}:
-            return None
-        return str(key)
+        https://steno3d.com/signup
 
-    @devel_key.setter
-    def devel_key(self, value):
-        if value is None:
-            del self.devel_key
-        else:
-            keyring.set_password('steno3d', self.host, value)
+        Then, you can request a devel key:
 
-    @devel_key.deleter
-    def devel_key(self):
-        self._hard_devel_key = None
-        try:
-            keyring.delete_password('steno3d', self.host)
-        except (keyring.errors.PasswordDeleteError, RuntimeError):
-            # Happens when the key or keychain does not exist
-            pass
+        https://steno3d.com/settings/developer
 
-    def get_user(self):
-        if getattr(self, '_me', None) is not None:
-            return self._me
-        elif getattr(self, '_user', None) is None:
-            return None
-        else:
-            username = self._user['uid']
-            email = self._user['email']
-            name = self._user['name']
-            url = self._user['url']
-            affiliation = self._user['affiliation']
-            location = self._user['location']
-            self._me = User(
-                username=username if username is not None else 'None',
-                email=email if email is not None else 'None',
-                name=name if name is not None else 'None',
-                url=url if url is not None else 'None',
-                affiliation=affiliation if affiliation is not None else 'None',
-                location=location if location is not None else 'None',
-            )
-            return self._me
-
-    def login(self, devel_key=None, skip_keychain=False, endpoint=None):
-        """Login to steno3d.com to allow uploading resources
+        Unless you choose to 'skip_credentials', your API key will be
+        saved locally and read next time you call `steno3d.login()`.
+        You can always login using a different devel key (or username if
+        the corresponding devel key is saved in the credentials file).
 
         Optional arguments:
-            devel_key     - API key from steno3d.com. Prompt will appear if
-                            this is not provided or saved on the keychain
-            skip_keychain - Prevents loading or saving API key on the
-                            keychain
-            endpoint      - target site, default is steno3d.com
+            devel_key        - API key from steno3d.com. Prompt will appear if
+                               this is not provided or saved in credential
+                               file. This may also be a username corresponding
+                               to a devel key saved in the credentials file
+            credentials_file - Local file where devel keys are stored.
+                               (Default: ~/.steno3d_client/credentials)
+            skip_credentials - If False (default), devel key will be read
+                               from and written to local credentials file.
+                               If True, only uses the provided devel key or
+                               prompts for a new key.
+            endpoint         - Target site (Default: steno3d.com)
         """
-        if not skip_keychain:
-            try:
-                keyring.get_password('steno3d', self.host)
-            except RuntimeError:
-                print('Unable to access keychain. Proceeding to login with '
-                      '`skip_keychain=True`.\nYou will need to '
-                      'reenter your developer API key every time you '
-                      'restart the kernel.')
-                self.login(devel_key, True, endpoint)
-                return
+
+        # Check user
+        if self.user.logged_in:
+            print(ALREADY_LOGGED_IN.format(user=self.user.username))
+            return
+
+        # Set endpoint
         if endpoint is not None:
             self.base_url = str(endpoint)
-        # Check client version first.
+
+        # Check client version
+        self._check_version()
+
+        # Assess credential file options.
+        if skip_credentials:
+            self._login_with(devel_key)
+            return
+
+        # Extract credential file
+        if credentials_file is None:
+            credentials_file = path.sep.join([path.expanduser('~'),
+                                              '.steno3d_client',
+                                              'credentials'])
+            cred_dir = path.sep.join(credentials_file.split(path.sep)[:-1])
+            if not path.isdir(cred_dir):
+                mkdir(cred_dir)
+        elif isinstance(credentials_file, string_types):
+            credentials_file = path.realpath(path.expanduser(
+                credentials_file
+            ))
+            cred_dir = path.sep.join(credentials_file.split(path.sep)[:-1])
+        else:
+            raise ValueError('credentials_file: must be the name of a file')
+
+        if not path.isdir(cred_dir):
+            raise ValueError(
+                '{}: credentials file directory must exist'.format(cred_dir)
+            )
+        if path.exists(credentials_file) and not path.isfile(credentials_file):
+            raise ValueError(
+                '{}: credentials file must be a file'.format(credentials_file)
+            )
+        if path.isfile(credentials_file):
+            print('Credentials file found: {}'.format(credentials_file))
+            with open(credentials_file, 'r') as cred:
+                devel_keys = cred.readlines()
+            devel_keys = [dk.strip() for dk in devel_keys
+                          if self.is_key(dk.strip())]
+            usernames = [dk.split('//')[0] for dk in devel_keys]
+        else:
+            print('Creating new credentials file: {}'.format(credentials_file))
+            devel_keys = []
+            usernames = []
+
+        # Get key from credential file
+        if devel_key in usernames:
+            print('Accessing API developer key for @{}'.format(devel_key))
+            devel_key = devel_keys[usernames.index(devel_key)]
+
+        if devel_key is None and len(devel_keys) > 0:
+            print('Accessing API developer key for @{}'.format(usernames[0]))
+            devel_key = devel_keys[0]
+
+        self._login_with(devel_key)
+
+        # Update credential file
+        if self.user.logged_in:
+            updated_devel_keys = [self.user.devel_key]
+            for i, key in enumerate(devel_keys):
+                if (key == self.user.devel_key or
+                        usernames[i] == self.user.username):
+                    continue
+                updated_devel_keys += [key]
+            with open(credentials_file, 'w') as cred:
+                cred.writelines(['{}\n'.format(k) for k in updated_devel_keys])
+
+    def _check_version(self):
+        """Check current Steno3D client version in the database"""
         try:
             resp = requests.post(
                 self.url + 'client/steno3dpy',
@@ -243,63 +281,63 @@ class _Comms(object):
                     current_version='Current version: ' + curr_ver
                 ))
             else:
-                raise Exception(INVALID_VERSION.format(
+                print(INVALID_VERSION.format(
                     your_version='Your version: ' + your_ver,
                     current_version='Required version: ' + curr_ver
                 ))
+                return
         elif resp.status_code == 400:
             resp_json = resp.json()
             print(INVALID_VERSION.format(
                 your_version='Your version: ' + __version__,
                 current_version='Error: ' + resp_json['reason']
             ))
-        # Set devel key next
-        if devel_key is not None:
-            if skip_keychain:
-                self._hard_devel_key = devel_key
-            else:
-                self.devel_key = devel_key
-        if ((skip_keychain and
-             getattr(self, '_hard_devel_key', None) is None) or
-                self.devel_key is None):
+
+    def _login_with(self, devel_key):
+        """Login with devel_key"""
+        if devel_key is None:
             print(WELCOME_MESSAGE.format(base_url=self.base_url))
             try:
-                devel_key = raw_input(WELCOME_HEADER + DEVKEY_PROMPT)
+                devel_key = raw_input(DEVKEY_PROMPT)
             except NameError:
-                devel_key = input(WELCOME_HEADER + DEVKEY_PROMPT)
-            split_key = devel_key.split('//')
-            if len(split_key) is not 2 or len(split_key[1]) is not 36:
-                self.devel_key = None
-                raise Exception(BAD_API_KEY.format(base_url=self.base_url))
-            if skip_keychain:
-                self._hard_devel_key = devel_key
-            else:
-                self.devel_key = devel_key
-        # Check user
-        if getattr(self, '_user', None) is None:
-            try:
-                resp = requests.get(
-                    self.url + 'me',
-                    headers={'sshKey': self.devel_key}
-                )
-            except requests.ConnectionError:
-                raise Exception(NOT_CONNECTED)
-            if resp.status_code is not 200:
-                self.devel_key = None
-                raise Exception(LOGIN_FAILED)
-            self._user = resp.json()
-        # Success
+                devel_key = input(DEVKEY_PROMPT)
+        if not self.is_key(devel_key):
+            print(BAD_API_KEY.format(base_url=self.base_url))
+            return
+        try:
+            resp = requests.get(
+                self.url + 'me',
+                headers={'sshKey': devel_key}
+            )
+        except requests.ConnectionError:
+            print(NOT_CONNECTED)
+            return
+        if resp.status_code is not 200:
+            self.logout()
+            print(LOGIN_FAILED.format(base_url=self.base_url))
+            return
+        self.user.login_with_json(resp.json())
+        self.user.set_key(devel_key)
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
-                name=self.get_user().username
+                name=self.user.username
             )
         )
 
+    @staticmethod
+    def is_key(devel_key):
+        """Checks if devel_key is a valid API key string"""
+        if not isinstance(devel_key, string_types):
+            return False
+        split_key = devel_key.split('//')
+        return len(split_key) == 2 and len(split_key[1]) == 36
+
     def logout(self):
-        """Logout current user and remove API key from keyring"""
-        self.devel_key = None
-        self._me = None
-        self._user = None
+        """Logout current user"""
+        if self.user.logged_in:
+            print('Goodbye, @{}.'.format(self.user.username))
+        self._base_url = PRODUCTION_BASE_URL
+        self.user.logout()
 
 
 Comms = _Comms()
@@ -309,7 +347,7 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(self, *args, **kwargs):
-        if Comms.get_user() is None:
+        if not Comms.user.logged_in:
             print("Please login: 'steno3d.login()'")
         else:
             return func(self, *args, **kwargs)
@@ -350,7 +388,7 @@ def upload(request_fcn, url, data, files):
         Comms.url + url,
         data=data,
         files=filedict,
-        headers={'sshKey': Comms.devel_key}
+        headers={'sshKey': Comms.user.devel_key}
     )
     for key in files:
         files[key].file.close()

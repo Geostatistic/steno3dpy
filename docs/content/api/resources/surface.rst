@@ -42,6 +42,12 @@ and data, a :ref:`DataArray <resources_data>`.
 
 Under the surface, this dictionary becomes a `_SurfaceBinder`.
 
+Binding data to a Surface using Mesh2D requires the data array to
+correspond to mesh vertices or mesh triangles, for node and cell-center data,
+respectively. When binding data to a Surface using Mesh2DGrid, the best way
+to align the data array correctly is first define your data as a (x, y)
+numpy array, then use numpy's flatten() function with default order 'C'.
+
 .. autoclass:: steno3d.surface._SurfaceBinder
 
 Options

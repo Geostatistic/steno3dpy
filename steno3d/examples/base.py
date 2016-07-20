@@ -7,6 +7,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from os import makedirs
 from os import mkdir
 from os.path import exists
 from os.path import expanduser
@@ -106,7 +107,7 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
 
     def data_directory(self):
         """path to directory containing all assets"""
-        return sep.join([expanduser('~'), '.steno3d_python_assets'])
+        return sep.join([expanduser('~'), '.steno3d_client', 'assets'])
 
     def sub_directory(self):
         return self.example_name.lower()
@@ -138,7 +139,7 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
         destination = sep.join([cls.data_directory, cls.sub_directory])
         archive = sep.join([destination, cls.sub_directory + '.zip'])
         if download_if_missing and not exists(cls.data_directory):
-            mkdir(cls.data_directory)
+            makedirs(cls.data_directory)
         if download_if_missing and not exists(destination):
             mkdir(destination)
         if verbose:
@@ -181,20 +182,21 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
                     if filename is not None:
                         return destination_file
                 except KeyError:
-                    raise IOError('Required file(s) not found in '
-                                  'archive. Archive file may be out of '
-                                  'date. Please delete archive and '
-                                  '{exclass}.fetch_data() again: '
-                                  '{archfile}'.format(
-                                    exclass=cls.example_name,
-                                    archfile=archive
-                                  ))
+                    raise IOError(
+                        """Required file(s) not found in archive:
+                        Archive file may be out of date. Please delete archive
+                        and {exclass}.fetch_data() again: {archfile}""".format(
+                            exclass=cls.example_name,
+                            archfile=archive
+                        )
+                    )
                 continue
-            raise IOError('Required file(s) not found - please call '
-                          '{exclass}.fetch_data() to download and '
-                          'save to a default folder in your home '
-                          'directory or {exclass}.'
-                          'fetch_data(directory=your_local_directory) '
-                          'to set an alternative local directory.'.format(
-                            exclass=cls.example_name
-                          ))
+            raise IOError(
+                """Required file(s) not found:
+                Please call {exclass}.fetch_data() to download and
+                save to a default folder in your home directory or
+                {exclass}.fetch_data(directory=your_local_directory)
+                to set an alternative local directory.""".format(
+                    exclass=cls.example_name
+                )
+            )

@@ -82,15 +82,15 @@ class Project(UserContent):
         return True
 
     def _validate_project_size(self):
-        if Comms.get_user() is not None:
-            res_limit = Comms.get_user().project_resource_limit
+        if Comms.user.logged_in:
+            res_limit = Comms.user.project_resource_limit
             if len(self.resources) > res_limit:
                 raise ValueError(
                     'Total number of resources in project ({res}) '
                     'exceeds limit: {lim}'.format(res=len(self.resources),
                                                   lim=res_limit)
                 )
-            size_limit = Comms.get_user().project_size_limit
+            size_limit = Comms.user.project_size_limit
             if self.nbytes() > size_limit:
                 raise ValueError(
                     'Total project size ({file} bytes) exceeds limit: '
@@ -146,8 +146,8 @@ class Project(UserContent):
     def url(self):
         """steno3d.com url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
-            raise Exception('Project not uploaded: Please upload() '
-                            'before accessing the URL.')
+            print('Project not uploaded: Please upload() '
+                  'before accessing the URL.')
         return self._url
 
 

@@ -41,6 +41,10 @@ volumes) and data, a :ref:`DataArray <resources_data>`.
 
 Under the surface, this dictionary becomes a `_VolumeBinder`.
 
+When binding data to a Volume, the best way to align the data array
+correctly is first define your data as a (x, y, z) numpy array, then use
+numpy's flatten() function with default order 'C'.
+
 .. autoclass:: steno3d.volume._VolumeBinder
 
 Options

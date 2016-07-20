@@ -44,7 +44,6 @@ __copyright__ = 'Copyright 2016 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
-get_user = client.Comms.get_user
 Pointer.resolve()
 
 try:

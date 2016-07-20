@@ -415,9 +415,11 @@ class Wolfpass(BaseExample):
                 location='CC',
                 data=DataArray(
                     title=npyfile.split('.')[0],
-                    array=npload(Wolfpass.fetch_data(filename=npyfile,
-                                                     download_if_missing=False,
-                                                     verbose=False))
+                    array=npload(
+                        Wolfpass.fetch_data(filename=npyfile,
+                                            download_if_missing=False,
+                                            verbose=False)
+                    ).flatten()
                 )
             )]
         return raw_data

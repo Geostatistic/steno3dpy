@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 API_SUBPATH = 'api/'
@@ -280,7 +280,8 @@ class _Comms(object):
             try:
                 resp = requests.get(
                     self.url + 'me',
-                    headers={'sshKey': self.devel_key}
+                    headers={'sshKey': self.devel_key,
+                             'client': 'steno3dpy:{}'.format(__version__)}
                 )
             except requests.ConnectionError:
                 raise Exception(NOT_CONNECTED)
@@ -350,7 +351,8 @@ def upload(request_fcn, url, data, files):
         Comms.url + url,
         data=data,
         files=filedict,
-        headers={'sshKey': Comms.devel_key}
+        headers={'sshKey': Comms.devel_key,
+                 'client': 'steno3dpy:{}'.format(__version__)}
     )
     for key in files:
         files[key].file.close()

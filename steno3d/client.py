@@ -308,7 +308,7 @@ class _Comms(object):
             resp = requests.get(
                 self.url + 'me',
                 headers={'sshKey': devel_key,
-                         'client': 'steno3dpy:{}'.format(__version__)}}
+                         'client': 'steno3dpy:{}'.format(__version__)}
             )
         except requests.ConnectionError:
             print(NOT_CONNECTED)

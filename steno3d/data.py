@@ -58,6 +58,13 @@ class DataArray(BaseData):
         self._validate_file_size('array')
         return True
 
+    def _get_dirty_data(self, force=False):
+        datadict = super()._get_dirty_data(force)
+        dirty = self._dirty_props
+        if ('order' in dirty) or force:
+            datadict['order'] = self.order
+        return datadict
+
     def _get_dirty_files(self, force=False):
         dirty = self._dirty_props
         files = dict()

@@ -25,10 +25,10 @@ class DataArray(BaseData):
     order = properties.String(
         'Data array order, for data on grid meshes',
         choices={
-            'C': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
-            'F': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
+            'c': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
+            'f': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
         },
-        default='C',
+        default='c',
         lowercase=True
     )
 

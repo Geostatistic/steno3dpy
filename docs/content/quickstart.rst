@@ -136,9 +136,9 @@ and define the Z vertex topography of the mesh.
 
 .. code:: python
 
-    >> X, Y = np.meshgrid(x,y)
+    >> X, Y = np.meshgrid(x, y, indexing='ij')
     >> Z = topo(X, Y)
-    >> my_mesh.Z = Z.flatten(order = 'C')
+    >> my_mesh.Z = Z.flatten()
 
 Right now, we have a 2D mesh. Let's create a surface with this mesh geometry.
 

@@ -42,10 +42,12 @@ the surface contains a mesh with 9 vertices and 4 faces (ie a 2x2 square grid).
 Mapping data to a mesh is staightforward for unstructured meshes (those defined
 by vertices, segments, triangles, etc); the order of the data array simply
 corresponds to the order of the associated mesh parameter. For grid meshes,
-however, mapping 1D data array to the 2D or 3D grid is not as simple. The
-easiest way to correctly align data is to start with a numpy array that is
-size (x, y) for 2D data or size (x, y, z) for 3D data then use numpy's
-flatten() function with default order 'C'. For in-depth examples
+however, mapping 1D data array to the 2D or 3D grid requires correct ordering.
+The default ordering is C-style, row-major ordering. For one example of
+correctly aligning data, start with a numpy array that is size (x, y) for
+2D data or size (x, y, z) for 3D data then use numpy's flatten() function
+with default order 'C'. Alternatively, you may specify data order='f'.
+This is Fortran- or Matlab-style, column-major ordering. For in-depth examples
 of binding data to resources please refer to the
 `example notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_.
 

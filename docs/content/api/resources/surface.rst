@@ -40,12 +40,12 @@ and data, a :ref:`DataArray <resources_data>`.
            data=my_data
        )]
 
-Under the surface, this dictionary becomes a `_SurfaceBinder`.
+Under the surface, this dictionary becomes a :code:`_SurfaceBinder`.
 
 Binding data to a Surface using Mesh2D requires the data array to
 correspond to mesh vertices or mesh triangles, for node and cell-center data,
 respectively. When binding data to a Surface using Mesh2DGrid, you may specify
-data order; the default is 'c', C-style, row-major ordering, but 'f',
+data order; the default is C-style, row-major ordering, but
 Fortran-style, column-major ordering is also available. For more details
 see the :ref:`DataArray documentation <resources_data>`.
 

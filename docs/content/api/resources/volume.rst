@@ -39,10 +39,10 @@ volumes) and data, a :ref:`DataArray <resources_data>`.
            data=my_data
        )]
 
-Under the surface, this dictionary becomes a `_VolumeBinder`.
+Under the surface, this dictionary becomes a :code:`_VolumeBinder`.
 
 When binding data to a Volume, you may specify
-data order; the default is 'c', C-style, row-major ordering, but 'f',
+data order; the default is C-style, row-major ordering, but
 Fortran-style, column-major ordering is also available. For more details
 see the :ref:`DataArray documentation<resources_data>`.
 

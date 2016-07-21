@@ -83,10 +83,19 @@ logged in to steno3d.com; the developer key and your website login are separate.
 
 .. note::
 
-    On most modern computers, the developer key will be stored in your keychain, so
-    next time you login to Steno3D, you will not need to manually enter your key::
+    By default, your developer key will be saved locally to default credentials
+    file `~/.steno3d_client/credentials`. This allows future logins without
+    manually entering your key::
 
         >> steno3d.login()
+
+    You may specify a different credentials file with::
+
+        >> steno3d.login('this-is-a-demo-key', credentials_file='/path/to/file')
+
+    or you may opt to not save the developer key at all with::
+
+        >> steno3d.login('this-is-a-demo-key', skip_credentials=True)
 
 If you ever lose your key, you can always `generate a new one <https://steno3d.com/settings/developer>`_.
 
@@ -130,9 +139,9 @@ and define the Z vertex topography of the mesh.
 
 .. code:: python
 
-    >> X, Y = np.meshgrid(x,y)
+    >> X, Y = np.meshgrid(x, y, indexing='ij')
     >> Z = topo(X, Y)
-    >> my_mesh.Z = Z.flatten(order = 'C')
+    >> my_mesh.Z = Z.flatten()
 
 Right now, we have a 2D mesh. Let's create a surface with this mesh geometry.
 

@@ -39,7 +39,10 @@ for points) and data, a :ref:`DataArray <resources_data>`.
            data=my_data
        )]
 
-Under the surface, this dictionary becomes a `_PointBinder`.
+Under the surface, this dictionary becomes a :code:`_PointBinder`.
+
+Binding data to Points requires the data array to correspond to mesh
+vertices.
 
 .. autoclass:: steno3d.point._PointBinder
 

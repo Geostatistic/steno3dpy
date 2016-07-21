@@ -39,10 +39,12 @@ containing location (either nodes/vertices, 'N', or cell centers/segments,
            data=my_data
        )]
 
-Under the surface, this dictionary becomes a `_LineBinder`.
+Under the surface, this dictionary becomes a :code:`_LineBinder`.
+
+Binding data to Lines requires the data array to correspond to mesh vertices
+or mesh segments, for node and cell-center data, respectively.
 
 .. autoclass:: steno3d.line._LineBinder
-
 
 Options
 -------

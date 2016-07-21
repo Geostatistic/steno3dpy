@@ -24,13 +24,12 @@ with open('README.rst') as f:
 
 setup(
     name = 'steno3d',
-    version = '0.1.8',
+    version = '0.2.0',
     packages = find_packages(),
     install_requires = ['numpy>=1.7',
                         'future',
                         'six',
                         'requests',
-                        'keyring',
                         'properties>=0.1.5',
                        ],
     author = '3point Science',

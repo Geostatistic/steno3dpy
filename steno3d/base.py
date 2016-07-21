@@ -39,8 +39,8 @@ class BaseResource(UserContent):
 
 
     def _validate_file_size(self, name):
-        if Comms.get_user() is not None:
-            file_limit = Comms.get_user().file_size_limit
+        if Comms.user.logged_in:
+            file_limit = Comms.user.file_size_limit
             if self.nbytes(name) > file_limit:
                 raise ValueError(
                     '{name} file size ({file} bytes) exceeds limit: '
@@ -162,16 +162,17 @@ class CompositeResource(BaseResource):
     def url(self):
         """steno3d.com url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
-            raise Exception('Resource not uploaded: Please upload() '
-                            'before accessing the URL.')
+            print('Resource not uploaded: Please upload() '
+                  'before accessing the URL.')
         return self._url
 
     @needs_login
     def plot(self):
         """Display the 3D representation of the content"""
         if getattr(self, '_upload_data', None) is None:
-            raise Exception('Resource not uploaded: Please upload() '
-                            'before plotting.')
+            print('Resource not uploaded: Please upload() '
+                  'before plotting.')
+            return
         return plot(self._url)
 
 

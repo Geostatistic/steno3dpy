@@ -83,10 +83,16 @@ logged in to steno3d.com; the developer key and your website login are separate.
 
 .. note::
 
-    On most modern computers, the developer key will be stored in your keychain, so
-    next time you login to Steno3D, you will not need to manually enter your key::
+    By default, your developer key will be saved locally to default credentials
+    file `~/.steno3d_client/credentials`. This allows future logins without
+    manually entering your key::
 
         >> steno3d.login()
+
+    You may specify a different credentials file with
+    `steno3d.login('this-is-a-demo-key', credentials_file='/path/to/file')`
+    or you may opt to not save the developer key at all with
+    `steno3d.login('this-is-a-demo-key', skip_credentials=False)`.
 
 If you ever lose your key, you can always `generate a new one <https://steno3d.com/settings/developer>`_.
 

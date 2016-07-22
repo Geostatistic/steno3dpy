@@ -28,7 +28,7 @@ after_success:
   - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" -a $TRAVIS_PYTHON_VERSION == "2.7" ]; then
       make publish;
     fi
-  - if [ "$TRAVIS_BRANCH" = "beta" -a "$TRAVIS_PULL_REQUEST" = "false" -a $TRAVIS_PYTHON_VERSION == "2.7" -a -n "$(grep version setup.py | cut -d \' -f 2 | grep -E '(^\d+\.\d+\.\d+b\d+)$')"]; then
+  - if [ "$TRAVIS_BRANCH" = "beta" -a "$TRAVIS_PULL_REQUEST" = "false" -a $TRAVIS_PYTHON_VERSION == "2.7" -a -n "$(grep version setup.py | cut -d \' -f 2 | grep -E '(^\d+\.\d+\.\d+b\d+)$')" ]; then
       make publish;
     fi
 

@@ -22,7 +22,6 @@ class BaseResource(UserContent):
     """Base class for all resources that are added to projects and
     uploaded to steno3d
     """
-    meta = properties.Object('Meta data in JSON form.', default={})
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)

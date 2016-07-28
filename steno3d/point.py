@@ -41,7 +41,7 @@ class Mesh0D(BaseMesh):
         """ get number of nodes """
         return len(self.vertices)
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         if name is None or name == 'vertices':
             return self.vertices.astype('f4').nbytes
         raise ValueError('Mesh0D cannot calculate the number of '
@@ -110,9 +110,10 @@ class Point(CompositeResource):
         ptype=_PointOptions
     )
 
-    def nbytes(self):
-        return (self.mesh.nbytes() + sum(d.data.nbytes() for d in self.data) +
-                sum(t.nbytes() for t in self.textures))
+    def _nbytes(self):
+        return (self.mesh._nbytes() +
+                sum(d.data._nbytes() for d in self.data) +
+                sum(t._nbytes() for t in self.textures))
 
     @properties.validator
     def validate(self):

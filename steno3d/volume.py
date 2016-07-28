@@ -64,12 +64,12 @@ class Mesh3DGrid(BaseMesh):
         """ get number of cells """
         return len(self.h1) * len(self.h2) * len(self.h3)
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         filenames = ('h1', 'h2', 'h3', 'x0')
         if name in filenames:
             return getattr(self, name).astype('f4').nbytes
         elif name is None:
-            return sum(self.nbytes(fn) for fn in filenames)
+            return sum(self._nbytes(fn) for fn in filenames)
         raise ValueError('Mesh3DGrid cannot calculate the number of '
                          'bytes of {}'.format(name))
 
@@ -149,8 +149,8 @@ class Volume(CompositeResource):
         ptype=_VolumeOptions
     )
 
-    def nbytes(self):
-        return self.mesh.nbytes() + sum(d.data.nbytes() for d in self.data)
+    def _nbytes(self):
+        return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
     @properties.validator
     def validate(self):

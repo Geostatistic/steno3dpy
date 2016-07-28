@@ -32,6 +32,7 @@ class Project(UserContent):
     )
 
     _public_online = None
+    _upload_version = 0
 
     @classmethod
     def _url_view_from_uid(cls, uid):
@@ -66,6 +67,11 @@ class Project(UserContent):
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
         self._upload(sync, verbose)
+        self._put(dict(title='{title}, version: {ver}'.format(
+            title=self.title,
+            ver=str(self._upload_version)
+        )))
+        self._upload_version = self._upload_version + 1
         if print_url:
             print(self._url)
         return self._url

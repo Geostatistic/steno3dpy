@@ -194,7 +194,8 @@ class _Comms(object):
             self.base_url = str(endpoint)
 
         # Check client version
-        self._check_version()
+        if not(self._version_ok()):
+            return
 
         # Assess credential file options.
         if skip_credentials:
@@ -259,7 +260,7 @@ class _Comms(object):
             with open(credentials_file, 'w') as cred:
                 cred.writelines(['{}\n'.format(k) for k in updated_devel_keys])
 
-    def _check_version(self):
+    def _version_ok(self):
         """Check current Steno3D client version in the database"""
         try:
             resp = requests.post(
@@ -267,31 +268,37 @@ class _Comms(object):
                 dict(version=__version__)
             )
         except requests.ConnectionError:
-            raise Exception(NOT_CONNECTED)
+            print(NOT_CONNECTED)
+            return False
         if resp.status_code == 200:
             resp_json = resp.json()
-            your_ver = resp_json['your_version']
-            curr_ver = resp_json['current_version']
-            if resp_json['valid'] or curr_ver == '0.0.0':
+            your_ver_str = resp_json['your_version']
+            your_ver = [int(v) for v in your_ver_str.split('.')]
+            curr_ver_str = resp_json['current_version']
+            curr_ver = [int(v) for v in curr_ver_str.split('.')]
+            if resp_json['valid'] or curr_ver_str == '0.0.0':
                 pass
-            elif (your_ver.split('.')[0] == curr_ver.split('.')[0] and
-                  your_ver.split('.')[1] == curr_ver.split('.')[1]):
+            elif your_ver[0] == curr_ver[0] and your_ver[1] == curr_ver[1]:
                 print(INVALID_VERSION.format(
-                    your_version='Your version: ' + your_ver,
-                    current_version='Current version: ' + curr_ver
+                    your_version='Your version: ' + your_ver_str,
+                    current_version='Current version: ' + curr_ver_str
                 ))
             else:
                 print(INVALID_VERSION.format(
-                    your_version='Your version: ' + your_ver,
-                    current_version='Required version: ' + curr_ver
+                    your_version='Your version: ' + your_ver_str,
+                    current_version='Required version: ' + curr_ver_str
                 ))
-                return
+                if your_ver[0] < curr_ver[0]:
+                    return False
+                if your_ver[0] == curr_ver[0] and your_ver[1] < curr_ver[1]:
+                    return False
         elif resp.status_code == 400:
             resp_json = resp.json()
             print(INVALID_VERSION.format(
                 your_version='Your version: ' + __version__,
                 current_version='Error: ' + resp_json['reason']
             ))
+        return True
 
     def _login_with(self, devel_key):
         """Login with devel_key"""

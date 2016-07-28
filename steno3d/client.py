@@ -96,7 +96,7 @@ your API key, please request a new one at:
 
 INVALID_VERSION = """
 
-Your version of steno3d is out of date.
+Oh no! Your version of steno3d is out of date.
 
 {your_version}
 {current_version}
@@ -195,6 +195,7 @@ class _Comms(object):
 
         # Check client version
         if not(self._version_ok()):
+            print('Login failed.')
             return
 
         # Assess credential file options.
@@ -277,12 +278,13 @@ class _Comms(object):
             curr_ver_str = resp_json['current_version']
             curr_ver = [int(v) for v in curr_ver_str.split('.')]
             if resp_json['valid'] or curr_ver_str == '0.0.0':
-                pass
+                return True
             elif your_ver[0] == curr_ver[0] and your_ver[1] == curr_ver[1]:
                 print(INVALID_VERSION.format(
                     your_version='Your version: ' + your_ver_str,
                     current_version='Current version: ' + curr_ver_str
                 ))
+                return True
             else:
                 print(INVALID_VERSION.format(
                     your_version='Your version: ' + your_ver_str,
@@ -292,6 +294,7 @@ class _Comms(object):
                     return False
                 if your_ver[0] == curr_ver[0] and your_ver[1] < curr_ver[1]:
                     return False
+                return True
         elif resp.status_code == 400:
             resp_json = resp.json()
             print(INVALID_VERSION.format(

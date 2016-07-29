@@ -59,11 +59,11 @@ class Mesh2D(BaseMesh):
         """ get number of cells """
         return len(self.triangles)
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         if name in ('vertices', 'triangles'):
             return getattr(self, name).astype('f4').nbytes
         elif name is None:
-            return self.nbytes('vertices') + self.nbytes('triangles')
+            return self._nbytes('vertices') + self._nbytes('triangles')
         raise ValueError('Mesh2D cannot calculate the number of '
                          'bytes of {}'.format(name))
 
@@ -139,14 +139,14 @@ class Mesh2DGrid(BaseMesh):
         """ get number of cells """
         return len(self.h1) * len(self.h2)
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         filenames = ('h1', 'h2', 'x0', 'Z')
         if name in filenames:
             if getattr(self, name, None) is None:
                 return 0
             return getattr(self, name).astype('f4').nbytes
         if name is None:
-            return sum(self.nbytes(fn) for fn in filenames)
+            return sum(self._nbytes(fn) for fn in filenames)
         raise ValueError('Mesh2DGrid cannot calculate the number of '
                          'bytes of {}'.format(name))
 
@@ -241,9 +241,10 @@ class Surface(CompositeResource):
         ptype=_SurfaceOptions
     )
 
-    def nbytes(self):
-        return (self.mesh.nbytes() + sum(d.data.nbytes() for d in self.data) +
-                sum(t.nbytes() for t in self.textures))
+    def _nbytes(self):
+        return (self.mesh._nbytes() +
+                sum(d.data._nbytes() for d in self.data) +
+                sum(t._nbytes() for t in self.textures))
 
     @properties.validator
     def validate(self):

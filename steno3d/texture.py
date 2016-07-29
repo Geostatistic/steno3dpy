@@ -40,7 +40,7 @@ class Texture2DImage(BaseTexture2D):
         required=True
     )
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         if name is None or name == 'image':
             self.image.seek(0)
             return len(self.image.read())

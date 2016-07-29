@@ -18,7 +18,7 @@ lint:
 	pylint --output-format=html steno3d > pylint.html
 
 graphs:
-	pyreverse -my -A -o pdf -p steno3d steno3d/**.py steno3d/**/**.py steno3d/**/**/**.py
+	pyreverse -my -A -o pdf -p steno3dpy steno3d/**.py steno3d/**/**.py
 
 tests:
 	nosetests --logging-level=INFO

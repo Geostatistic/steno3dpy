@@ -56,8 +56,8 @@ class Project(UserContent):
             uid=uid)
         return url
 
-    def nbytes(self):
-        return sum(r.nbytes() for r in self.resources)
+    def _nbytes(self):
+        return sum(r._nbytes() for r in self.resources)
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
@@ -75,9 +75,13 @@ class Project(UserContent):
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
         self._upload(sync, verbose)
+        self._trigger_ACL_fix()
         if print_url:
             print(self._url)
         return self._url
+
+    def _trigger_ACL_fix(self):
+        self._put({})
 
     @properties.validator
     def validate(self):
@@ -100,10 +104,10 @@ class Project(UserContent):
                                                   lim=res_limit)
                 )
             size_limit = Comms.user.project_size_limit
-            if self.nbytes() > size_limit:
+            if self._nbytes() > size_limit:
                 raise ValueError(
                     'Total project size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(file=self.nbytes(),
+                    '{lim} bytes'.format(file=self._nbytes(),
                                          lim=size_limit)
                 )
         return True

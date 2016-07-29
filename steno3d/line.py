@@ -54,11 +54,11 @@ class Mesh1D(BaseMesh):
         """ get number of cells """
         return len(self.segments)
 
-    def nbytes(self, name=None):
+    def _nbytes(self, name=None):
         if name in ('segments', 'vertices'):
             return getattr(self, name).astype('f4').nbytes
         elif name is None:
-            return self.nbytes('segments') + self.nbytes('vertices')
+            return self._nbytes('segments') + self._nbytes('vertices')
         raise ValueError('Mesh1D cannot calculate the number of '
                          'bytes of {}'.format(name))
 
@@ -129,8 +129,8 @@ class Line(CompositeResource):
         ptype=_LineOptions
     )
 
-    def nbytes(self):
-        return self.mesh.nbytes() + sum(d.data.nbytes() for d in self.data)
+    def _nbytes(self):
+        return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
     @properties.validator
     def validate(self):

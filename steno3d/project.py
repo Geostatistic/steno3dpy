@@ -66,9 +66,13 @@ class Project(UserContent):
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
         self._upload(sync, verbose)
+        self._trigger_ACL_fix()
         if print_url:
             print(self._url)
         return self._url
+
+    def _trigger_ACL_fix(self):
+        self._put({})
 
     @properties.validator
     def validate(self):

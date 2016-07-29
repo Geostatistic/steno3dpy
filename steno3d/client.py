@@ -30,9 +30,10 @@ SLEEP_TIME = .75
 DEVKEY_PROMPT = "If you have a Steno3D developer key, please enter it here > "
 
 WELCOME_MESSAGE = """
+>> Welcome to the Python client library for Steno3D!
+"""
 
-Welcome to the Python client library for Steno3D!
-
+FIRST_LOGIN = """
 If you do not have a Steno3D developer key, you need to request
 one from the Steno3D website in order to access the API. Please
 log in to the application (if necessary) and request a new key.
@@ -49,8 +50,7 @@ prompt by calling steno3d.login().
 """
 
 LOGIN_FAILED = """
-
-Oh no! We could not log you in. The API developer key that you provided
+>> Oh no! We could not log you in. The API developer key that you provided
 could not be validated. If your current API key has been lost or
 invalidated, please request a new one at:
 
@@ -68,8 +68,7 @@ If the problem persists:
 """
 
 NOT_CONNECTED = """
-
-Oh no! We could not connect to the Steno3D server. Please ensure that you are:
+>> Oh no! We could not connect to the Steno3D server. Please ensure that you are:
 
 1) Connected to the Internet
 2) Can connect to Steno3D at https://steno3d.com
@@ -82,8 +81,7 @@ Oh no! We could not connect to the Steno3D server. Please ensure that you are:
 """
 
 BAD_API_KEY = """
-
-Oh no! Your API developer key format is incorrect.
+>> Oh no! Your API developer key format is incorrect.
 
 It should be your username followed by '//' then 36 characters.
 You may also use only your username if you have access to local saved
@@ -95,13 +93,25 @@ your API key, please request a new one at:
 """
 
 INVALID_VERSION = """
-
 Oh no! Your version of steno3d is out of date.
 
 {your_version}
 {current_version}
 
 Please update steno3d with `pip install --upgrade steno3d`.
+
+"""
+
+BETA_TEST = """
+It looks like you are using a beta version of steno3d. Thank you for
+trying it out!
+
+Please, if you run into any problems or have any feedback, open an
+issue at https://github.com/3ptscience/steno3dpy/issues
+
+If you would like to switch to the most recent stable version:
+> pip uninstall steno3d
+> pip install steno3d
 
 """
 
@@ -197,6 +207,8 @@ class _Comms(object):
         if not(self._version_ok()):
             print('Login failed.')
             return
+
+        print(WELCOME_MESSAGE)
 
         # Assess credential file options.
         if skip_credentials:
@@ -297,16 +309,19 @@ class _Comms(object):
                 return True
         elif resp.status_code == 400:
             resp_json = resp.json()
-            print(INVALID_VERSION.format(
-                your_version='Your version: ' + __version__,
-                current_version='Error: ' + resp_json['reason']
-            ))
+            if 'b' in __version__.split('.')[2]:
+                print(BETA_TEST)
+            else:
+                print(INVALID_VERSION.format(
+                    your_version='Your version: ' + __version__,
+                    current_version='Error: ' + resp_json['reason']
+                ))
         return True
 
     def _login_with(self, devel_key):
         """Login with devel_key"""
         if devel_key is None:
-            print(WELCOME_MESSAGE.format(base_url=self.base_url))
+            print(FIRST_LOGIN.format(base_url=self.base_url))
             try:
                 devel_key = raw_input(DEVKEY_PROMPT)
             except NameError:

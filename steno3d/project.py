@@ -20,13 +20,13 @@ from .content import UserContent
 QUOTA_REACHED = """
 Uploading this {priv} project will put you over your quota
 of {num} {priv} project(s). For more projects and space, consider
-upgrading your account (https://steno3d.com/settings/plan).
+upgrading your account: https://steno3d.com/settings/plan
 """
 
 QUOTA_IMPENDING = """
 After this project, you may upload {remaining} more {priv} project(s) before
 reaching your {priv} project quota. For more projects and space
-consider upgrading your account (https://steno3d.com/settings/plan).
+consider upgrading your account: https://steno3d.com/settings/plan
 """
 
 

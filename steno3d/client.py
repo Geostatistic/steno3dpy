@@ -399,6 +399,12 @@ def put(url, data=None, files=None):
 
 
 @needs_login
+def get(url):
+    """Make a get request from a steno3d online endpoint"""
+    return upload(requests.get, url, None, None)
+
+
+@needs_login
 def upload(request_fcn, url, data, files):
     """Post data and files to the steno3d online endpoint"""
     data = {} if data is None else data

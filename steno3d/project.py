@@ -11,9 +11,23 @@ from builtins import super
 
 import properties
 
-from .client import needs_login
 from .client import Comms
+from .client import get
+from .client import needs_login
 from .content import UserContent
+
+
+QUOTA_REACHED = """
+Uploading this {priv} project will put you over your quota
+of {num} {priv} project(s). For more projects and space, consider
+upgrading your account: https://steno3d.com/settings/plan
+"""
+
+QUOTA_IMPENDING = """
+After this project, you may upload {remaining} more {priv} project(s) before
+reaching your {priv} project quota. For more projects and space
+consider upgrading your account: https://steno3d.com/settings/plan
+"""
 
 
 class Project(UserContent):
@@ -50,13 +64,8 @@ class Project(UserContent):
         """Upload the project"""
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
-            if verbose:
-                print('Initializing ' +
-                      ('public ' if self.public else 'private ') +
-                      'project: ' + self.title)
-                if self.public:
-                    print('This project will be viewable by everyone.')
-            self._post(self._get_dirty_data(force=True, initialize=True))
+
+            self._check_project_quota(verbose)
             self._public_online = self.public
         elif verbose and self._public_online:
             print('This project is PUBLIC. It is viewable by everyone.')
@@ -139,6 +148,31 @@ class Project(UserContent):
                 (r._json['longUid'] for r in self.resources)
             )
         return datadict
+
+    def _check_project_quota(self, verbose=True):
+        if self.public:
+            privacy = 'public'
+        else:
+            privacy = 'private'
+        if verbose:
+            print('Verifying your quota for ' + privacy + ' projects...')
+        resp = get('check/quota?test=ProjectSteno3D')
+        resp = resp.json()[privacy]
+        if resp['quota'] == 'Unlimited':
+            pass
+        elif resp['count'] >= resp['quota']:
+            raise Exception(QUOTA_REACHED.format(
+                                priv=privacy,
+                                num=resp['quota']
+                            ))
+        elif verbose and (resp['quota'] - resp['count'] - 1) < 4:
+            print(QUOTA_IMPENDING.format(
+                    remaining=resp['quota'] - resp['count'] - 1,
+                    priv=privacy
+                  ))
+        if verbose and self.public:
+            print('This PUBLIC project will be viewable by everyone.')
+
 
     @property
     def _url(self):

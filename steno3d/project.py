@@ -11,9 +11,23 @@ from builtins import super
 
 import properties
 
-from .client import needs_login
 from .client import Comms
+from .client import get
+from .client import needs_login
 from .content import UserContent
+
+
+QUOTA_REACHED = """
+Uploading this {priv} project will put you over your quota
+of {num} {priv} project(s). For more projects and space, consider
+upgrading your account: https://steno3d.com/settings/plan
+"""
+
+QUOTA_IMPENDING = """
+After this project, you may upload {remaining} more {priv} project(s) before
+reaching your {priv} project quota. For more projects and space
+consider upgrading your account: https://steno3d.com/settings/plan
+"""
 
 
 class Project(UserContent):
@@ -42,21 +56,16 @@ class Project(UserContent):
             uid=uid)
         return url
 
-    def nbytes(self):
-        return sum(r.nbytes() for r in self.resources)
+    def _nbytes(self):
+        return sum(r._nbytes() for r in self.resources)
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the project"""
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
-            if verbose:
-                print('Initializing ' +
-                      ('public ' if self.public else 'private ') +
-                      'project: ' + self.title)
-                if self.public:
-                    print('This project will be viewable by everyone.')
-            self._post(self._get_dirty_data(force=True, initialize=True))
+
+            self._check_project_quota(verbose)
             self._public_online = self.public
         elif verbose and self._public_online:
             print('This project is PUBLIC. It is viewable by everyone.')
@@ -66,9 +75,13 @@ class Project(UserContent):
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
         self._upload(sync, verbose)
+        self._trigger_ACL_fix()
         if print_url:
             print(self._url)
         return self._url
+
+    def _trigger_ACL_fix(self):
+        self._put({})
 
     @properties.validator
     def validate(self):
@@ -91,10 +104,10 @@ class Project(UserContent):
                                                   lim=res_limit)
                 )
             size_limit = Comms.user.project_size_limit
-            if self.nbytes() > size_limit:
+            if self._nbytes() > size_limit:
                 raise ValueError(
                     'Total project size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(file=self.nbytes(),
+                    '{lim} bytes'.format(file=self._nbytes(),
                                          lim=size_limit)
                 )
         return True
@@ -135,6 +148,31 @@ class Project(UserContent):
                 (r._json['longUid'] for r in self.resources)
             )
         return datadict
+
+    def _check_project_quota(self, verbose=True):
+        if self.public:
+            privacy = 'public'
+        else:
+            privacy = 'private'
+        if verbose:
+            print('Verifying your quota for ' + privacy + ' projects...')
+        resp = get('check/quota?test=ProjectSteno3D')
+        resp = resp.json()[privacy]
+        if resp['quota'] == 'Unlimited':
+            pass
+        elif resp['count'] >= resp['quota']:
+            raise Exception(QUOTA_REACHED.format(
+                                priv=privacy,
+                                num=resp['quota']
+                            ))
+        elif verbose and (resp['quota'] - resp['count'] - 1) < 4:
+            print(QUOTA_IMPENDING.format(
+                    remaining=resp['quota'] - resp['count'] - 1,
+                    priv=privacy
+                  ))
+        if verbose and self.public:
+            print('This PUBLIC project will be viewable by everyone.')
+
 
     @property
     def _url(self):

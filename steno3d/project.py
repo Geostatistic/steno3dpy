@@ -9,12 +9,11 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-import properties
+from tratlets import Bool
 
-from .client import Comms
-from .client import get
-from .client import needs_login
-from .content import UserContent
+from .base import CompositeResource, UserContent
+from .client import Comms, get, needs_login
+from .trait import KeywordInstance, Repeated, validator
 
 
 QUOTA_REACHED = """
@@ -34,15 +33,14 @@ class Project(UserContent):
     """Steno3D top-level project"""
     _model_api_location = 'project/steno3d'
 
-    resources = properties.Pointer(
-        'Project Resources',
-        ptype='CompositeResource',
-        repeated=True
+    resources = Repeated(
+        help='Project Resources',
+        trait=KeywordInstance(klass=CompositeResource)
     )
 
-    public = properties.Bool(
-        'Public visibility of project',
-        default=False
+    public = Bool(
+        help='Public visibility of project',
+        default_value=False
     )
 
     _public_online = None
@@ -83,7 +81,7 @@ class Project(UserContent):
     def _trigger_ACL_fix(self):
         self._put({})
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if project resource pointers are correct"""
         for res in self.resources:

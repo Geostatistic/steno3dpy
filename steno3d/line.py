@@ -8,13 +8,14 @@ from __future__ import unicode_literals
 from builtins import super
 
 from numpy import max as npmax
-from numpy import min as npmin
-import properties
+from numpy import min as
 
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import Options
+from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator
 
 
 class _Mesh1DOptions(Options):
@@ -27,21 +28,20 @@ class _LineOptions(ColorOptions):
 
 class Mesh1D(BaseMesh):
     """Contains spatial information of a 1D line set"""
-    vertices = properties.Array(
-        'Mesh vertices',
+    vertices = Array(
+        help='Mesh vertices',
         shape=('*', 3),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    segments = properties.Array(
-        'Segment endpoint indices',
+    segments = Array(
+        help='Segment endpoint indices',
         shape=('*', 2),
-        dtype=int,
-        required=True
+        dtype=int
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_Mesh1DOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_Mesh1DOptions,
+        allow_none=True
     )
 
     @property
@@ -72,7 +72,7 @@ class Mesh1D(BaseMesh):
         super()._on_property_change(name, pre, post)
 
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         if npmin(self.segments) < 0:
@@ -95,44 +95,42 @@ class Mesh1D(BaseMesh):
         return files
 
 
-class _LineBinder(properties.PropertyClass):
+class _LineBinder(DelayedValidator):
     """Contains the data on a 1D line set with location information"""
-    location = properties.String(
-        'Location of the data on mesh',
-        required=True,
+    location = StringChoices(
+        help='Location of the data on mesh',
         choices={
             'CC': ('LINE', 'FACE', 'CELLCENTER', 'EDGE', 'SEGMENT'),
             'N': ('VERTEX', 'NODE', 'ENDPOINT')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass=DataArray
     )
 
 
 class Line(CompositeResource):
     """Contains all the information about a 1D line set"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=Mesh1D,
-        required=True
+    mesh = KeywordInstance(
+        help='Mesh',
+        ptype=Mesh1D
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_LineBinder,
-        repeated=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_LineBinder),
+        allow_none=True
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_LineOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_LineOptions,
+        allow_none=True
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):

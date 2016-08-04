@@ -7,58 +7,82 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-import properties
+from traitlets import Int, Unicode
+
+from .traits import DelayedValidator
 
 
-class User(properties.PropertyClass):
+class User(DelayedValidator ):
     """Class representing a user instance"""
     _model_api_location = "user"
-    email = properties.String('Email')
-    name = properties.String('Name')
-    url = properties.String('URL')
-    affiliation = properties.String('Affiliation')
-    location = properties.String('Location')
-    username = properties.String('Username')
-
-    devel_key = properties.String('Developer API Key')
-
-    file_size_limit = properties.Int(
-        'Inidividual file limit',
-        default=5000000
+    email = Unicode(
+        help='Email',
+        allow_none=True
     )
-    project_size_limit = properties.Int(
-        'Project size limit',
-        default=25000000
+    name = Unicode(
+        help='Name',
+        allow_none=True
     )
-    project_resource_limit = properties.Int(
-        'Maximum resources in a project',
-        default=25
+    url = Unicode(
+        help='URL',
+        allow_none=True
+    )
+    affiliation = Unicode(
+        help='Affiliation',
+        allow_none=True
+    )
+    location = Unicode(
+        help='Location',
+        allow_none=True
+    )
+    username = Unicode(
+        help='Username',
+        default_value=None,
+        allow_none=True
     )
 
-    def _on_prop_change(self, prop, pre, post):
-        if not pre == post:
-            print('User data must be modified in settings at steno3d.com')
-            setattr(self, '_p_' + prop, pre)
+    devel_key = Unicode(
+        help='Developer API Key',
+        allow_none=True
+    )
+
+    file_size_limit = Int(
+        help='Inidividual file limit',
+        default_value=5000000
+    )
+    project_size_limit = Int(
+        help='Project size limit',
+        default_value=25000000
+    )
+    project_resource_limit = Int(
+        help='Maximum resources in a project',
+        default_value=25
+    )
+
+    # def _on_prop_change(self, prop, pre, post):
+    #     if not pre == post:
+    #         print('User data must be modified in settings at steno3d.com')
+    #         self.' + prop, pre)
 
     def login_with_json(self, login_json):
-        setattr(self, '_p_username', login_json['uid'])
-        setattr(self, '_p_email', login_json['email'])
-        setattr(self, '_p_name', login_json['name'])
-        setattr(self, '_p_url', login_json['url'])
-        setattr(self, '_p_affiliation', login_json['affiliation'])
-        setattr(self, '_p_location', login_json['location'])
+        self.username = login_json['uid']
+        self.email = login_json['email']
+        self.name = login_json['name']
+        self.url = login_json['url']
+        self.affiliation = login_json['affiliation']
+        self.location = login_json['location']
 
     def set_key(self, devel_key):
-        setattr(self, '_p_devel_key', devel_key)
+        self.devel_key = devel_key
 
     def logout(self):
-        setattr(self, '_p_username', None)
-        setattr(self, '_p_email', None)
-        setattr(self, '_p_name', None)
-        setattr(self, '_p_url', None)
-        setattr(self, '_p_affiliation', None)
-        setattr(self, '_p_location', None)
-        setattr(self, '_p_devel_key', None)
+        self.username = None
+        self.email = None
+        self.name = None
+        self.url = None
+        self.affiliation = None
+        self.location = None
+        self.devel_key = None
 
     @property
     def logged_in(self):

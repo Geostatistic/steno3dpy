@@ -8,12 +8,12 @@ from __future__ import unicode_literals
 from builtins import super
 from json import dumps
 
-import properties
-
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
+from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator, Vector
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -27,31 +27,30 @@ class _VolumeOptions(ColorOptions):
 class Mesh3DGrid(BaseMesh):
     """Contains spatial information of a 3D grid volume."""
 
-    h1 = properties.Array(
-        'Tensor cell widths, x-direction',
+    h1 = Array(
+        help='Tensor cell widths, x-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    h2 = properties.Array(
-        'Tensor cell widths, y-direction',
+    h2 = Array(
+        help='Tensor cell widths, y-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    h3 = properties.Array(
-        'Tensor cell widths, z-direction',
+    h3 = Array(
+        help='Tensor cell widths, z-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    x0 = properties.Vector(
-        'Origin vector',
-        default=[0, 0, 0]
+    x0 = Vector(
+        help='Origin vector',
+        default_value=[0, 0, 0],
+        allow_none=True
     )
-    opts = properties.Pointer(
-        'Mesh3D Options',
-        ptype=_Mesh3DOptions
+    opts = KeywordInstance(
+        help='Mesh3D Options',
+        klass=_Mesh3DOptions,
+        allow_none=True
     )
 
     @property
@@ -82,7 +81,7 @@ class Mesh3DGrid(BaseMesh):
             raise err
         super()._on_property_change(name, pre, post)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         if self.x0.nV != 1:
@@ -114,45 +113,41 @@ class Mesh3DGrid(BaseMesh):
         return datadict
 
 
-class _VolumeBinder(properties.PropertyClass):
+class _VolumeBinder(DelayedValidator):
     """Contains the data on a 3D volume with location information"""
-    location = properties.String(
-        'Location of the data on mesh',
-        required=True,
+    location = StringChoices(
+        help='Location of the data on mesh',
         choices={
             'CC': ('CELLCENTER'),
             # 'N': ('NODE', 'VERTEX', 'CORNER')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass=DataArray
     )
 
 
 class Volume(CompositeResource):
     """Contains all the information about a 3D volume"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=Mesh3DGrid,
-        required=True
+    mesh = KeywordInstance(
+        help='Mesh',
+        klass=Mesh3DGrid,
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_VolumeBinder,
-        repeated=True,
-        required=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_VolumeBinder)
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_VolumeOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_VolumeOptions,
+        allow_none=True
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):

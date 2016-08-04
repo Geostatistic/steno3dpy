@@ -10,9 +10,8 @@ from collections import namedtuple
 from io import BytesIO
 from json import dumps
 
-import properties
-
 from .base import BaseTexture2D
+from .traits import Image, validator, Vector
 
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
@@ -23,21 +22,17 @@ class Texture2DImage(BaseTexture2D):
 
     _resource_class = 'image'
 
-    O = properties.Vector(
-        'Origin of the texture',
-        required=True
+    O = Vector(
+        help='Origin of the texture'
     )
-    U = properties.Vector(
-        'U axis of the texture',
-        required=True
+    U = Vector(
+        help='U axis of the texture'
     )
-    V = properties.Vector(
-        'V axis of the texture',
-        required=True
+    V = Vector(
+        help='V axis of the texture'
     )
-    image = properties.Image(
-        'Image file',
-        required=True
+    image = Image(
+        help='Image file'
     )
 
     def _nbytes(self, name=None):
@@ -56,7 +51,7 @@ class Texture2DImage(BaseTexture2D):
             raise err
         super()._on_property_change(name, pre, post)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         if self.O.nV != 1 or self.U.nV != 1 or self.V.nV != 1:

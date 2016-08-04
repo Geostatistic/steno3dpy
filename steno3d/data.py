@@ -7,23 +7,21 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-import properties
-
 from .base import BaseData
+from .traits import Array, StringChoices, validator
 
 
 class DataArray(BaseData):
     """Data array with unique values at every point in the mesh"""
     _resource_class = 'array'
-    array = properties.Array(
-        'Data, unique values at every point in the mesh',
+    array = Array(
+        help='Data, unique values at every point in the mesh',
         shape=('*',),
-        dtype=(float, int),
-        required=True
+        dtype=(float, int)
     )
 
-    order = properties.String(
-        'Data array order, for data on grid meshes',
+    order = StringChoices(
+        help='Data array order, for data on grid meshes',
         choices={
             'c': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
             'f': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
@@ -32,10 +30,10 @@ class DataArray(BaseData):
         lowercase=True
     )
 
-    def __init__(self, array=None, **kwargs):
-        super().__init__(**kwargs)
-        if array is not None:
-            self.array = array
+    # def __init__(self, array=None, **kwargs):
+    #     super().__init__(**kwargs)
+    #     if array is not None:
+    #         self.array = array
 
     def _nbytes(self, name=None):
         if name is None or name == 'array':
@@ -53,7 +51,7 @@ class DataArray(BaseData):
         super()._on_property_change(name, pre, post)
 
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if content is built correctly"""
         self._validate_file_size('array')

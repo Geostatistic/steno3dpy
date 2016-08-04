@@ -7,12 +7,12 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-import properties
-
 from .base import BaseMesh
 from .base import CompositeResource
 from .options import ColorOptions
 from .options import Options
+from .texture import Texture2DImage
+from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator
 
 
 class _Mesh0DOptions(Options):
@@ -25,15 +25,15 @@ class _PointOptions(ColorOptions):
 
 class Mesh0D(BaseMesh):
     """Contains spatial information of a 0D point cloud."""
-    vertices = properties.Array(
-        'Point locations',
+    vertices = Array(
+        help='Point locations',
         shape=('*', 3),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    opts = properties.Pointer(
-        'Mesh0D Options',
-        ptype=_Mesh0DOptions
+    opts = KeywordInstance(
+        help='Mesh0D Options',
+        klass=_Mesh0DOptions,
+        allow_none=True
     )
 
     @property
@@ -56,7 +56,7 @@ class Mesh0D(BaseMesh):
             raise err
         super()._on_property_change(name, pre, post)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         self._validate_file_size('vertices')
@@ -71,43 +71,40 @@ class Mesh0D(BaseMesh):
         return files
 
 
-class _PointBinder(properties.PropertyClass):
+class _PointBinder(DelayedValidator):
     """Contains the data on a 0D point cloud"""
-    location = properties.String(
-        'Location of the data on mesh',
-        default='N',
-        required=True,
+    location = StringChoices(
+        help='Location of the data on mesh',
+        default_value='N',
         choices={
             'N': ('NODE', 'CELLCENTER', 'CC', 'VERTEX')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass='DataArray'
     )
 
 
 class Point(CompositeResource):
     """Contains all the information about a 0D point cloud"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=Mesh0D,
-        required=True
+    mesh = KeywordInstance(
+        help='Mesh',
+        klass=Mesh0D
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_PointBinder,
-        repeated=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_PointBinder),
+        allow_none=True
     )
-    textures = properties.Pointer(
-        'Textures',
-        ptype='Texture2DImage',
-        repeated=True
+    textures = Repeated(
+        help='Textures',
+        trait=KeywordInstance(klass=Texture2DImage),
+        allow_none=False
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_PointOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_PointOptions
     )
 
     def _nbytes(self):
@@ -115,7 +112,7 @@ class Point(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):

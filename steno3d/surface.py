@@ -10,12 +10,15 @@ from json import dumps
 
 from numpy import max as npmax
 from numpy import min as npmin
-import properties
+from traitlets import Union
 
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
+from .texture import Texture2DImage
+from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator, Vector
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -32,21 +35,20 @@ class Mesh2D(BaseMesh):
     Contains spatial information about a 2D surface defined by
     triangular faces.
     """
-    vertices = properties.Array(
-        'Mesh vertices',
+    vertices = Array(
+        help='Mesh vertices',
         shape=('*', 3),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    triangles = properties.Array(
-        'Mesh triangle vertex indices',
+    triangles = Array(
+        help='Mesh triangle vertex indices',
         shape=('*', 3),
-        dtype=int,
-        required=True
+        dtype=int
     )
-    opts = properties.Pointer(
-        'Mesh2D Options',
-        ptype=_Mesh2DOptions
+    opts = KeywordInstance(
+        help='Mesh2D Options',
+        klass=_Mesh2DOptions,
+        allow_none=True
     )
 
     @property
@@ -76,7 +78,7 @@ class Mesh2D(BaseMesh):
             raise err
         super()._on_property_change(name, pre, post)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         if npmin(self.triangles) < 0:
@@ -103,30 +105,30 @@ class Mesh2D(BaseMesh):
 
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
-    h1 = properties.Array(
-        'Grid cell widths, x-direction',
-        shape=('*',),
-        dtype=float,
-        required=True
-    )
-    h2 = properties.Array(
-        'Grid cell widths, y-direction',
-        shape=('*',),
-        dtype=float,
-        required=True
-    )
-    x0 = properties.Vector(
-        'Origin vector',
-        default=[0, 0, 0]
-    )
-    Z = properties.Array(
-        'Node topography',
+    h1 = Array(
+        help='Grid cell widths, x-direction',
         shape=('*',),
         dtype=float
     )
-    opts = properties.Pointer(
-        'Mesh2D Options',
-        ptype=_Mesh2DOptions
+    h2 = Array(
+        help='Grid cell widths, y-direction',
+        shape=('*',),
+        dtype=float
+    )
+    x0 = Vector(
+        help='Origin vector',
+        default=[0, 0, 0]
+    )
+    Z = Array(
+        help='Node topography',
+        shape=('*',),
+        dtype=float,
+        allow_none=True
+    )
+    opts = KeywordInstance(
+        help='Mesh2D Options',
+        klass=_Mesh2DOptions,
+        allow_none=True
     )
 
     @property
@@ -159,7 +161,7 @@ class Mesh2DGrid(BaseMesh):
             raise err
         super()._on_property_change(name, pre, post)
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if mesh content is built correctly"""
         if self.x0.nV != 1:
@@ -202,43 +204,44 @@ class Mesh2DGrid(BaseMesh):
         return files
 
 
-class _SurfaceBinder(properties.PropertyClass):
+class _SurfaceBinder(DelayedValidator):
     """Contains the data on a 2D surface with location information"""
-    location = properties.String(
-        'Location of the data on mesh',
-        required=True,
+    location = StringChoices(
+        help='Location of the data on mesh',
         choices={
             'CC': ('FACE', 'CELLCENTER'),
             'N': ('NODE', 'VERTEX', 'CORNER')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass=DataArray
     )
 
 
 class Surface(CompositeResource):
     """Contains all the information about a 2D surface"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=[Mesh2D, Mesh2DGrid],
-        required=True
+    mesh = Union(
+        help='Mesh',
+        trait_types=[
+            KeywordInstance(klass=Mesh2D),
+            KeywordInstance(klass=Mesh2DGrid)
+        ]
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_SurfaceBinder,
-        repeated=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_SurfaceBinder),
+        allow_none=True
     )
-    textures = properties.Pointer(
-        'Textures',
-        ptype='Texture2DImage',
-        repeated=True
+    textures = Repeated(
+        help='Textures',
+        trait=KeywordInstance(klass=Texture2DImage),
+        allow_none=True
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_SurfaceOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_SurfaceOptions,
+        allow_none=True
     )
 
     def _nbytes(self):
@@ -246,7 +249,7 @@ class Surface(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @properties.validator
+    @validator
     def validate(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):

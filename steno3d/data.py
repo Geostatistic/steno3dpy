@@ -26,7 +26,7 @@ class DataArray(BaseData):
             'c': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
             'f': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
         },
-        default='c',
+        default_value='c',
         lowercase=True
     )
 

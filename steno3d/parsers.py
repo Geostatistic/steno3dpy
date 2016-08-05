@@ -16,7 +16,7 @@ from future.utils import with_metaclass as _with_metaclass
 from traitlets import Unicode as _Unicode
 from six import string_types as _string_types
 
-from .traits import DefaultValidator as _DefaultValidator
+from .traits import DelayedValidator as _DelayedValidator
 
 
 class _ParserMetaClass(type):
@@ -52,14 +52,14 @@ class _ParserMetaClass(type):
 
 
 class _BaseParserMetaClass(_ParserMetaClass,
-                           _DefaultValidator.__class__):
+                           _DelayedValidator.__class__):
     """Augmented metaclass for parsers, inherits from properties
     metaclass
     """
 
 
 class BaseParser(_with_metaclass(_BaseParserMetaClass,
-                                 _DefaultValidator)):
+                                 _DelayedValidator)):
     """Base class for Steno3D parser objects"""
 
     extensions = (None,)
@@ -169,14 +169,14 @@ class _AllParserMetaClass(type):
 
 
 class _BaseAllParserMetaClass(_AllParserMetaClass,
-                              _DefaultValidator.__class__):
+                              _DelayedValidator.__class__):
     """Augmented metaclass for parser Directors, inherits from
     properties metaclass
     """
 
 
 class AllParsers(_with_metaclass(_BaseAllParserMetaClass,
-                                 _DefaultValidator)):
+                                 _DelayedValidator)):
     """Base class for Steno3D parser objects that parse all
     available file types
     """

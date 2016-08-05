@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
@@ -29,23 +28,25 @@ class MetaDocTraits(tr.MetaHasTraits):
                 )
             )
 
-        def required(trait):
+        def is_required(trait):
             return not trait.allow_none
 
         doc_str = classdict.get('__doc__', '')
-        required = {key: value for key, value in classdict.items()
-                    if isinstance(value, TraitType) and required(value)}
-        optional = {key: value for key, value in classdict.items()
-                    if isinstance(value, TraitType) and not required(value)}
-        if required:
+        req = {key: value for key, value in classdict.items()
+               if isinstance(value, tr.TraitType) and is_required(value)}
+        opt = {key: value for key, value in classdict.items()
+               if isinstance(value, tr.TraitType) and not is_required(value)}
+        if req:
             doc_str += '\n\nRequired:\n\n' + '\n'.join(
-                (sphinx(key, value) for key, value in required.items()))
-        if optional:
+                (sphinx(key, value) for key, value in req.items())
+            )
+        if opt:
             doc_str += '\n\nOptional:\n\n' + '\n'.join(
-                (sphinx(key, value) for key, value in optional.items()))
+                (sphinx(key, value) for key, value in opt.items())
+            )
         classdict['__doc__'] = doc_str.strip()
 
-        return super().__new__(mcs, name, bases, classdict)
+        return super(MetaDocTraits, mcs).__new__(mcs, name, bases, classdict)
 
 
 class HasDocTraits(with_metaclass(MetaDocTraits, tr.HasTraits)):
@@ -59,10 +60,13 @@ def validator(func):
         self._cross_validation_lock = False
         trait_dict = self.traits()
         for k in trait_dict:
-            val = getattr(self, k)
-            trait_dict[k]._validate(self, val)
-            if isinstance(val, DelayedValidator):
-                val.validate()
+            if k in self._trait_values: # check this so we don't generate dynamic defaults  on validation
+                val = getattr(self, k)
+                trait_dict[k]._validate(self, val)
+                if isinstance(val, DelayedValidator):
+                    val.validate()
+            elif not trait_dict[k].allow_none:
+                raise tr.TraitError('Required property not set: {}'.format(k))
         func_out = func(self)
         self._cross_validation_lock = True
         return func_out
@@ -72,7 +76,7 @@ def validator(func):
 class DelayedValidator(HasDocTraits):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(DelayedValidator, self).__init__(*args, **kwargs)
         self._cross_validation_lock = True
 
     @validator
@@ -135,7 +139,7 @@ class StringChoices(tr.Enum):
         self.lowercase = lowercase
         self.strip = strip
         self.choices = choices
-        super().__init__([v for v in choices], **metadata)
+        super(StringChoices, self).__init__([v for v in choices], **metadata)
 
     def validate(self, obj, value):
         """check that input is string and in choices, if applicable"""
@@ -215,11 +219,11 @@ class Array(tr.TraitType):
             raise tr.TraitError("{}: Invalid dtype - must be int "
                                 "and/or float".format(dtype))
         self.dtype = dtype
-        super().__init__(**metadata)
+        super(Array, self).__init__(**metadata)
 
     def info(self):
-        return 'a list or numpy array of type {type} with shape {shp}'.format(
-            type=', '.join([str(t), for t in self.dtype]),
+        return 'a list or numpy array of {type} with shape {shp}'.format(
+            type=', '.join([str(t) for t in self.dtype]),
             shp=self.shape
         )
 
@@ -229,7 +233,7 @@ class Array(tr.TraitType):
             self.error(obj, value)
         value = np.array(value)
         if (value.dtype.kind == 'i' and
-                len(set(self.dtype).intersection(six.integer_types)) == 0):
+                len(set(self.dtype).intersection(integer_types)) == 0):
             self.error(obj, value)
         if value.dtype.kind == 'f' and float not in self.dtype:
             self.error(obj, value)
@@ -265,7 +269,7 @@ class Vector(Array):
     """A trait for 3D vectors"""
 
     def __init__(self, **metadata):
-        super().__init__(shape=(3,), dtype=float, **metadata)
+        super(Vector, self).__init__(shape=(3,), dtype=float, **metadata)
 
     def validate(self, obj, value):
         if isinstance(value, string_types):
@@ -275,7 +279,7 @@ class Vector(Array):
                 value = [0., 1, 0]
             if value.upper() == 'Z':
                 value = [0., 0, 1]
-        return super().validate(obj, value)
+        return super(Vector, self).validate(obj, value)
 
 
 class KeywordInstance(tr.Instance):
@@ -284,7 +288,7 @@ class KeywordInstance(tr.Instance):
     def __init__(self, klass=None, args=(), kw=None, **metadata):
         if klass is None:
             raise tr.TraitError('KeywordInstance klass cannot be None')
-        super().__init__(klass, args, kw, **metadata)
+        super(KeywordInstance, self).__init__(klass, args, kw, **metadata)
 
     def validate(self, obj, value):
         if isinstance(value, self.klass):
@@ -300,11 +304,11 @@ class KeywordInstance(tr.Instance):
             self.error(obj, value)
 
     def info(self):
-        if isinstance(self.klass, six.string_types):
+        if isinstance(self.klass, string_types):
             klass = self.klass
         else:
             klass = self.klass.__name__
-        result = class_of(klass)
+        result = tr.class_of(klass)
         result = result + ' or a keyword dictionary to construct ' + result
         if self.allow_none:
             return result + ' or None'
@@ -316,7 +320,7 @@ class Repeated(tr.List):
     def validate(self, obj, value):
         if not isinstance(value, (list, tuple)):
             value = [value]
-        return super().validate(obj, value)
+        return super(Repeated, self).validate(obj, value)
 
 
 

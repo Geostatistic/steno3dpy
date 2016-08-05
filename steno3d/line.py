@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 from builtins import super
 
 from numpy import max as npmax
-from numpy import min as
+from numpy import min as npmin
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -114,7 +114,7 @@ class Line(CompositeResource):
     """Contains all the information about a 1D line set"""
     mesh = KeywordInstance(
         help='Mesh',
-        ptype=Mesh1D
+        klass=Mesh1D
     )
     data = Repeated(
         help='Data',

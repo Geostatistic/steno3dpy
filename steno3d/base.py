@@ -7,9 +7,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from json import dumps
 from pprint import pformat
+from warnings import warn
 
 from traitlets import Unicode
 from .traits import DelayedValidator, validator
@@ -32,13 +32,13 @@ class UserContent(DelayedValidator):
     )
     description = Unicode(
         help='Description of the model.',
-        default='',
+        default_value='',
         allow_none=True
     )
     _sync = False
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(UserContent, self).__init__(**kwargs)
         self._upload_data = None
 
     @classproperty
@@ -195,7 +195,7 @@ class BaseResource(UserContent):
     """
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(BaseResource, self)._get_dirty_data(force)
         dirty = self._dirty
         if 'opts' in dirty or (force and hasattr(self, 'opts')):
             datadict['meta'] = self.opts._json
@@ -235,12 +235,12 @@ class CompositeResource(BaseResource):
         'textures': None,
     }
 
-    # def __init__(self, project=None, **kwargs):
-    #     if project is None:
-    #         raise TypeError('Resource must be constructed with its '
-    #                         'containing project(s)')
-    #     super().__init__(**kwargs)
-    #     self.project = project
+    def __init__(self, project=None, **kwargs):
+        if project is not None:
+            warn('Resources are no longer constructed with their project. '
+                 'Resources must be added to the project\'s list of '
+                 'resources, `your_proj.resources`', DeprecationWarning)
+        super(CompositeResource, self).__init__(**kwargs)
 
     @classmethod
     def _url_view_from_uid(cls, uid):
@@ -272,7 +272,7 @@ class CompositeResource(BaseResource):
 
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(CompositeResource, self)._get_dirty_data(force)
         dirty = self._dirty_props
         if 'mesh' in dirty or force:
             datadict['mesh'] = dumps({
@@ -321,7 +321,7 @@ class CompositeResource(BaseResource):
                     if p not in post_post:
                         post_post += [p]
                 self.project = post_post
-        super()._on_property_change(name, pre, post)
+        super(CompositeResource, self)._on_property_change(name, pre, post)
 
     @property
     def _url(self):

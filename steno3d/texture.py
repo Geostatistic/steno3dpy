@@ -9,6 +9,7 @@ from builtins import super
 from collections import namedtuple
 from io import BytesIO
 from json import dumps
+from traitlets import observe, validate
 
 from .base import BaseTexture2D
 from .traits import Image, validator, Vector
@@ -35,29 +36,28 @@ class Texture2DImage(BaseTexture2D):
         help='Image file'
     )
 
-    def _nbytes(self, name=None):
-        if name is None or name == 'image':
-            self.image.seek(0)
-            return len(self.image.read())
-        raise ValueError('Texture2DImage cannot calculate the number of '
-                         'bytes of {}'.format(name))
-
-    def _on_property_change(self, name, pre, post):
+    def _nbytes(self, img=None):
+        if img is None or img == 'image':
+            img = self.image
         try:
-            if name == 'image':
-                self._validate_file_size(name)
-        except ValueError as err:
-            setattr(self, '_p_' + name, pre)
-            raise err
-        super()._on_property_change(name, pre, post)
+            img.seek(0)
+            return len(img.read())
+        except:
+            raise ValueError('Texture2DImage cannot calculate the number of '
+                             'bytes of {}'.format(img))
 
-    @validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if self.O.nV != 1 or self.U.nV != 1 or self.V.nV != 1:
-            raise ValueError('O, U, and V must each be only one vector')
-        self._validate_file_size('image')
-        return True
+    @observe('image')
+    def _reject_large_files(self, change):
+        try:
+            self._validate_file_size(change['name'], change['new'])
+        except ValueError as err:
+            setattr(change['owner'], change['name'], change['old'])
+            raise err
+
+    @validate('image')
+    def _validate_Z(self, proposal):
+        proposal['owner']._validate_file_size('image', proposal['value'])
+        return proposal['value']
 
     def _get_dirty_files(self, force=False):
         dirty = self._dirty_props

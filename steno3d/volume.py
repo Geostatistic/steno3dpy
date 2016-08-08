@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 
 from builtins import super
 from json import dumps
+from numpy import ndarray
+from tratlets import validate
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -63,39 +65,22 @@ class Mesh3DGrid(BaseMesh):
         """ get number of cells """
         return len(self.h1) * len(self.h2) * len(self.h3)
 
-    def _nbytes(self, name=None):
+    def _nbytes(self, arr=None):
         filenames = ('h1', 'h2', 'h3', 'x0')
-        if name in filenames:
-            return getattr(self, name).astype('f4').nbytes
-        elif name is None:
+        if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
+        if arr in filenames:
+            if getattr(self, arr, None) is None:
+                return 0
+            arr = getattr(self, arr)
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh3DGrid cannot calculate the number of '
-                         'bytes of {}'.format(name))
-
-    def _on_property_change(self, name, pre, post):
-        try:
-            if name in ('h1', 'h2', 'h3', 'x0'):
-                self._validate_file_size(name)
-        except ValueError as err:
-            setattr(self, '_p_' + name, pre)
-            raise err
-        super()._on_property_change(name, pre, post)
-
-    @validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if self.x0.nV != 1:
-            raise ValueError('Origin x0 must be only one vector')
-        self._validate_file_size('h1')
-        self._validate_file_size('h2')
-        self._validate_file_size('h3')
-        self._validate_file_size('x0')
-        return True
+                         'bytes of {}'.format(arr))
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
         dirty = self._dirty_props
-        # datadict = dict()
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty):
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -147,14 +132,14 @@ class Volume(CompositeResource):
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @validator
-    def validate(self):
+    @validate('data')
+    def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(self.data):
+        for ii, dat in enumerate(proposal['value']):
             assert dat.location == 'CC'  # in ('N', 'CC')
             valid_length = (
-                self.mesh.nC if dat.location == 'CC'
-                else self.mesh.nN
+                proposal['owner'].mesh.nC if dat.location == 'CC'
+                else proposal['owner'].mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -166,8 +151,7 @@ class Volume(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        super(Volume, self).validate()
-        return True
+        return proposal['value']
 
 
 __all__ = ['Volume', 'Mesh3DGrid']

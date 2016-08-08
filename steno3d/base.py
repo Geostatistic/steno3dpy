@@ -183,11 +183,6 @@ class UserContent(DelayedValidator):
             raise ValueError('JSON not available: Data not uploaded')
         return json
 
-    @validator
-    def validate(self):
-        """Check if content is built correctly"""
-        return True
-
 
 class BaseResource(UserContent):
     """Base class for all resources that are added to projects and
@@ -202,20 +197,15 @@ class BaseResource(UserContent):
             self.opts._mark_clean(recurse=False)
         return datadict
 
-    @validator
-    def validate(self):
-        """Check if content is built correctly"""
-        return True
 
-
-    def _validate_file_size(self, name):
+    def _validate_file_size(self, name, arr):
         if Comms.user.logged_in:
             file_limit = Comms.user.file_size_limit
-            if self._nbytes(name) > file_limit:
+            if self._nbytes(arr) > file_limit:
                 raise ValueError(
                     '{name} file size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(name=name,
-                                         file=self._nbytes(name),
+                                         file=self._nbytes(arr),
                                          lim=file_limit)
                 )
         return True

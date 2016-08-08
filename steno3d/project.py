@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-from traitlets import Bool
+from traitlets import Bool, validate
 
 from .base import CompositeResource, UserContent
 from .client import Comms, get, needs_login
@@ -81,14 +81,14 @@ class Project(UserContent):
     def _trigger_ACL_fix(self):
         self._put({})
 
-    @validator
-    def validate(self):
+    @validate('resources')
+    def _validate_resources(self):
         """Check if project resource pointers are correct"""
-        for res in self.resources:
-            if self not in res.project:
-                raise ValueError('Project/resource pointers misaligned: '
-                                 'Ensure that resources point to containing '
-                                 'project.')
+        # for res in self.resources:
+        #     if self not in res.project:
+        #         raise ValueError('Project/resource pointers misaligned: '
+        #                          'Ensure that resources point to containing '
+        #                          'project.')
         self._validate_project_size()
         return True
 
@@ -110,26 +110,26 @@ class Project(UserContent):
                 )
         return True
 
-    def _on_property_change(self, name, pre, post):
-        if name == 'resources':
-            if pre is None:
-                pre = []
-            if post is None:
-                post = []
-            for res in post:
-                if res not in pre and self not in res.project:
-                    res.project += [self]
-            for res in pre:
-                if res not in post and self in res.project:
-                    res.project = [p for p in res.project
-                                   if p is not self]
-            if len(set(post)) != len(post):
-                post_post = []
-                for r in post:
-                    if r not in post_post:
-                        post_post += [r]
-                self.resources = post_post
-        super()._on_property_change(name, pre, post)
+    # def _on_property_change(self, name, pre, post):
+    #     if name == 'resources':
+    #         if pre is None:
+    #             pre = []
+    #         if post is None:
+    #             post = []
+    #         for res in post:
+    #             if res not in pre and self not in res.project:
+    #                 res.project += [self]
+    #         for res in pre:
+    #             if res not in post and self in res.project:
+    #                 res.project = [p for p in res.project
+    #                                if p is not self]
+    #         if len(set(post)) != len(post):
+    #             post_post = []
+    #             for r in post:
+    #                 if r not in post_post:
+    #                     post_post += [r]
+    #             self.resources = post_post
+    #     super()._on_property_change(name, pre, post)
 
     def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         dirty = self._dirty

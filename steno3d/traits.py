@@ -58,18 +58,19 @@ def validator(func):
     @wraps(func)
     def func_wrapper(self):
         self._cross_validation_lock = False
-        trait_dict = self.traits()
-        for k in trait_dict:
-            if k in self._trait_values: # check this so we don't generate dynamic defaults  on validation
-                val = getattr(self, k)
-                trait_dict[k]._validate(self, val)
-                if isinstance(val, DelayedValidator):
-                    val.validate()
-            elif not trait_dict[k].allow_none:
-                raise tr.TraitError('Required property not set: {}'.format(k))
-        func_out = func(self)
-        self._cross_validation_lock = True
-        return func_out
+        try:
+            trait_dict = self.traits()
+            for k in trait_dict:
+                if k in self._trait_values:
+                    val = getattr(self, k)
+                    trait_dict[k]._validate(self, val)
+                    if isinstance(val, DelayedValidator):
+                        val.validate()
+                elif not trait_dict[k].allow_none:
+                    raise tr.TraitError('Required property not set: {}'.format(k))
+        finally:
+            self._cross_validation_lock = True
+        return func(self)
     return func_wrapper
 
 

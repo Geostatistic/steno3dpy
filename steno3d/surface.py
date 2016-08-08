@@ -10,7 +10,8 @@ from json import dumps
 
 from numpy import max as npmax
 from numpy import min as npmin
-from traitlets import Union
+from numpy import ndarray
+from traitlets import observe, Union, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -61,33 +62,39 @@ class Mesh2D(BaseMesh):
         """ get number of cells """
         return len(self.triangles)
 
-    def _nbytes(self, name=None):
-        if name in ('vertices', 'triangles'):
-            return getattr(self, name).astype('f4').nbytes
-        elif name is None:
+    def _nbytes(self, arr=None):
+        if arr is None:
             return self._nbytes('vertices') + self._nbytes('triangles')
+        if arr in ('vertices', 'triangles'):
+            arr = getattr(self, arr)
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh2D cannot calculate the number of '
-                         'bytes of {}'.format(name))
+                         'bytes of {}'.format(arr))
 
-    def _on_property_change(self, name, pre, post):
+    @observe('triangles', 'vertices')
+    def _reject_large_files(self, change):
         try:
-            if name in ('vertices', 'triangles'):
-                self._validate_file_size(name)
+            self._validate_file_size(change['name'], change['new'])
         except ValueError as err:
-            setattr(self, '_p_' + name, pre)
+            setattr(change['owner'], change['name'], change['old'])
             raise err
-        super()._on_property_change(name, pre, post)
 
-    @validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if npmin(self.triangles) < 0:
+    @validate('triangles')
+    def _validate_seg(self, proposal):
+        if npmin(proposal['value']) < 0:
             raise ValueError('Triangles may only have positive integers')
-        if npmax(self.triangles) >= len(self.vertices):
+        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
             raise ValueError('Triangles expects more vertices than provided')
-        self._validate_file_size('vertices')
-        self._validate_file_size('triangles')
-        return True
+        proposal['owner']._validate_file_size('triangles', proposal['value'])
+        return proposal['value']
+
+    @validate('vertices')
+    def _validate_vert(self, proposal):
+        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
+            raise ValueError('Triangles expects more vertices than provided')
+        proposal['owner']._validate_file_size('vertices', proposal['value'])
+        return proposal['value']
 
 
     def _get_dirty_files(self, force=False):
@@ -141,44 +148,40 @@ class Mesh2DGrid(BaseMesh):
         """ get number of cells """
         return len(self.h1) * len(self.h2)
 
-    def _nbytes(self, name=None):
+    def _nbytes(self, arr=None):
         filenames = ('h1', 'h2', 'x0', 'Z')
-        if name in filenames:
-            if getattr(self, name, None) is None:
-                return 0
-            return getattr(self, name).astype('f4').nbytes
-        if name is None:
+        if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
+        if arr in filenames:
+            if getattr(self, arr, None) is None:
+                return 0
+            arr = getattr(self, arr)
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh2DGrid cannot calculate the number of '
-                         'bytes of {}'.format(name))
+                         'bytes of {}'.format(arr))
 
-    def _on_property_change(self, name, pre, post):
+    @observe('Z')
+    def _reject_large_files(self, change):
         try:
-            if name in ('h1', 'h2', 'x0', 'Z'):
-                self._validate_file_size(name)
+            self._validate_file_size(change['name'], change['new'])
         except ValueError as err:
-            setattr(self, '_p_' + name, pre)
+            setattr(change['owner'], change['name'], change['old'])
             raise err
-        super()._on_property_change(name, pre, post)
 
-    @validator
-    def validate(self):
+    @validate('Z')
+    def _validate_Z(self, proposal):
         """Check if mesh content is built correctly"""
-        if self.x0.nV != 1:
-            raise ValueError('Origin x0 must be only one vector')
-        if getattr(self, 'Z', None) is not None and len(self.Z) != self.nN:
+        if len(proposal['value']) != proposal['owner'].nN:
             raise ValueError(
                 'Length of Z, {zlen}, must equal number of nodes, '
                 '{nnode}'.format(
-                    zlen=len(self.Z),
-                    nnode=self.nN
+                    zlen=len(proposal['value']),
+                    nnode=proposal['owner'].nN
                 )
             )
-        self._validate_file_size('h1')
-        self._validate_file_size('h2')
-        self._validate_file_size('x0')
-        self._validate_file_size('Z')
-        return True
+        proposal['owner']._validate_file_size('Z', proposal['value'])
+        return proposal['value']
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
@@ -249,14 +252,14 @@ class Surface(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @validator
-    def validate(self):
+    @validate('data')
+    def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(self.data):
+        for ii, dat in enumerate(proposal['value']):
             assert dat.location in ('N', 'CC')
             valid_length = (
-                self.mesh.nC if dat.location == 'CC'
-                else self.mesh.nN
+                proposal['owner'].mesh.nC if dat.location == 'CC'
+                else proposal['owner'].mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -268,8 +271,7 @@ class Surface(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        super(Surface, self).validate()
-        return True
+        return proposal['value']
 
 
 __all__ = ['Surface', 'Mesh2D', 'Mesh2DGrid']

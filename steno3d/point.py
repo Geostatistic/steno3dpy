@@ -6,6 +6,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
+from numpy import ndarray
+from traitlets import observe, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -41,26 +43,27 @@ class Mesh0D(BaseMesh):
         """ get number of nodes """
         return len(self.vertices)
 
-    def _nbytes(self, name=None):
-        if name is None or name == 'vertices':
-            return self.vertices.astype('f4').nbytes
+    def _nbytes(self, arr=None):
+        if arr is None or arr == 'vertices':
+            arr = self.vertices
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh0D cannot calculate the number of '
-                         'bytes of {}'.format(name))
+                         'bytes of {}'.format(arr))
 
-    def _on_property_change(self, name, pre, post):
+    @observe('vertices')
+    def _reject_large_files(self, change):
         try:
-            if name == 'vertices':
-                self._validate_file_size(name)
+            self._validate_file_size(change['name'], change['new'])
         except ValueError as err:
-            setattr(self, '_p_' + name, pre)
+            setattr(change['owner'], change['name'], change['old'])
             raise err
-        super()._on_property_change(name, pre, post)
 
-    @validator
-    def validate(self):
+    @validate('vertices')
+    def _validate_verts(self, proposal):
         """Check if mesh content is built correctly"""
-        self._validate_file_size('vertices')
-        return True
+        proposal['owner']._validate_file_size('vertices', proposal['value'])
+        return proposal['value']
 
     def _get_dirty_files(self, force=False):
         dirty = self._dirty_props
@@ -112,12 +115,12 @@ class Point(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @validator
-    def validate(self):
+    @validate('data')
+    def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(self.data):
+        for ii, dat in enumerate(proposal['value']):
             assert dat.location == 'N'
-            valid_length = self.mesh.nN
+            valid_length = proposal['owner'].mesh.nN
             if len(dat.data.array) != valid_length:
                 raise ValueError(
                     'point.data[{index}] length {datalen} does not match '
@@ -128,8 +131,7 @@ class Point(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        super(Point, self).validate()
-        return True
+        return proposal['value']
 
 
 __all__ = ['Point', 'Mesh0D']

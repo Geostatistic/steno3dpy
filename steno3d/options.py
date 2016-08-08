@@ -19,14 +19,9 @@ class Options(DelayedValidator):
     def _json(self):
         """returns json representation of options"""
         opts_json = {}
-        for key in self._properties:
+        for key in self.trait_names():
             opts_json[key] = getattr(self, key)
         return dumps(opts_json)
-
-    @validator
-    def validate(self):
-        """Check if content is built correctly"""
-        return True
 
 
 class ColorOptions(Options):

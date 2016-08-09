@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from builtins import super
 from warnings import warn
 
-from traitlets import Bool, observe, validate
+from traitlets import Bool, observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
 from .client import Comms, get, needs_login
@@ -122,9 +122,9 @@ class Project(UserContent):
     def _fix_proj_res(self, change):
         before = change['old']
         after = change['new']
-        if before is None:
+        if before in (None, Undefined):
             before = []
-        if after is None:
+        if after in (None, Undefined):
             after = []
         for res in after:
             if res not in before and self not in res.project:

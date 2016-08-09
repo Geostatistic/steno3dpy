@@ -124,7 +124,7 @@ class Mesh2DGrid(BaseMesh):
     )
     x0 = Vector(
         help='Origin vector',
-        default_value=[0, 0, 0]
+        default_value=[0., 0., 0.]
     )
     Z = Array(
         help='Node topography',

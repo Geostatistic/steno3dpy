@@ -10,7 +10,7 @@ from numpy import ndarray
 from traitlets import observe, validate
 
 from .base import BaseData
-from .traits import Array, StringChoices, validator
+from .traits import Array, String
 
 
 class DataArray(BaseData):
@@ -22,7 +22,7 @@ class DataArray(BaseData):
         dtype=(float, int)
     )
 
-    order = StringChoices(
+    order = String(
         help='Data array order, for data on grid meshes',
         choices={
             'c': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
@@ -32,10 +32,10 @@ class DataArray(BaseData):
         lowercase=True
     )
 
-    # def __init__(self, array=None, **kwargs):
-    #     super().__init__(**kwargs)
-    #     if array is not None:
-    #         self.array = array
+    def __init__(self, array=None, **kwargs):
+        super(DataArray, self).__init__(**kwargs)
+        if array is not None:
+            self.array = array
 
     def _nbytes(self, arr=None):
         if arr is None or arr == 'array':
@@ -48,7 +48,7 @@ class DataArray(BaseData):
     @observe('array')
     def _reject_large_files(self, change):
         try:
-            self._validate_file_size(change['new'])
+            self._validate_file_size(change['name'], change['new'])
         except ValueError as err:
             setattr(change['owner'], change['name'], change['old'])
             raise err
@@ -60,16 +60,16 @@ class DataArray(BaseData):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
-        if ('order' in dirty) or force:
+        dirty = [d for d in self.steno3d_traits() if d.dirty]
+        if 'order' in dirty or force:
             datadict['order'] = self.order
         return datadict
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = [d for d in self.steno3d_traits() if d.dirty]
         if 'array' in dirty or force:
-            files['array'] = self._properties['array'].serialize(self.array)
+            files['array'] = self.traits()['array'].serialize(self.array)
         return files
 
 __all__ = ['DataArray']

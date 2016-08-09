@@ -10,14 +10,14 @@ from builtins import super
 from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
-from traitlets imoprt observe, validate
+from traitlets import observe, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import Options
-from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 
 class _Mesh1DOptions(Options):
@@ -91,20 +91,20 @@ class Mesh1D(BaseMesh):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self._properties['vertices'].serialize(self.vertices)
+                self.traits()['vertices'].serialize(self.vertices)
         if 'segments' in dirty or force:
             files['segments'] = \
-                self._properties['segments'].serialize(self.segments)
+                self.traits()['segments'].serialize(self.segments)
         return files
 
 
-class _LineBinder(DelayedValidator):
+class _LineBinder(HasSteno3DTraits):
     """Contains the data on a 1D line set with location information"""
-    location = StringChoices(
+    location = String(
         help='Location of the data on mesh',
         choices={
             'CC': ('LINE', 'FACE', 'CELLCENTER', 'EDGE', 'SEGMENT'),
@@ -121,7 +121,7 @@ class Line(CompositeResource):
     """Contains all the information about a 1D line set"""
     mesh = KeywordInstance(
         help='Mesh',
-        klass=Mesh1D
+        klass='Mesh1D'
     )
     data = Repeated(
         help='Data',

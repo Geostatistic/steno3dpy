@@ -19,7 +19,7 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator, Vector
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -98,14 +98,14 @@ class Mesh2D(BaseMesh):
 
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = {}
+        dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self._properties['vertices'].serialize(self.vertices)
+                self.traits()['vertices'].serialize(self.vertices)
         if 'triangles' in dirty or force:
             files['triangles'] = \
-                self._properties['triangles'].serialize(self.triangles)
+                self.traits()['triangles'].serialize(self.triangles)
         return files
 
 
@@ -185,7 +185,7 @@ class Mesh2DGrid(BaseMesh):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
+        dirty = self._dirty_traits
         if ('h1' in dirty or 'h2' in dirty) or force:
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -200,16 +200,16 @@ class Mesh2DGrid(BaseMesh):
         return datadict
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'Z' in dirty or (force and getattr(self, 'Z', None) is not None):
-            files['Z'] = self._properties['Z'].serialize(self.Z)
+            files['Z'] = self.traits()['Z'].serialize(self.Z)
         return files
 
 
-class _SurfaceBinder(DelayedValidator):
+class _SurfaceBinder(HasSteno3DTraits):
     """Contains the data on a 2D surface with location information"""
-    location = StringChoices(
+    location = String(
         help='Location of the data on mesh',
         choices={
             'CC': ('FACE', 'CELLCENTER'),

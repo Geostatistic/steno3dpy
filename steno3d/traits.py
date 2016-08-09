@@ -16,6 +16,9 @@ import numpy as np
 import traitlets as tr
 
 
+_REGISTRY = {}
+
+
 class MetaDocTraits(tr.MetaHasTraits):
 
     def __new__(mcs, name, bases, classdict):
@@ -46,11 +49,9 @@ class MetaDocTraits(tr.MetaHasTraits):
             )
         classdict['__doc__'] = doc_str.strip()
 
-        return super(MetaDocTraits, mcs).__new__(mcs, name, bases, classdict)
-
-
-class HasDocTraits(with_metaclass(MetaDocTraits, tr.HasTraits)):
-    pass
+        newcls = super(MetaDocTraits, mcs).__new__(mcs, name, bases, classdict)
+        _REGISTRY[name] = newcls
+        return newcls
 
 
 def validator(func):
@@ -74,18 +75,74 @@ def validator(func):
     return func_wrapper
 
 
-class DelayedValidator(HasDocTraits):
+class DelayedValidator(tr.HasTraits):
 
     def __init__(self, *args, **kwargs):
-        super(DelayedValidator, self).__init__(*args, **kwargs)
         self._cross_validation_lock = True
+        super(DelayedValidator, self).__init__(*args, **kwargs)
 
     @validator
     def validate(self):
         return True
 
 
-class Color(tr.TraitType):
+class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
+
+    def __init__(self, **metadata):
+        self._dirty_traits = set()
+        super(HasSteno3DTraits, self).__init__(**metadata)
+
+    @tr.observe()
+    def _mark_dirty(self, change):
+        self._dirty_traits.add(change['name'])
+
+    def _mark_clean(self, recurse=True):
+        self._dirty_traits = set()
+        if not recurse or getattr(self, '_inside_clean', False):
+            return
+        self._inside_clean = True
+        traits = self._dirty
+        for trait in traits:
+            value = getattr(self, trait)
+            if isinstance(value, HasSteno3DTraits):
+                value._mark_clean()
+            if isinstance(value, (list, tuple)):
+                for v in value:
+                    if isinstance(v, HasSteno3DTraits):
+                        v._mark_clean()
+        self._inside_clean = False
+
+    @property
+    def _dirty(self):
+        if getattr(self, '_inside_dirty', False):
+            return set()
+        dirty_instances = set()
+        self._inside_dirty = True
+        traits = self.traits()
+        for trait in traits:
+            value = getattr(self, trait)
+            if isinstance(value, HasSteno3DTraits) and len(value._dirty) > 0:
+                dirty_instances.add(trait)
+            if isinstance(value, (list, tuple)):
+                for v in value:
+                    if isinstance(v, HasSteno3DTraits) and len(v._dirty) > 0:
+                        dirty_instances.add(trait)
+        self._inside_diry = False
+        return self._dirty_traits.union(dirty_instances)
+
+
+class Steno3DTrait(tr.TraitType):
+    """A subclass of traittype to use in steno3d"""
+
+    # def __init__(self, dirty=True, is_file=False, **metadata):
+    #     self.dirty = dirty
+    #     self.is_file = is_file
+    #     super(Steno3DTrait, self).__init__(**metadata)
+
+
+
+
+class Color(Steno3DTrait):
     """A trait for rgb, hex, or string colors. Converts to rgb."""
 
     default_value = 'RANDOM'
@@ -120,10 +177,13 @@ class Color(tr.TraitType):
         return tuple(value)
 
 
-class StringChoices(tr.Enum):
+class String(Steno3DTrait):
     """A trait for strings, where you can map several values to one"""
 
-    def __init__(self, choices={}, lowercase=False, strip=' ', **metadata):
+    def __init__(self, choices={}, lowercase=False, strip=' ',
+                 default_value=tr.Undefined, **metadata):
+        if choices is None:
+            choices = {}
         if not isinstance(choices, (list, tuple, dict)):
             raise tr.TraitError('choices must be a list, tuple, or dict')
         if isinstance(choices, (list, tuple)):
@@ -140,7 +200,9 @@ class StringChoices(tr.Enum):
         self.lowercase = lowercase
         self.strip = strip
         self.choices = choices
-        super(StringChoices, self).__init__([v for v in choices], **metadata)
+        if metadata.get('allow_none', False) and default_value is tr.Undefined:
+            default_value = None
+        super(String, self).__init__(default_value=default_value, **metadata)
 
     def validate(self, obj, value):
         """check that input is string and in choices, if applicable"""
@@ -156,8 +218,18 @@ class StringChoices(tr.Enum):
             self.error(obj, value)
         return value.lower() if self.lowercase else value
 
+    def info(self):
+        """description of string trait"""
+        if self.choices is not None and len(self.choices) != 0:
+            result = 'any of ' + ', '.join(self.choices)
+        else:
+            result = 'a string'
+        if self.allow_none:
+            return result + ' or None'
+        return result
 
-class Image(tr.TraitType):
+
+class Image(Steno3DTrait):
     """A trait for PNG images"""
 
     info_text = 'a PNG image file'
@@ -199,7 +271,7 @@ class Image(tr.TraitType):
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
 
-class Array(tr.TraitType):
+class Array(Steno3DTrait):
     """A trait for serializable float or int arrays"""
 
     def __init__(self, shape=('*',), dtype=(float, int), **metadata):
@@ -290,6 +362,12 @@ class KeywordInstance(tr.Instance):
         if klass is None:
             raise tr.TraitError('KeywordInstance klass cannot be None')
         super(KeywordInstance, self).__init__(klass, args, kw, **metadata)
+
+    def _resolve_string(self, string):
+        try:
+            return _REGISTRY[string]
+        except KeyError:
+            return super(KeywordInstance, self)._resolve_string(string)
 
     def validate(self, obj, value):
         if isinstance(value, self.klass):

@@ -11,9 +11,9 @@ from json import dumps
 from pprint import pformat
 from warnings import warn
 
-from traitlets import Unicode
-from .traits import DelayedValidator, validator
+from traitlets import observe, Undefined, validate
 
+from .traits import HasSteno3DTraits, KeywordInstance, Repeated, String
 from .client import Comms, needs_login, pause, plot, post, put
 
 
@@ -23,23 +23,21 @@ class classproperty(property):
         return self.fget.__get__(None, owner)()
 
 
-class UserContent(DelayedValidator):
+class UserContent(HasSteno3DTraits):
     """Base class for everything user creates and uploads in steno3d"""
-    title = Unicode(
+    title = String(
         help='Title of the model.',
         default_value='',
         allow_none=True
     )
-    description = Unicode(
+    description = String(
         help='Description of the model.',
         default_value='',
         allow_none=True
     )
     _sync = False
-
-    def __init__(self, **kwargs):
-        super(UserContent, self).__init__(**kwargs)
-        self._upload_data = None
+    _upload_data = None
+    _dirty = set()
 
     @classproperty
     @classmethod
@@ -58,6 +56,7 @@ class UserContent(DelayedValidator):
                 className=cls._resource_class
             )
         return cls.__model_api_location
+
 
     def _upload(self, sync=False, verbose=True, tab_level=''):
         if getattr(self, '_uploading', False):
@@ -99,7 +98,7 @@ class UserContent(DelayedValidator):
             self._uploading = False
 
     def _get_dirty_data(self, force=False):
-        dirty = self._dirty_props
+        dirty = self._dirty_traits
         datadict = dict()
         if 'title' in dirty or force:
             datadict['title'] = self.title
@@ -113,7 +112,8 @@ class UserContent(DelayedValidator):
     def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         pass
 
-    def _on_property_change(self, name, pre, post):
+    @observe()
+    def _on_property_change(self, change):
         if getattr(self, '_sync', False):
             self._upload(self._sync)
 
@@ -194,7 +194,6 @@ class BaseResource(UserContent):
         dirty = self._dirty
         if 'opts' in dirty or (force and hasattr(self, 'opts')):
             datadict['meta'] = self.opts._json
-            self.opts._mark_clean(recurse=False)
         return datadict
 
 
@@ -213,12 +212,11 @@ class BaseResource(UserContent):
 
 class CompositeResource(BaseResource):
     """A composite resource that stores references to lower-level objects."""
-    # project = properties.Pointer(
-    #     'Project',
-    #     ptype='Project',
-    #     required=True,
-    #     repeated=True
-    # )
+    project = Repeated(
+        help='Project',
+        trait=KeywordInstance(klass='Project')
+    )
+
     _children = {
         'mesh': None,
         'data': 'data',
@@ -226,11 +224,16 @@ class CompositeResource(BaseResource):
     }
 
     def __init__(self, project=None, **kwargs):
-        if project is not None:
-            warn('Resources are no longer constructed with their project. '
-                 'Resources must be added to the project\'s list of '
-                 'resources, `your_proj.resources`', DeprecationWarning)
+        if project is None:
+            raise TypeError('Resource must be constructed with its '
+                            'containing project(s)')
         super(CompositeResource, self).__init__(**kwargs)
+        self.project = project
+        # if project is not None:
+        #     warn('Resources are no longer constructed with their project. '
+        #          'Resources must be added to the project\'s list of '
+        #          'resources, `your_proj.resources`', DeprecationWarning)
+        # super(CompositeResource, self).__init__(**kwargs)
 
     @classmethod
     def _url_view_from_uid(cls, uid):
@@ -241,13 +244,13 @@ class CompositeResource(BaseResource):
             uid=uid)
         return url
 
-    @validator
-    def validate(self):
-        # for proj in self.project:
-        #     if self not in proj.resources:
-        #         raise ValueError('Project/resource pointers misaligned: '
-        #                          'Ensure that projects contain all the '
-        #                          'resources that point to them.')
+    @validate('project')
+    def _validate_proj(self, proposal):
+        for proj in proposal['value']:
+            if self not in proj.resources:
+                raise ValueError('Project/resource pointers misaligned: '
+                                 'Ensure that projects contain all the '
+                                 'resources that point to them.')
         return True
 
     @needs_login
@@ -292,26 +295,27 @@ class CompositeResource(BaseResource):
         if 'textures' in dirty:
             [t._upload(sync, verbose, tab_level) for t in self.textures]
 
-    def _on_property_change(self, name, pre, post):
-        if name == 'project':
-            if pre is None:
-                pre = []
-            if post is None:
-                post = []
-            for proj in post:
-                if proj not in pre and self not in proj.resources:
-                    proj.resources += [self]
-            for proj in pre:
-                if proj not in post and self in proj.resources:
-                    proj.resources = [r for r in proj.resources
-                                      if r is not self]
-            if len(set(post)) != len(post):
-                post_post = []
-                for p in post:
-                    if p not in post_post:
-                        post_post += [p]
-                self.project = post_post
-        super(CompositeResource, self)._on_property_change(name, pre, post)
+    @observe('project')
+    def _fix_proj_res(self, change):
+        before = change['old']
+        after = change['new']
+        if before in (None, Undefined):
+            before = []
+        if after in (None, Undefined):
+            after = []
+        for proj in after:
+            if proj not in before and self not in proj.resources:
+                proj.resources += [self]
+        for proj in before:
+            if proj not in after and self in proj.resources:
+                proj.resources = [r for r in proj.resources
+                                  if r is not self]
+        if len(set(after)) != len(after):
+            post_post = []
+            for p in after:
+                if p not in post_post:
+                    post_post += [p]
+            self.project = post_post
 
     @property
     def _url(self):

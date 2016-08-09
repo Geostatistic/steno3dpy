@@ -25,8 +25,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from properties.base import Pointer
-
 from . import parsers
 from . import client
 from .project import *
@@ -44,7 +42,6 @@ __copyright__ = 'Copyright 2016 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
-Pointer.resolve()
 
 try:
     del Pointer

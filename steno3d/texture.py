@@ -12,7 +12,7 @@ from json import dumps
 from traitlets import observe, validate
 
 from .base import BaseTexture2D
-from .traits import Image, validator, Vector
+from .traits import Image, Vector
 
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
@@ -60,8 +60,8 @@ class Texture2DImage(BaseTexture2D):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'image' in dirty or force:
             self.image.seek(0)
             copy = BytesIO()
@@ -73,8 +73,7 @@ class Texture2DImage(BaseTexture2D):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
-        # datadict = dict()
+        dirty = self._dirty_traits
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
                 O=[self.O[0][0], self.O[0][1], self.O[0][2]],

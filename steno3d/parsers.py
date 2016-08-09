@@ -13,10 +13,10 @@ from os.path import isfile as _isfile
 from os.path import realpath as _realpath
 
 from future.utils import with_metaclass as _with_metaclass
-from traitlets import Unicode as _Unicode
 from six import string_types as _string_types
 
-from .traits import DelayedValidator as _DelayedValidator
+from .traits import HasSteno3DTraits as _HasSteno3DTraits
+from .traits import String as _String
 
 
 class _ParserMetaClass(type):
@@ -52,18 +52,18 @@ class _ParserMetaClass(type):
 
 
 class _BaseParserMetaClass(_ParserMetaClass,
-                           _DelayedValidator.__class__):
+                           _HasSteno3DTraits.__class__):
     """Augmented metaclass for parsers, inherits from properties
     metaclass
     """
 
 
 class BaseParser(_with_metaclass(_BaseParserMetaClass,
-                                 _DelayedValidator)):
+                                 _HasSteno3DTraits)):
     """Base class for Steno3D parser objects"""
 
     extensions = (None,)
-    file_name = _Unicode(
+    file_name = _String(
         help='The main file to parse'
     )
 
@@ -169,14 +169,14 @@ class _AllParserMetaClass(type):
 
 
 class _BaseAllParserMetaClass(_AllParserMetaClass,
-                              _DelayedValidator.__class__):
+                              _HasSteno3DTraits.__class__):
     """Augmented metaclass for parser Directors, inherits from
     properties metaclass
     """
 
 
 class AllParsers(_with_metaclass(_BaseAllParserMetaClass,
-                                 _DelayedValidator)):
+                                 _HasSteno3DTraits)):
     """Base class for Steno3D parser objects that parse all
     available file types
     """

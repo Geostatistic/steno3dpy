@@ -8,14 +8,14 @@ from __future__ import unicode_literals
 from builtins import super
 from json import dumps
 from numpy import ndarray
-from tratlets import validate
+from traitlets import validate
 
 from .base import BaseMesh
 from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
-from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator, Vector
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -80,7 +80,7 @@ class Mesh3DGrid(BaseMesh):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
+        dirty = self._dirty_traits
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty):
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -98,9 +98,9 @@ class Mesh3DGrid(BaseMesh):
         return datadict
 
 
-class _VolumeBinder(DelayedValidator):
+class _VolumeBinder(HasSteno3DTraits):
     """Contains the data on a 3D volume with location information"""
-    location = StringChoices(
+    location = String(
         help='Location of the data on mesh',
         choices={
             'CC': ('CELLCENTER'),

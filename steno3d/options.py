@@ -9,10 +9,10 @@ from json import dumps
 
 from traitlets import Float, Bool
 
-from .traits import Color, DelayedValidator, validator
+from .traits import Color, HasSteno3DTraits
 
 
-class Options(DelayedValidator):
+class Options(HasSteno3DTraits):
     """Generic options for all steno3d resources"""
 
     @property

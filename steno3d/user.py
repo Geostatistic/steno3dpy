@@ -7,41 +7,41 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-from traitlets import Int, Unicode
+from traitlets import Int
 
-from .traits import DelayedValidator
+from .traits import HasSteno3DTraits, String
 
 
-class User(DelayedValidator ):
+class User(HasSteno3DTraits ):
     """Class representing a user instance"""
     _model_api_location = "user"
-    email = Unicode(
+    email = String(
         help='Email',
         allow_none=True
     )
-    name = Unicode(
+    name = String(
         help='Name',
         allow_none=True
     )
-    url = Unicode(
+    url = String(
         help='URL',
         allow_none=True
     )
-    affiliation = Unicode(
+    affiliation = String(
         help='Affiliation',
         allow_none=True
     )
-    location = Unicode(
+    location = String(
         help='Location',
         allow_none=True
     )
-    username = Unicode(
+    username = String(
         help='Username',
         default_value=None,
         allow_none=True
     )
 
-    devel_key = Unicode(
+    devel_key = String(
         help='Developer API Key',
         allow_none=True
     )

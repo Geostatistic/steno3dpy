@@ -14,7 +14,7 @@ from .base import CompositeResource
 from .options import ColorOptions
 from .options import Options
 from .texture import Texture2DImage
-from .traits import Array, DelayedValidator, KeywordInstance, Repeated, StringChoices, validator
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 
 class _Mesh0DOptions(Options):
@@ -66,17 +66,17 @@ class Mesh0D(BaseMesh):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self._properties['vertices'].serialize(self.vertices)
+                self.traits()['vertices'].serialize(self.vertices)
         return files
 
 
-class _PointBinder(DelayedValidator):
+class _PointBinder(HasSteno3DTraits):
     """Contains the data on a 0D point cloud"""
-    location = StringChoices(
+    location = String(
         help='Location of the data on mesh',
         default_value='N',
         choices={
@@ -103,11 +103,12 @@ class Point(CompositeResource):
     textures = Repeated(
         help='Textures',
         trait=KeywordInstance(klass=Texture2DImage),
-        allow_none=False
+        allow_none=True
     )
     opts = KeywordInstance(
         help='Options',
-        klass=_PointOptions
+        klass=_PointOptions,
+        allow_none=True
     )
 
     def _nbytes(self):

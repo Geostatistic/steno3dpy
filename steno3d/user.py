@@ -7,9 +7,7 @@ from __future__ import unicode_literals
 
 from builtins import super
 
-from traitlets import Int
-
-from .traits import HasSteno3DTraits, String
+from .traits import HasSteno3DTraits, Int, String
 
 
 class User(HasSteno3DTraits ):

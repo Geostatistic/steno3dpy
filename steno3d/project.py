@@ -10,11 +10,11 @@ from __future__ import unicode_literals
 from builtins import super
 from warnings import warn
 
-from traitlets import Bool, observe, Undefined, validate
+from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
 from .client import Comms, get, needs_login
-from .traits import KeywordInstance, Repeated
+from .traits import Bool, KeywordInstance, Repeated
 
 
 QUOTA_REACHED = """

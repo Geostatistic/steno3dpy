@@ -11,7 +11,7 @@ from json import dumps
 from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
-from traitlets import observe, Union, validate
+from traitlets import observe, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -19,7 +19,7 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Union, Vector
 
 
 class _Mesh2DOptions(MeshOptions):

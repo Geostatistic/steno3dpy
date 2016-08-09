@@ -7,9 +7,7 @@ from __future__ import unicode_literals
 
 from json import dumps
 
-from traitlets import Float, Bool
-
-from .traits import Color, HasSteno3DTraits
+from .traits import Bool, Color, Float, HasSteno3DTraits
 
 
 class Options(HasSteno3DTraits):

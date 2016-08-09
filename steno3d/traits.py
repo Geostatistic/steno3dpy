@@ -396,6 +396,10 @@ class KeywordInstance(tr.Instance):
 class Repeated(tr.List):
     """A list trait that creates a length-1 list if given an instance"""
 
+    def get(self, obj, cls=None):
+        value = super(Repeated, self).get(obj, cls)
+        return [v for v in value]
+
     def validate(self, obj, value):
         if not isinstance(value, (list, tuple)):
             value = [value]

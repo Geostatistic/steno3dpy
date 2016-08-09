@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
-from os.path import isfile
 from six import integer_types
 from six import string_types
 from six import with_metaclass
 from tempfile import NamedTemporaryFile
 
 import numpy as np
+from png import Reader
 import traitlets as tr
 
 
@@ -23,8 +23,11 @@ class MetaDocTraits(tr.MetaHasTraits):
 
     def __new__(mcs, name, bases, classdict):
         def sphinx(trait_name, trait):
+            if isinstance(trait, Steno3DTrait):
+                return trait.sphinx(trait_name)
             return (
-                ':param {name}: {doc}\n:type {name}: :class:`{cls}`'.format(
+                ':param {name}: {doc}\n:type {name}: '
+                ':class:`{cls} <.{cls}>`'.format(
                     name=trait_name,
                     doc=trait.help,
                     cls=trait.__class__.__name__
@@ -41,11 +44,11 @@ class MetaDocTraits(tr.MetaHasTraits):
                if isinstance(value, tr.TraitType) and not is_required(value)}
         if req:
             doc_str += '\n\nRequired:\n\n' + '\n'.join(
-                (sphinx(key, value) for key, value in req.items())
+                (value.sphinx(key) for key, value in req.items())
             )
         if opt:
             doc_str += '\n\nOptional:\n\n' + '\n'.join(
-                (sphinx(key, value) for key, value in opt.items())
+                (value.sphinx(key) for key, value in opt.items())
             )
         classdict['__doc__'] = doc_str.strip()
 
@@ -131,23 +134,68 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         return self._dirty_traits.union(dirty_instances)
 
 
-class Steno3DTrait(tr.TraitType):
-    """A subclass of traittype to use in steno3d"""
+class Steno3DTrait(object):
+    """A mixin for identifying and documenting steno3d traits"""
 
-    # def __init__(self, dirty=True, is_file=False, **metadata):
-    #     self.dirty = dirty
-    #     self.is_file = is_file
-    #     super(Steno3DTrait, self).__init__(**metadata)
+    sphinx_extra = ''
+
+    @property
+    def sphinx_class(self):
+        return ':class:`{cls} <.{cls}>`'.format(cls=self.__class__.__name__)
+
+    def sphinx(self, name):
+        if not isinstance(self, tr.TraitType):
+            return ''
+        return (
+            ':param {name}: {doc}\n:type {name}: {cls}'.format(
+                name=name,
+                doc=self.help + self.sphinx_extra,
+                cls=self.sphinx_class
+            )
+        )
 
 
+class Steno3DNumber(Steno3DTrait):
+
+    @property
+    def sphinx_extra(self):
+        if self.min is None and self.max is None:
+            return ''
+        return ', Range: [{mn}, {mx}]'.format(
+            mn='-inf' if self.min is None else self.min,
+            mx='inf' if self.max is None else self.max
+        )
 
 
-class Color(Steno3DTrait):
+class Int(Steno3DNumber, tr.Int):
+    pass
+
+
+class Float(Steno3DNumber, tr.Float):
+    pass
+
+
+class Bool(Steno3DTrait, tr.Bool):
+    pass
+
+
+class Union(Steno3DTrait, tr.Union):
+
+    @property
+    def sphinx_class(self):
+        for t in self.trait_types:
+            if not isinstance(t, Steno3DTrait):
+                return super(Union, self).sphinx_class
+        return ', '.join(t.sphinx_class for t in self.trait_types)
+
+
+class Color(Steno3DTrait, tr.TraitType):
     """A trait for rgb, hex, or string colors. Converts to rgb."""
 
     default_value = 'RANDOM'
     info_text = ('a color (RGB with values 0-255, hex color e.g. \'#FF0000\', '
                 'string color name, or \'random\')')
+    sphinx_extra = ', Format: RGB, hex, or predefined color'
 
     def validate(self, obj, value):
         """check if input is valid color and converts to RBG"""
@@ -177,7 +225,7 @@ class Color(Steno3DTrait):
         return tuple(value)
 
 
-class String(Steno3DTrait):
+class String(Steno3DTrait, tr.TraitType):
     """A trait for strings, where you can map several values to one"""
 
     def __init__(self, choices={}, lowercase=False, strip=' ',
@@ -228,29 +276,30 @@ class String(Steno3DTrait):
             return result + ' or None'
         return result
 
+    @property
+    def sphinx_extra(self):
+        if self.choices is None or len(self.choices) == 0:
+            return ''
+        return ', Choices: ' + ', '.join(self.choices)
 
-class Image(Steno3DTrait):
+
+class Image(Steno3DTrait, tr.TraitType):
     """A trait for PNG images"""
 
     info_text = 'a PNG image file'
+    sphinx_extra = ', Format: PNG'
 
     def validate(self, obj, value):
         """checks that image file is PNG and gets a copy"""
-        try:
-            import png
-        except:
-            raise ImportError('Error importing png module: '
-                              '`pip install pypng`')
-
         if getattr(value, '__valid__', False):
             return value
 
         try:
             if hasattr(value, 'read'):
-                png.Reader(value).validate_signature()
+                Reader(value).validate_signature()
             else:
                 with open(value, 'rb') as v:
-                    png.Reader(v).validate_signature()
+                    Reader(v).validate_signature()
         except Exception:
             self.error(obj, value)
 
@@ -271,7 +320,7 @@ class Image(Steno3DTrait):
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
 
-class Array(Steno3DTrait):
+class Array(Steno3DTrait, tr.TraitType):
     """A trait for serializable float or int arrays"""
 
     def __init__(self, shape=('*',), dtype=(float, int), **metadata):
@@ -298,6 +347,14 @@ class Array(Steno3DTrait):
         return 'a list or numpy array of {type} with shape {shp}'.format(
             type=', '.join([str(t) for t in self.dtype]),
             shp=self.shape
+        )
+
+    @property
+    def sphinx_extra(self):
+        return ', Shape: {shp}, Type: {dtype}'.format(
+            shp='(' + ', '.join(['\*' if s == '*' else str(s)
+                                 for s in self.shape]) + ')',
+            dtype=self.dtype
         )
 
     def validate(self, obj, value):
@@ -355,7 +412,7 @@ class Vector(Array):
         return super(Vector, self).validate(obj, value)
 
 
-class KeywordInstance(tr.Instance):
+class KeywordInstance(Steno3DTrait, tr.Instance):
     """An instance trait that can be constructed with only a keyword dict"""
 
     def __init__(self, klass=None, args=(), kw=None, **metadata):
@@ -393,8 +450,29 @@ class KeywordInstance(tr.Instance):
             return result + ' or None'
         return result
 
-class Repeated(tr.List):
+    @property
+    def sphinx_class(self):
+        if isinstance(self.klass, string_types):
+            kls = self.klass
+        else:
+            kls = self.klass.__name__
+        return ':class:`{cls} <.{cls}>`'.format(cls=kls)
+
+class Repeated(Steno3DTrait, tr.List):
     """A list trait that creates a length-1 list if given an instance"""
+
+    @property
+    def sphinx_class(self):
+        if self._trait is None or not isinstance(self._trait, Steno3DTrait):
+            return super(Repeated, self).sphinx_class
+        return self._trait.sphinx_class
+
+    @property
+    def sphinx_extra(self):
+        message = ' (Multiple values may be specified using a list)'
+        if self._trait is not None and isinstance(self._trait, Steno3DTrait):
+            return self._trait.sphinx_extra + message
+        return message
 
     def get(self, obj, cls=None):
         value = super(Repeated, self).get(obj, cls)

@@ -37,11 +37,19 @@ class MetaDocTraits(tr.MetaHasTraits):
         def is_required(trait):
             return not trait.allow_none
 
+        trait_dict = {}
+        for base in reversed(bases):
+            if issubclass(base, tr.HasTraits):
+                trait_dict.update(base.class_traits())
+
+        trait_dict.update({key: value for key, value in classdict.items()
+                           if isinstance(value, tr.TraitType)})
+
         doc_str = classdict.get('__doc__', '')
-        req = {key: value for key, value in classdict.items()
-               if isinstance(value, tr.TraitType) and is_required(value)}
-        opt = {key: value for key, value in classdict.items()
-               if isinstance(value, tr.TraitType) and not is_required(value)}
+        req = {key: value for key, value in trait_dict.items()
+               if is_required(value)}
+        opt = {key: value for key, value in trait_dict.items()
+               if not is_required(value)}
         if req:
             doc_str += '\n\nRequired:\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in req.items())

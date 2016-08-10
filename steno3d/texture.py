@@ -77,9 +77,9 @@ class Texture2DImage(BaseTexture2D):
         dirty = self._dirty_traits
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
-                O=[self.O[0][0], self.O[0][1], self.O[0][2]],
-                U=[self.U[0][0], self.U[0][1], self.U[0][2]],
-                V=[self.V[0][0], self.V[0][1], self.V[0][2]],
+                O=self.O.tolist(),
+                U=self.U.tolist(),
+                V=self.V.tolist(),
             ))
         return datadict
 

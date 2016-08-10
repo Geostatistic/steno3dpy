@@ -6,6 +6,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
+from six import string_types
+
 from numpy import ndarray
 from traitlets import observe, validate
 
@@ -38,7 +40,7 @@ class DataArray(BaseData):
             self.array = array
 
     def _nbytes(self, arr=None):
-        if arr is None or arr == 'array':
+        if arr is None or (isinstance(arr, string_types) and arr == 'array'):
             arr = self.array
         if isinstance(arr, ndarray):
             return arr.astype('f4').nbytes
@@ -60,14 +62,14 @@ class DataArray(BaseData):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = [d for d in self.steno3d_traits() if d.dirty]
+        dirty = self._dirty_traits
         if 'order' in dirty or force:
             datadict['order'] = self.order
         return datadict
 
     def _get_dirty_files(self, force=False):
         files = super()._get_dirty_files(force)
-        dirty = [d for d in self.steno3d_traits() if d.dirty]
+        dirty = self._dirty_traits
         if 'array' in dirty or force:
             files['array'] = self.traits()['array'].serialize(self.array)
         return files

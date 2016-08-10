@@ -6,6 +6,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
+from six import string_types
+
 from numpy import ndarray
 from traitlets import observe, validate
 
@@ -44,7 +46,7 @@ class Mesh0D(BaseMesh):
         return len(self.vertices)
 
     def _nbytes(self, arr=None):
-        if arr is None or arr == 'vertices':
+        if arr is None or (isinstance(arr, string_types) and arr == 'vertices'):
             arr = self.vertices
         if isinstance(arr, ndarray):
             return arr.astype('f4').nbytes

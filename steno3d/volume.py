@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from builtins import super
 from json import dumps
 from numpy import ndarray
+from six import string_types
 from traitlets import validate
 
 from .base import BaseMesh
@@ -69,7 +70,7 @@ class Mesh3DGrid(BaseMesh):
         filenames = ('h1', 'h2', 'h3', 'x0')
         if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
-        if arr in filenames:
+        if isinstance(arr, string_types) and arr in filenames:
             if getattr(self, arr, None) is None:
                 return 0
             arr = getattr(self, arr)

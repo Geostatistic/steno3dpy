@@ -11,6 +11,7 @@ from json import dumps
 from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
+from six import string_types
 from traitlets import observe, validate
 
 from .base import BaseMesh
@@ -65,7 +66,7 @@ class Mesh2D(BaseMesh):
     def _nbytes(self, arr=None):
         if arr is None:
             return self._nbytes('vertices') + self._nbytes('triangles')
-        if arr in ('vertices', 'triangles'):
+        if isinstance(arr, string_types) and arr in ('vertices', 'triangles'):
             arr = getattr(self, arr)
         if isinstance(arr, ndarray):
             return arr.astype('f4').nbytes
@@ -81,7 +82,7 @@ class Mesh2D(BaseMesh):
             raise err
 
     @validate('triangles')
-    def _validate_seg(self, proposal):
+    def _validate_tri(self, proposal):
         if npmin(proposal['value']) < 0:
             raise ValueError('Triangles may only have positive integers')
         if npmax(proposal['value']) >= len(proposal['owner'].vertices):
@@ -91,7 +92,7 @@ class Mesh2D(BaseMesh):
 
     @validate('vertices')
     def _validate_vert(self, proposal):
-        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
+        if npmax(proposal['owner'].triangles) >= len(proposal['value']):
             raise ValueError('Triangles expects more vertices than provided')
         proposal['owner']._validate_file_size('vertices', proposal['value'])
         return proposal['value']
@@ -152,7 +153,7 @@ class Mesh2DGrid(BaseMesh):
         filenames = ('h1', 'h2', 'x0', 'Z')
         if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
-        if arr in filenames:
+        if isinstance(arr, string_types) and arr in filenames:
             if getattr(self, arr, None) is None:
                 return 0
             arr = getattr(self, arr)

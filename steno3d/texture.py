@@ -9,6 +9,7 @@ from builtins import super
 from collections import namedtuple
 from io import BytesIO
 from json import dumps
+from six import string_types
 from traitlets import observe, validate
 
 from .base import BaseTexture2D
@@ -37,7 +38,7 @@ class Texture2DImage(BaseTexture2D):
     )
 
     def _nbytes(self, img=None):
-        if img is None or img == 'image':
+        if img is None or (isinstance(img, string_types) and img == 'image'):
             img = self.image
         try:
             img.seek(0)

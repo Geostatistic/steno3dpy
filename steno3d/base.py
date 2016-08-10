@@ -37,7 +37,6 @@ class UserContent(HasSteno3DTraits):
     )
     _sync = False
     _upload_data = None
-    _dirty = set()
 
     @classproperty
     @classmethod
@@ -266,7 +265,7 @@ class CompositeResource(BaseResource):
 
     def _get_dirty_data(self, force=False):
         datadict = super(CompositeResource, self)._get_dirty_data(force)
-        dirty = self._dirty_props
+        dirty = self._dirty_traits
         if 'mesh' in dirty or force:
             datadict['mesh'] = dumps({
                 'uid': self.mesh._json['longUid']

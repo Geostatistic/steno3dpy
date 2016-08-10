@@ -10,6 +10,7 @@ from builtins import super
 from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
+from six import string_types
 from traitlets import observe, validate
 
 from .base import BaseMesh
@@ -59,7 +60,7 @@ class Mesh1D(BaseMesh):
     def _nbytes(self, arr=None):
         if arr is None:
             return self._nbytes('segments') + self._nbytes('vertices')
-        if arr in ('segments', 'vertices'):
+        if isinstance(arr, string_types) and arr in ('segments', 'vertices'):
             arr = getattr(self, arr)
         if isinstance(arr, ndarray):
             return arr.astype('f4').nbytes
@@ -85,7 +86,7 @@ class Mesh1D(BaseMesh):
 
     @validate('vertices')
     def _validate_vert(self, proposal):
-        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
+        if npmax(proposal['owner'].segments) >= len(proposal['value']):
             raise ValueError('Segments expects more vertices than provided')
         proposal['owner']._validate_file_size('vertices', proposal['value'])
         return proposal['value']

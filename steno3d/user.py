@@ -57,11 +57,6 @@ class User(HasSteno3DTraits ):
         default_value=25
     )
 
-    # def _on_prop_change(self, prop, pre, post):
-    #     if not pre == post:
-    #         print('User data must be modified in settings at steno3d.com')
-    #         self.' + prop, pre)
-
     def login_with_json(self, login_json):
         self.username = login_json['uid']
         self.email = login_json['email']

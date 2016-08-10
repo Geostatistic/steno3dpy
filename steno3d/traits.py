@@ -69,7 +69,10 @@ def validator(func):
     """wrapper used on validation functions to recursively validate"""
     @wraps(func)
     def func_wrapper(self):
+        if getattr(self, '_validating', False):
+            return
         self._cross_validation_lock = False
+        self._validating = True
         try:
             trait_dict = self.traits()
             for k in trait_dict:
@@ -78,10 +81,15 @@ def validator(func):
                     trait_dict[k]._validate(self, val)
                     if isinstance(val, DelayedValidator):
                         val.validate()
+                    if isinstance(val, (list, tuple)):
+                        for v in val:
+                            if isinstance(v, DelayedValidator):
+                                v.validate()
                 elif not trait_dict[k].allow_none:
                     raise tr.TraitError('Required property not set: {}'.format(k))
         finally:
             self._cross_validation_lock = True
+            self._validating = False
         return func(self)
     return func_wrapper
 
@@ -101,6 +109,9 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
 
     def __init__(self, **metadata):
         self._dirty_traits = set()
+        for key in metadata:
+            if key not in self.trait_names():
+                raise KeyError('{}: Keyword input is not trait'.format(key))
         super(HasSteno3DTraits, self).__init__(**metadata)
 
     @tr.observe()
@@ -112,16 +123,18 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         if not recurse or getattr(self, '_inside_clean', False):
             return
         self._inside_clean = True
-        traits = self._dirty
-        for trait in traits:
-            value = getattr(self, trait)
-            if isinstance(value, HasSteno3DTraits):
-                value._mark_clean()
-            if isinstance(value, (list, tuple)):
-                for v in value:
-                    if isinstance(v, HasSteno3DTraits):
-                        v._mark_clean()
-        self._inside_clean = False
+        try:
+            traits = self._dirty
+            for trait in traits:
+                value = getattr(self, trait)
+                if isinstance(value, HasSteno3DTraits):
+                    value._mark_clean()
+                if isinstance(value, (list, tuple)):
+                    for v in value:
+                        if isinstance(v, HasSteno3DTraits):
+                            v._mark_clean()
+        finally:
+            self._inside_clean = False
 
     @property
     def _dirty(self):
@@ -129,16 +142,18 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
             return set()
         dirty_instances = set()
         self._inside_dirty = True
-        traits = self.traits()
-        for trait in traits:
-            value = getattr(self, trait)
-            if isinstance(value, HasSteno3DTraits) and len(value._dirty) > 0:
-                dirty_instances.add(trait)
-            if isinstance(value, (list, tuple)):
-                for v in value:
-                    if isinstance(v, HasSteno3DTraits) and len(v._dirty) > 0:
-                        dirty_instances.add(trait)
-        self._inside_diry = False
+        try:
+            traits = self.traits()
+            for trait in traits:
+                value = getattr(self, trait)
+                if isinstance(value, HasSteno3DTraits) and len(value._dirty) > 0:
+                    dirty_instances.add(trait)
+                if isinstance(value, (list, tuple)):
+                    for v in value:
+                        if isinstance(v, HasSteno3DTraits) and len(v._dirty) > 0:
+                            dirty_instances.add(trait)
+        finally:
+            self._inside_dirty = False
         return self._dirty_traits.union(dirty_instances)
 
 
@@ -195,6 +210,9 @@ class Union(Steno3DTrait, tr.Union):
             if not isinstance(t, Steno3DTrait):
                 return super(Union, self).sphinx_class
         return ', '.join(t.sphinx_class for t in self.trait_types)
+
+    def info(self):
+        return " or ".join([tt.info() for tt in self.trait_types])
 
 
 class Color(Steno3DTrait, tr.TraitType):
@@ -413,9 +431,9 @@ class Vector(Array):
         if isinstance(value, string_types):
             if value.upper() == 'X':
                 value = [1., 0, 0]
-            if value.upper() == 'Y':
+            elif value.upper() == 'Y':
                 value = [0., 1, 0]
-            if value.upper() == 'Z':
+            elif value.upper() == 'Z':
                 value = [0., 0, 1]
         return super(Vector, self).validate(obj, value)
 

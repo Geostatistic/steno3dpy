@@ -28,6 +28,7 @@ setup(
     packages = find_packages(),
     install_requires = ['future',
                         'numpy>=1.7',
+                        'pypng',
                         'requests',
                         'six',
                         'traitlets',

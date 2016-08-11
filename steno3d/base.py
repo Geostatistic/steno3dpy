@@ -7,15 +7,180 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from json import dumps
+from pprint import pformat
+from warnings import warn
 
-import properties
+from traitlets import observe, Undefined, validate
 
-from .client import Comms
-from .client import needs_login
-from .client import plot
-from .content import UserContent
+from .traits import HasSteno3DTraits, KeywordInstance, Repeated, String
+from .client import Comms, needs_login, pause, plot, post, put
+
+
+class classproperty(property):
+    """class decorator to enable property behavior in classmethods"""
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+
+class UserContent(HasSteno3DTraits):
+    """Base class for everything user creates and uploads in steno3d"""
+    title = String(
+        help='Title of the model.',
+        default_value='',
+        allow_none=True
+    )
+    description = String(
+        help='Description of the model.',
+        default_value='',
+        allow_none=True
+    )
+    _sync = False
+    _upload_data = None
+
+    @classproperty
+    @classmethod
+    def _resource_class(cls):
+        """name of the class of resource"""
+        if getattr(cls, '__resource_class', None) is None:
+            cls.__resource_class = cls.__name__.lower()
+        return cls.__resource_class
+
+    @classproperty
+    @classmethod
+    def _model_api_location(cls):
+        """api destination for resource"""
+        if getattr(cls, '__model_api_location', None) is None:
+            cls.__model_api_location = 'resource/{className}'.format(
+                className=cls._resource_class
+            )
+        return cls.__model_api_location
+
+
+    def _upload(self, sync=False, verbose=True, tab_level=''):
+        if getattr(self, '_uploading', False):
+            return
+        try:
+            if verbose:
+                print(
+                    tab_level + ('Uploading '
+                                 if getattr(self, '_upload_data', None) is None
+                                 else 'Updating ') +
+                    self._resource_class + ': ' + self.title
+                )
+            self._uploading = True
+            pause()
+            assert self.validate()
+            self._upload_dirty(sync, verbose, tab_level + '    ')
+            if getattr(self, '_upload_data', None) is None:
+                self._post(
+                    self._get_dirty_data(force=True),
+                    self._get_dirty_files(force=True)
+                )
+            else:
+                dirty_data = self._get_dirty_data()
+                dirty_files = self._get_dirty_files()
+                if len(dirty_data) > 0 or len(dirty_files) > 0:
+                    self._put(dirty_data, dirty_files)
+            self._mark_clean(recurse=False)
+            self._sync = sync
+            if verbose:
+                print(tab_level + '... Complete!')
+        except Exception as err:
+            if self._sync:
+                print('Upload failed, turning off syncing. To restart '
+                      'syncing, upload() again.')
+                self._sync = False
+            else:
+                raise err
+        finally:
+            self._uploading = False
+
+    def _get_dirty_data(self, force=False):
+        dirty = self._dirty_traits
+        datadict = dict()
+        if 'title' in dirty or force:
+            datadict['title'] = self.title
+        if 'description' in dirty or force:
+            datadict['description'] = self.description
+        return datadict
+
+    def _get_dirty_files(self, force=False):
+        return {}
+
+    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
+        pass
+
+    @observe()
+    def _on_property_change(self, change):
+        if getattr(self, '_sync', False):
+            self._upload(self._sync)
+
+    def _post(self, datadict=None, files=None):
+        self._client_upload(post, self._model_api_location,
+                            datadict, files)
+
+    def _put(self, datadict=None, files=None):
+        pause()
+        api_uid = '{mapi}/{uid}'.format(mapi=self._model_api_location,
+                                        uid=self._upload_data['uid'])
+        self._client_upload(put, api_uid, datadict, files)
+
+    def _client_upload(self, request_fcn, url,
+                       datadict=None, files=None):
+        req = request_fcn(
+            url,
+            data=datadict if datadict else tuple(),
+            files=files if files else tuple(),
+        )
+        if isinstance(req, list):
+            for rq in req:
+                if rq.status_code != 200:
+                    try:
+                        resp = pformat(rq.json())
+                    except ValueError:
+                        resp = rq
+
+                    raise Exception(
+                        'Upload failed: {location}'.format(
+                            location=url,
+                        ) +
+                        '\ndata: {datadict}\nfiles: {filedict}'.format(
+                            datadict=pformat(datadict),
+                            filedict=pformat(files),
+                        ) +
+                        '\nresponse: {response}'.format(
+                            response=resp,
+                        )
+                    )
+            self._upload_data = [rq.json() for rq in req]
+        else:
+            if req.status_code != 200:
+                try:
+                    resp = pformat(req.json())
+                except ValueError:
+                    resp = req
+                raise Exception(
+                    'Upload failed: {location}'.format(
+                        location=url,
+                    ) +
+                    '\ndata: {datadict}\nfiles: {filedict}'.format(
+                        datadict=pformat(datadict),
+                        filedict=pformat(files),
+                    ) +
+                    '\nresponse: {response}'.format(
+                        response=resp,
+                    )
+                )
+            self._upload_data = req.json()
+
+    @property
+    def _json(self):
+        """Return a JSON representation of the object"""
+        json = getattr(self, '_upload_data', None)
+        if json is None:
+            raise ValueError('JSON not available: Data not uploaded')
+        return json
 
 
 class BaseResource(UserContent):
@@ -24,27 +189,21 @@ class BaseResource(UserContent):
     """
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(BaseResource, self)._get_dirty_data(force)
         dirty = self._dirty
         if 'opts' in dirty or (force and hasattr(self, 'opts')):
             datadict['meta'] = self.opts._json
-            self.opts._mark_clean(recurse=False)
         return datadict
 
-    @properties.validator
-    def validate(self):
-        """Check if content is built correctly"""
-        return True
 
-
-    def _validate_file_size(self, name):
+    def _validate_file_size(self, name, arr):
         if Comms.user.logged_in:
             file_limit = Comms.user.file_size_limit
-            if self._nbytes(name) > file_limit:
+            if self._nbytes(arr) > file_limit:
                 raise ValueError(
                     '{name} file size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(name=name,
-                                         file=self._nbytes(name),
+                                         file=self._nbytes(arr),
                                          lim=file_limit)
                 )
         return True
@@ -52,12 +211,11 @@ class BaseResource(UserContent):
 
 class CompositeResource(BaseResource):
     """A composite resource that stores references to lower-level objects."""
-    project = properties.Pointer(
-        'Project',
-        ptype='Project',
-        required=True,
-        repeated=True
+    project = Repeated(
+        help='Project',
+        trait=KeywordInstance(klass='Project')
     )
+
     _children = {
         'mesh': None,
         'data': 'data',
@@ -68,8 +226,13 @@ class CompositeResource(BaseResource):
         if project is None:
             raise TypeError('Resource must be constructed with its '
                             'containing project(s)')
-        super().__init__(**kwargs)
+        super(CompositeResource, self).__init__(**kwargs)
         self.project = project
+        # if project is not None:
+        #     warn('Resources are no longer constructed with their project. '
+        #          'Resources must be added to the project\'s list of '
+        #          'resources, `your_proj.resources`', DeprecationWarning)
+        # super(CompositeResource, self).__init__(**kwargs)
 
     @classmethod
     def _url_view_from_uid(cls, uid):
@@ -80,13 +243,14 @@ class CompositeResource(BaseResource):
             uid=uid)
         return url
 
-    @properties.validator
-    def validate(self):
-        for proj in self.project:
+    @validate('project')
+    def _validate_proj(self, proposal):
+        for proj in proposal['value']:
             if self not in proj.resources:
                 raise ValueError('Project/resource pointers misaligned: '
                                  'Ensure that projects contain all the '
                                  'resources that point to them.')
+        return True
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
@@ -100,8 +264,8 @@ class CompositeResource(BaseResource):
 
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
+        datadict = super(CompositeResource, self)._get_dirty_data(force)
+        dirty = self._dirty_traits
         if 'mesh' in dirty or force:
             datadict['mesh'] = dumps({
                 'uid': self.mesh._json['longUid']
@@ -130,26 +294,27 @@ class CompositeResource(BaseResource):
         if 'textures' in dirty:
             [t._upload(sync, verbose, tab_level) for t in self.textures]
 
-    def _on_property_change(self, name, pre, post):
-        if name == 'project':
-            if pre is None:
-                pre = []
-            if post is None:
-                post = []
-            for proj in post:
-                if proj not in pre and self not in proj.resources:
-                    proj.resources += [self]
-            for proj in pre:
-                if proj not in post and self in proj.resources:
-                    proj.resources = [r for r in proj.resources
-                                      if r is not self]
-            if len(set(post)) != len(post):
-                post_post = []
-                for p in post:
-                    if p not in post_post:
-                        post_post += [p]
-                self.project = post_post
-        super()._on_property_change(name, pre, post)
+    @observe('project')
+    def _fix_proj_res(self, change):
+        before = change['old']
+        after = change['new']
+        if before in (None, Undefined):
+            before = []
+        if after in (None, Undefined):
+            after = []
+        for proj in after:
+            if proj not in before and self not in proj.resources:
+                proj.resources += [self]
+        for proj in before:
+            if proj not in after and self in proj.resources:
+                proj.resources = [r for r in proj.resources
+                                  if r is not self]
+        if len(set(after)) != len(after):
+            post_post = []
+            for p in after:
+                if p not in post_post:
+                    post_post += [p]
+            self.project = post_post
 
     @property
     def _url(self):
@@ -185,7 +350,7 @@ class BaseData(BaseResource):
     """Base class for all data resources. These can be contained within
     each composite resource and define data corresponding to the mesh
     """
-    @properties.classproperty
+    @classproperty
     @classmethod
     def _model_api_location(cls):
         """api destination for texture resource"""
@@ -200,7 +365,7 @@ class BaseTexture2D(BaseResource):
     within some composite resources and define data in space that gets
     mapped to the mesh.
     """
-    @properties.classproperty
+    @classproperty
     @classmethod
     def _model_api_location(cls):
         """api destination for texture resource"""

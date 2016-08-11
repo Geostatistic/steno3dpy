@@ -7,13 +7,16 @@ from __future__ import unicode_literals
 
 from builtins import super
 from json import dumps
-
-import properties
+from numpy import ndarray
+from six import string_types
+from traitlets import validate
 
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -27,31 +30,30 @@ class _VolumeOptions(ColorOptions):
 class Mesh3DGrid(BaseMesh):
     """Contains spatial information of a 3D grid volume."""
 
-    h1 = properties.Array(
-        'Tensor cell widths, x-direction',
+    h1 = Array(
+        help='Tensor cell widths, x-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    h2 = properties.Array(
-        'Tensor cell widths, y-direction',
+    h2 = Array(
+        help='Tensor cell widths, y-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    h3 = properties.Array(
-        'Tensor cell widths, z-direction',
+    h3 = Array(
+        help='Tensor cell widths, z-direction',
         shape=('*',),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    x0 = properties.Vector(
-        'Origin vector',
-        default=[0, 0, 0]
+    x0 = Vector(
+        help='Origin vector',
+        default_value=[0., 0., 0.],
+        allow_none=True
     )
-    opts = properties.Pointer(
-        'Mesh3D Options',
-        ptype=_Mesh3DOptions
+    opts = KeywordInstance(
+        help='Mesh3D Options',
+        klass=_Mesh3DOptions,
+        allow_none=True
     )
 
     @property
@@ -64,39 +66,22 @@ class Mesh3DGrid(BaseMesh):
         """ get number of cells """
         return len(self.h1) * len(self.h2) * len(self.h3)
 
-    def _nbytes(self, name=None):
+    def _nbytes(self, arr=None):
         filenames = ('h1', 'h2', 'h3', 'x0')
-        if name in filenames:
-            return getattr(self, name).astype('f4').nbytes
-        elif name is None:
+        if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
+        if isinstance(arr, string_types) and arr in filenames:
+            if getattr(self, arr, None) is None:
+                return 0
+            arr = getattr(self, arr)
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh3DGrid cannot calculate the number of '
-                         'bytes of {}'.format(name))
-
-    def _on_property_change(self, name, pre, post):
-        try:
-            if name in ('h1', 'h2', 'h3', 'x0'):
-                self._validate_file_size(name)
-        except ValueError as err:
-            setattr(self, '_p_' + name, pre)
-            raise err
-        super()._on_property_change(name, pre, post)
-
-    @properties.validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if self.x0.nV != 1:
-            raise ValueError('Origin x0 must be only one vector')
-        self._validate_file_size('h1')
-        self._validate_file_size('h2')
-        self._validate_file_size('h3')
-        self._validate_file_size('x0')
-        return True
+                         'bytes of {}'.format(arr))
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
-        # datadict = dict()
+        dirty = self._dirty_traits
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty):
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -106,7 +91,7 @@ class Mesh3DGrid(BaseMesh):
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty or
                      'x0' in dirty):
             datadict['OUVZ'] = dumps(dict(
-                O=self.x0.tolist()[0],
+                O=self.x0.tolist(),
                 U=[self.h1.sum().astype(float), 0, 0],
                 V=[0, self.h2.sum().astype(float), 0],
                 Z=[0, 0, self.h3.sum().astype(float)]
@@ -114,52 +99,48 @@ class Mesh3DGrid(BaseMesh):
         return datadict
 
 
-class _VolumeBinder(properties.PropertyClass):
+class _VolumeBinder(HasSteno3DTraits):
     """Contains the data on a 3D volume with location information"""
-    location = properties.String(
-        'Location of the data on mesh',
-        required=True,
+    location = String(
+        help='Location of the data on mesh',
         choices={
             'CC': ('CELLCENTER'),
             # 'N': ('NODE', 'VERTEX', 'CORNER')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass=DataArray
     )
 
 
 class Volume(CompositeResource):
     """Contains all the information about a 3D volume"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=Mesh3DGrid,
-        required=True
+    mesh = KeywordInstance(
+        help='Mesh',
+        klass=Mesh3DGrid,
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_VolumeBinder,
-        repeated=True,
-        required=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_VolumeBinder)
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_VolumeOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_VolumeOptions,
+        allow_none=True
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @properties.validator
-    def validate(self):
+    @validate('data')
+    def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(self.data):
+        for ii, dat in enumerate(proposal['value']):
             assert dat.location == 'CC'  # in ('N', 'CC')
             valid_length = (
-                self.mesh.nC if dat.location == 'CC'
-                else self.mesh.nN
+                proposal['owner'].mesh.nC if dat.location == 'CC'
+                else proposal['owner'].mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -171,8 +152,7 @@ class Volume(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        super(Volume, self).validate()
-        return True
+        return proposal['value']
 
 
 __all__ = ['Volume', 'Mesh3DGrid']

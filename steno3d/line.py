@@ -9,12 +9,16 @@ from builtins import super
 
 from numpy import max as npmax
 from numpy import min as npmin
-import properties
+from numpy import ndarray
+from six import string_types
+from traitlets import observe, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import Options
+from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 
 class _Mesh1DOptions(Options):
@@ -27,21 +31,20 @@ class _LineOptions(ColorOptions):
 
 class Mesh1D(BaseMesh):
     """Contains spatial information of a 1D line set"""
-    vertices = properties.Array(
-        'Mesh vertices',
+    vertices = Array(
+        help='Mesh vertices',
         shape=('*', 3),
-        dtype=float,
-        required=True
+        dtype=float
     )
-    segments = properties.Array(
-        'Segment endpoint indices',
+    segments = Array(
+        help='Segment endpoint indices',
         shape=('*', 2),
-        dtype=int,
-        required=True
+        dtype=int
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_Mesh1DOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_Mesh1DOptions,
+        allow_none=True
     )
 
     @property
@@ -54,92 +57,95 @@ class Mesh1D(BaseMesh):
         """ get number of cells """
         return len(self.segments)
 
-    def _nbytes(self, name=None):
-        if name in ('segments', 'vertices'):
-            return getattr(self, name).astype('f4').nbytes
-        elif name is None:
+    def _nbytes(self, arr=None):
+        if arr is None:
             return self._nbytes('segments') + self._nbytes('vertices')
+        if isinstance(arr, string_types) and arr in ('segments', 'vertices'):
+            arr = getattr(self, arr)
+        if isinstance(arr, ndarray):
+            return arr.astype('f4').nbytes
         raise ValueError('Mesh1D cannot calculate the number of '
-                         'bytes of {}'.format(name))
+                         'bytes of {}'.format(arr))
 
-    def _on_property_change(self, name, pre, post):
+    @observe('segments', 'vertices')
+    def _reject_large_files(self, change):
         try:
-            if name in ('segments', 'vertices'):
-                self._validate_file_size(name)
+            self._validate_file_size(change['name'], change['name'])
         except ValueError as err:
-            setattr(self, '_p_' + name, pre)
+            setattr(change['owner'], change['name'], change['old'])
             raise err
-        super()._on_property_change(name, pre, post)
 
-
-    @properties.validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if npmin(self.segments) < 0:
+    @validate('segments')
+    def _validate_seg(self, proposal):
+        if npmin(proposal['value']) < 0:
             raise ValueError('Segments may only have positive integers')
-        if npmax(self.segments) >= len(self.vertices):
+        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
             raise ValueError('Segments expects more vertices than provided')
-        self._validate_file_size('segments')
-        self._validate_file_size('vertices')
-        return True
+        proposal['owner']._validate_file_size('segments', proposal['value'])
+        return proposal['value']
+
+    @validate('vertices')
+    def _validate_vert(self, proposal):
+        if npmax(proposal['owner'].segments) >= len(proposal['value']):
+            raise ValueError('Segments expects more vertices than provided')
+        proposal['owner']._validate_file_size('vertices', proposal['value'])
+        return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self._properties['vertices'].serialize(self.vertices)
+                self.traits()['vertices'].serialize(self.vertices)
         if 'segments' in dirty or force:
             files['segments'] = \
-                self._properties['segments'].serialize(self.segments)
+                self.traits()['segments'].serialize(self.segments)
         return files
 
 
-class _LineBinder(properties.PropertyClass):
+class _LineBinder(HasSteno3DTraits):
     """Contains the data on a 1D line set with location information"""
-    location = properties.String(
-        'Location of the data on mesh',
-        required=True,
+    location = String(
+        help='Location of the data on mesh',
         choices={
             'CC': ('LINE', 'FACE', 'CELLCENTER', 'EDGE', 'SEGMENT'),
             'N': ('VERTEX', 'NODE', 'ENDPOINT')
         }
     )
-    data = properties.Pointer(
-        'Data',
-        ptype='DataArray',
-        required=True
+    data = KeywordInstance(
+        help='Data',
+        klass=DataArray
     )
 
 
 class Line(CompositeResource):
     """Contains all the information about a 1D line set"""
-    mesh = properties.Pointer(
-        'Mesh',
-        ptype=Mesh1D,
-        required=True
+    mesh = KeywordInstance(
+        help='Mesh',
+        klass='Mesh1D'
     )
-    data = properties.Pointer(
-        'Data',
-        ptype=_LineBinder,
-        repeated=True
+    data = Repeated(
+        help='Data',
+        trait=KeywordInstance(klass=_LineBinder),
+        allow_none=True
     )
-    opts = properties.Pointer(
-        'Options',
-        ptype=_LineOptions
+    opts = KeywordInstance(
+        help='Options',
+        klass=_LineOptions,
+        allow_none=True
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @properties.validator
-    def validate(self):
+    @validate('data')
+    def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(self.data):
+        for ii, dat in enumerate(proposal['value']):
             assert dat.location in ('N', 'CC')
             valid_length = (
-                self.mesh.nC if dat.location == 'CC'
-                else self.mesh.nN
+                proposal['owner'].mesh.nC if dat.location == 'CC'
+                else proposal['owner'].mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -151,8 +157,7 @@ class Line(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        super(Line, self).validate()
-        return True
+        return proposal['value']
 
 
 __all__ = ['Line', 'Mesh1D']

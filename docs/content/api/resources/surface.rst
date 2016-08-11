@@ -9,7 +9,7 @@ Surface
 
 Steno3D Surfaces are 2D resources. The steps to construct the surface resource
 pictured above can be found online in the
-`example notebooks <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_.
+`example notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_.
 
 .. autoclass:: steno3d.surface.Surface
 

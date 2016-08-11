@@ -9,10 +9,11 @@ from builtins import super
 from collections import namedtuple
 from io import BytesIO
 from json import dumps
-
-import properties
+from six import string_types
+from traitlets import observe, validate
 
 from .base import BaseTexture2D
+from .traits import Image, Vector
 
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
@@ -23,50 +24,45 @@ class Texture2DImage(BaseTexture2D):
 
     _resource_class = 'image'
 
-    O = properties.Vector(
-        'Origin of the texture',
-        required=True
+    O = Vector(
+        help='Origin of the texture'
     )
-    U = properties.Vector(
-        'U axis of the texture',
-        required=True
+    U = Vector(
+        help='U axis of the texture'
     )
-    V = properties.Vector(
-        'V axis of the texture',
-        required=True
+    V = Vector(
+        help='V axis of the texture'
     )
-    image = properties.Image(
-        'Image file',
-        required=True
+    image = Image(
+        help='Image file'
     )
 
-    def _nbytes(self, name=None):
-        if name is None or name == 'image':
-            self.image.seek(0)
-            return len(self.image.read())
-        raise ValueError('Texture2DImage cannot calculate the number of '
-                         'bytes of {}'.format(name))
-
-    def _on_property_change(self, name, pre, post):
+    def _nbytes(self, img=None):
+        if img is None or (isinstance(img, string_types) and img == 'image'):
+            img = self.image
         try:
-            if name == 'image':
-                self._validate_file_size(name)
-        except ValueError as err:
-            setattr(self, '_p_' + name, pre)
-            raise err
-        super()._on_property_change(name, pre, post)
+            img.seek(0)
+            return len(img.read())
+        except:
+            raise ValueError('Texture2DImage cannot calculate the number of '
+                             'bytes of {}'.format(img))
 
-    @properties.validator
-    def validate(self):
-        """Check if mesh content is built correctly"""
-        if self.O.nV != 1 or self.U.nV != 1 or self.V.nV != 1:
-            raise ValueError('O, U, and V must each be only one vector')
-        self._validate_file_size('image')
-        return True
+    @observe('image')
+    def _reject_large_files(self, change):
+        try:
+            self._validate_file_size(change['name'], change['new'])
+        except ValueError as err:
+            setattr(change['owner'], change['name'], change['old'])
+            raise err
+
+    @validate('image')
+    def _validate_Z(self, proposal):
+        proposal['owner']._validate_file_size('image', proposal['value'])
+        return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        dirty = self._dirty_props
-        files = dict()
+        files = super()._get_dirty_files(force)
+        dirty = self._dirty_traits
         if 'image' in dirty or force:
             self.image.seek(0)
             copy = BytesIO()
@@ -78,13 +74,12 @@ class Texture2DImage(BaseTexture2D):
 
     def _get_dirty_data(self, force=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
-        # datadict = dict()
+        dirty = self._dirty_traits
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
-                O=[self.O[0][0], self.O[0][1], self.O[0][2]],
-                U=[self.U[0][0], self.U[0][1], self.U[0][2]],
-                V=[self.V[0][0], self.V[0][1], self.V[0][2]],
+                O=self.O.tolist(),
+                U=self.U.tolist(),
+                V=self.V.tolist(),
             ))
         return datadict
 

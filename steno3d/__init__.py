@@ -44,9 +44,8 @@ login = client.Comms.login
 logout = client.Comms.logout
 
 try:
-    del Pointer
-    del project, data, line, point, surface, texture, volume
-    del base, client, content, options, user
+    del project, data, line, point, surface, texture, tratis, volume
+    del base, client, options, user
     del absolute_import, division, print_function, unicode_literals
 except NameError:
     # Error cleaning namespace

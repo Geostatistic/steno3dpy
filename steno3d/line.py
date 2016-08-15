@@ -22,7 +22,16 @@ from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 
 class _Mesh1DOptions(Options):
-    pass
+    view_type = String(
+        help='Display 1D lines or tubes/boreholes/extruded lines',
+        choices={
+            'line': ('lines', 'thin', '1d'),
+            'tube': ('tubes', 'extruded line', 'extruded lines',
+                     'borehole', 'boreholes')
+        },
+        default_value='line',
+        lowercase=True
+    )
 
 
 class _LineOptions(ColorOptions):

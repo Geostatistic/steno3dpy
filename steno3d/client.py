@@ -339,8 +339,8 @@ class _Comms(object):
             print(NOT_CONNECTED)
             return
         if resp.status_code is not 200:
-            self.logout()
             print(LOGIN_FAILED.format(base_url=self.base_url))
+            self.logout()
             return
         self.user.login_with_json(resp.json())
         self.user.set_key(devel_key)

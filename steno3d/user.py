@@ -5,12 +5,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
-
 from .traits import HasSteno3DTraits, Int, String
 
 
-class User(HasSteno3DTraits ):
+class User(HasSteno3DTraits):
     """Class representing a user instance"""
     _model_api_location = "user"
     email = String(

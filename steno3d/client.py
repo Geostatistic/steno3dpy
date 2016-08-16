@@ -204,7 +204,7 @@ class _Comms(object):
             self.base_url = str(endpoint)
 
         # Check client version
-        if not(self._version_ok()):
+        if not self._version_ok():
             print('Login failed.')
             return
 
@@ -372,11 +372,11 @@ Comms = _Comms()
 def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
-    def func_wrapper(self, *args, **kwargs):
+    def func_wrapper(*args, **kwargs):
         if not Comms.user.logged_in:
             print("Please login: 'steno3d.login()'")
         else:
-            return func(self, *args, **kwargs)
+            return func(*args, **kwargs)
     return func_wrapper
 
 

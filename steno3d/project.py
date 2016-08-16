@@ -196,4 +196,34 @@ class Project(UserContent):
         return self._url
 
 
+    @classmethod
+    def _build_from_json(cls, json):
+        pub = False
+        for a in json['access']:
+            if a['user'] == 'Special:PUBLIC':
+                pub = True
+                break
+        proj = Project(
+            public=pub,
+            title=json['title'],
+            description=json['description']
+        )
+        proj._public_online = pub
+        proj._upload_data = json
+
+        jres = json['resources']
+
+        proj.resources = [CompositeResource._build_from_json(jres[longuid])
+                          for longuid in jres]
+
+
+
+
+
+        proj._mark_clean()
+
+
+
+
+
 __all__ = ['Project']

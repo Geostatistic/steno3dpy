@@ -182,6 +182,30 @@ class UserContent(HasSteno3DTraits):
             raise ValueError('JSON not available: Data not uploaded')
         return json
 
+    @classmethod
+    def _build_from_uid(cls, uid):
+        if not isinstance(uid, string_types) or len(uid) != 20:
+            raise ValueError('{}: invalid uid'.format(uid))
+        resp = get('{api}/{uid}'.format(
+            api=cls._model_api_locaion,
+            uid=uid
+        ))
+        if resp.status_code != 200:
+            raise ValueError('{uid}: {cls}} query failed'.format(
+                uid=uid,
+                cls=cls._resource_class
+            ))
+        return cls._build_from_json(resp.json())
+
+    @classmethod
+    def _build_from_json(cls, json):
+        usercont = cls(
+            title=json['title'],
+            description=json['description']
+        )
+        usercont._upload_data = json
+        return usercont
+
 
 class BaseResource(UserContent):
     """Base class for all resources that are added to projects and
@@ -215,12 +239,6 @@ class CompositeResource(BaseResource):
         help='Project',
         trait=KeywordInstance(klass='Project')
     )
-
-    _children = {
-        'mesh': None,
-        'data': 'data',
-        'textures': None,
-    }
 
     def __init__(self, project=None, **kwargs):
         if project is None:
@@ -338,6 +356,42 @@ class CompositeResource(BaseResource):
                   'before plotting.')
             return
         return plot(self._url)
+
+    @classmethod
+    def _build_from_json(cls, json):
+        resource_string = json['longUid'].split('Resource')[-1].split(':')[0]
+        resource_class = getattr(globals()['steno3d'], resource_string)
+        res = resource_class(
+            title=json['title'],
+            description=json['description']
+        )
+        (mesh_string, mesh_uid) = (
+            json['mesh']['uid'].split('Resource')[-1].split(':')
+        )
+        mesh_class = getattr(globals()['steno3d'], mesh_string)
+
+        res.mesh = mesh_class._build_from_uid(mesh_uid)
+
+        if 'textures' in json:
+            res.textures = []
+            for t in json['textures']
+
+
+        if 'data' in json:
+            res.data = []
+            for d in json['data']:
+                (data_string, data_uid) = (
+                    d['uid'].split('Resource')[-1].split(':')
+                )
+                data_class = getattr(globals()['steno3d'], data_string)
+                res.data += [dict(
+                    location=d['location'],
+                    data=data_class._build_from_uid(data_uid)
+                )]
+
+        if 'meta' in json:
+            for key in json['meta']:
+                setattr(res, key, json['meta'][key])
 
 
 class BaseMesh(BaseResource):

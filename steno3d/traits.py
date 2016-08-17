@@ -87,7 +87,9 @@ def validator(func):
                             if isinstance(v, DelayedValidator):
                                 v.validate()
                 elif not trait_dict[k].allow_none:
-                    raise tr.TraitError('Required property not set: {}'.format(k))
+                    raise tr.TraitError(
+                        'Required property not set: {}'.format(k)
+                    )
         finally:
             self._cross_validation_lock = True
             self._validating = False
@@ -147,11 +149,13 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
             traits = self.traits()
             for trait in traits:
                 value = getattr(self, trait)
-                if isinstance(value, HasSteno3DTraits) and len(value._dirty) > 0:
+                if (isinstance(value, HasSteno3DTraits) and
+                        len(value._dirty) > 0):
                     dirty_instances.add(trait)
                 if isinstance(value, (list, tuple)):
                     for v in value:
-                        if isinstance(v, HasSteno3DTraits) and len(v._dirty) > 0:
+                        if (isinstance(v, HasSteno3DTraits) and
+                                len(v._dirty) > 0):
                             dirty_instances.add(trait)
         finally:
             self._inside_dirty = False
@@ -183,11 +187,12 @@ class Steno3DNumber(Steno3DTrait):
 
     @property
     def sphinx_extra(self):
-        if self.min is None and self.max is None:
+        if (getattr(self, 'min', None) is None and
+                getattr(self, 'max', None) is None):
             return ''
         return ', Range: [{mn}, {mx}]'.format(
-            mn='-inf' if self.min is None else self.min,
-            mx='inf' if self.max is None else self.max
+            mn='-inf' if getattr(self, 'min', None) is None else self.min,
+            mx='inf' if getattr(self, 'max', None) is None else self.max
         )
 
 
@@ -221,7 +226,7 @@ class Color(Steno3DTrait, tr.TraitType):
 
     default_value = 'RANDOM'
     info_text = ('a color (RGB with values 0-255, hex color e.g. \'#FF0000\', '
-                'string color name, or \'random\')')
+                 'string color name, or \'random\')')
     sphinx_extra = ', Format: RGB, hex, or predefined color'
 
     def validate(self, obj, value):
@@ -243,9 +248,9 @@ class Color(Steno3DTrait, tr.TraitType):
             except ValueError:
                 self.error(obj, value)
         if not isinstance(value, (list, tuple)):
-                self.error(obj, value)
+            self.error(obj, value)
         if len(value) != 3:
-                self.error(obj, value)
+            self.error(obj, value)
         for v in value:
             if not isinstance(v, integer_types) or not 0 <= v <= 255:
                 self.error(obj, value)
@@ -255,7 +260,7 @@ class Color(Steno3DTrait, tr.TraitType):
 class String(Steno3DTrait, tr.TraitType):
     """A trait for strings, where you can map several values to one"""
 
-    def __init__(self, choices={}, lowercase=False, strip=' ',
+    def __init__(self, choices=None, lowercase=False, strip=' ',
                  default_value=tr.Undefined, **metadata):
         if choices is None:
             choices = {}
@@ -446,6 +451,7 @@ class Array(Steno3DTrait, tr.TraitType):
         data_file.close()
         return arr
 
+
 class Vector(Array):
     """A trait for 3D vectors"""
 
@@ -509,6 +515,7 @@ class KeywordInstance(Steno3DTrait, tr.Instance):
             kls = self.klass.__name__
         return ':class:`{cls} <.{cls}>`'.format(cls=kls)
 
+
 class Repeated(Steno3DTrait, tr.List):
     """A list trait that creates a length-1 list if given an instance"""
 
@@ -533,7 +540,6 @@ class Repeated(Steno3DTrait, tr.List):
         if not isinstance(value, (list, tuple)):
             value = [value]
         return super(Repeated, self).validate(obj, value)
-
 
 
 COLORS_20 = [

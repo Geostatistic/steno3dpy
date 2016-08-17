@@ -63,10 +63,6 @@ class Project(UserContent):
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the project"""
-        # if sync:
-        #     warn('Online sync no longer supported. Please re-upload after '
-        #          'making changes.', DeprecationWarning)
-        #     sync = False
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
 

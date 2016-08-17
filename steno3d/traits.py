@@ -416,7 +416,7 @@ class Array(Steno3DTrait, tr.TraitType):
             raise Exception('Must be a float or an int: {}'.format(data.dtype))
 
         data_file = NamedTemporaryFile('rb+', suffix='.dat')
-        data.astype(use_dtype).tofile(data_file.name)
+        data.astype(use_dtype).tofile(data_file.file)
         data_file.seek(0)
         return FileProp(data_file, use_dtype)
 

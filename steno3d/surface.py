@@ -20,7 +20,8 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Union, Vector
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
+                     String, Union, Vector)
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -97,7 +98,6 @@ class Mesh2D(BaseMesh):
         proposal['owner']._validate_file_size('vertices', proposal['value'])
         return proposal['value']
 
-
     def _get_dirty_files(self, force=False):
         files = {}
         dirty = self._dirty_traits
@@ -110,16 +110,10 @@ class Mesh2D(BaseMesh):
         return files
 
     @classmethod
-    def _build_from_uid(cls, uid, copy=True, tab_level=''):
-        print('{tl}Downloading {cls}'.format(
-            tl=tab_level,
-            cls=cls._resource_class
-        ), end=': ')
-        json = cls._json_from_uid(uid)
-        print('' if json['title'] is None else json['title'])
+    def _build_from_json(cls, json, **kwargs):
         mesh = Mesh2D(
-            title=json['title'],
-            description=json['description'],
+            title=kwargs['title'],
+            description=kwargs['description'],
             vertices=Array.download(
                 url=json['vertices'],
                 shape=(json['verticesSize']//12, 3),
@@ -132,11 +126,7 @@ class Mesh2D(BaseMesh):
             ),
             opts=json['meta']
         )
-        if not copy:
-            mesh._upload_data = json
-        print('{}...Complete!'.format(tab_level))
         return mesh
-
 
 
 class Mesh2DGrid(BaseMesh):
@@ -236,16 +226,10 @@ class Mesh2DGrid(BaseMesh):
         return files
 
     @classmethod
-    def _build_from_uid(cls, uid, copy=True, tab_level=''):
-        print('{tl}Downloading {cls}'.format(
-            tl=tab_level,
-            cls=cls._resource_class
-        ), end=': ')
-        json = cls._json_from_uid(uid)
-        print('' if json['title'] is None else json['title'])
+    def _build_from_json(cls, json, **kwargs):
         mesh = Mesh2DGrid(
-            title=json['title'],
-            description=json['description'],
+            title=kwargs['title'],
+            description=kwargs['description'],
             h1=json['tensors']['h1'],
             h2=json['tensors']['h2'],
             x0=json['OUV']['O'],
@@ -256,9 +240,6 @@ class Mesh2DGrid(BaseMesh):
             ),
             opts=json['meta']
         )
-        if not copy:
-            mesh._upload_data = json
-        print('{}...Complete!'.format(tab_level))
         return mesh
 
 

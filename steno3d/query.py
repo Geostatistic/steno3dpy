@@ -44,8 +44,8 @@ def my_projects(n=None, queue=100):
         raise ValueError('{}: n must be int'.format(n))
     print('Querying your most recent {} project(s) ...'.format(n))
     projs = []
-    projit = _query(MINE, queue)
-    for i in range(n):
+    projit = _query(MINE, min(n, queue))
+    for _ in range(n):
         try:
             projs += [_short_json(next(projit))]
         except StopIteration:
@@ -59,7 +59,7 @@ def my_projects(n=None, queue=100):
 
 @needs_login
 def project_by_uid(uid, copy=None):
-    return Project._build_from_uid(uid, copy)
+    return Project._build(uid, copy)
 
 
 @needs_login

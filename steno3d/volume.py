@@ -16,7 +16,8 @@ from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
+                     String, Vector)
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -99,25 +100,16 @@ class Mesh3DGrid(BaseMesh):
         return datadict
 
     @classmethod
-    def _build_from_uid(cls, uid, copy=True, tab_level=''):
-        print('{tl}Downloading {cls}'.format(
-            tl=tab_level,
-            cls=cls._resource_class
-        ), end=': ')
-        json = cls._json_from_uid(uid)
-        print('' if json['title'] is None else json['title'])
+    def _build_from_json(cls, json, **kwargs):
         mesh = Mesh3DGrid(
-            title=json['title'],
-            description=json['description'],
+            title=kwargs['title'],
+            description=kwargs['description'],
             h1=json['tensors']['h1'],
             h2=json['tensors']['h2'],
             h3=json['tensors']['h3'],
             x0=json['OUVZ']['O'],
             opts=json['meta']
         )
-        if not copy:
-            mesh._upload_data = json
-        print('{}...Complete!'.format(tab_level))
         return mesh
 
 

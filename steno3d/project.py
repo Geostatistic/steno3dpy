@@ -8,18 +8,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
-from six import integer_types
-from six import string_types
 
 from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
 from .client import Comms, get, needs_login
-from .line import Line
-from .point import Point
-from .surface import Surface
 from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
-from .volume import Volume
 
 
 QUOTA_REACHED = """
@@ -178,7 +172,6 @@ class Project(UserContent):
         if verbose and self.public:
             print('This PUBLIC project will be viewable by everyone.')
 
-
     @property
     def _url(self):
         if getattr(self, '_upload_data', None) is not None:
@@ -193,13 +186,11 @@ class Project(UserContent):
                   'before accessing the URL.')
         return self._url
 
-
     @classmethod
-    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+    def _build(cls, uid, copy=True, tab_level=''):
         print('Downloading project', end=': ')
         json = cls._json_from_uid(uid)
         print('' if json['title'] is None else json['title'])
-
         pub = False
         for a in json['access']:
             if a['user'] == 'Special:PUBLIC':
@@ -231,29 +222,22 @@ class Project(UserContent):
             description=json['description'],
             resources=[]
         )
-
         jres = json['resources']
         for longuid in jres:
             res_string = longuid.split('Resource')[-1].split(':')[0]
             res_class = _REGISTRY[res_string]
-            proj.resources += [res_class._build_from_uid(
-                uid=jres[longuid],
+            proj.resources += [res_class._build(
+                src=jres[longuid],
                 copy=copy,
                 tab_level=tab_level + '    ',
                 project=proj
             )]
-
         if not copy:
             proj._public_online = pub
             proj._upload_data = json
             proj._mark_clean()
-
         print('... Complete!')
-
         return proj
-
-
-
 
 
 __all__ = ['Project']

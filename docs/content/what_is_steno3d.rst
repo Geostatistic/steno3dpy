@@ -7,7 +7,7 @@ What is Steno3D
 
 Steno3D_ is designed for you to explore and share your 3D data. Below is a
 visual overview of this library. An interactive tutorial is also available
-online as a `Jupyter notebook <http://mybinder.org/repo/3ptscience/steno3dpy-notebooks>`_
+online as a `Jupyter notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
 
 .. TODO: structure image and some explanation
 
@@ -15,6 +15,7 @@ online as a `Jupyter notebook <http://mybinder.org/repo/3ptscience/steno3dpy-not
 **Contents**
     - :ref:`projects`
     - :ref:`resources`
+    - :ref:`traitlets_ref`
 
 .. image:: ../images/Steno3DAPI.png
 
@@ -86,15 +87,14 @@ spatial location.
 .. viewpoint, cross-section slices, etc. Every resource has options that
 .. define the initial perspective state.
 
+.. _traitlets_ref:
 
-Properties
-==========
+Traitlets
+=========
 
-`Properties <http://propertiespy.readthedocs.io/en/latest/>`_ are the building blocks of
-resources. They include :class:`pointers <properties.base.Pointer>` which allow
-composite resources (points, lines, surfaces, volumes) to point to other
-resources (meshes, data). They also include
-:class:`arrays <properties.Array>` where data and mesh information are
-contained. There are also many
-:class:`basic properties <properties.basic.Bool>` such as strings, numbers,
-datetimes, etc. used within resources or to construct resource options.
+The `Traitlets <https://github.com/ipython/traitlets>`_ library provides the
+building blocks for Steno3D. Traitlets allow for a declarative interface
+when constructing classes, and enforce type checking and validation when
+using Steno3D. The Traitlets `documentation <http://traitlets.readthedocs.io/en/stable/>`_
+provides a general description of the library, and the custom TraitTypes
+used by Steno3D are documented :ref:`here <custom_traitlets>`.

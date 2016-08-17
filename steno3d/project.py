@@ -8,13 +8,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
+from warnings import warn
 
-import properties
+from traitlets import observe, Undefined, validate
 
-from .client import Comms
-from .client import get
-from .client import needs_login
-from .content import UserContent
+from .base import CompositeResource, UserContent
+from .client import Comms, get, needs_login
+from .traits import Bool, KeywordInstance, Repeated
 
 
 QUOTA_REACHED = """
@@ -34,15 +34,14 @@ class Project(UserContent):
     """Steno3D top-level project"""
     _model_api_location = 'project/steno3d'
 
-    resources = properties.Pointer(
-        'Project Resources',
-        ptype='CompositeResource',
-        repeated=True
+    resources = Repeated(
+        help='Project Resources',
+        trait=KeywordInstance(klass=CompositeResource)
     )
 
-    public = properties.Bool(
-        'Public visibility of project',
-        default=False
+    public = Bool(
+        help='Public visibility of project',
+        default_value=False
     )
 
     _public_online = None
@@ -55,9 +54,6 @@ class Project(UserContent):
             mapi='app',
             uid=uid)
         return url
-
-    def _nbytes(self):
-        return sum(r._nbytes() for r in self.resources)
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
@@ -83,10 +79,10 @@ class Project(UserContent):
     def _trigger_ACL_fix(self):
         self._put({})
 
-    @properties.validator
-    def validate(self):
+    @validate('resources')
+    def _validate_resources(self, proposal):
         """Check if project resource pointers are correct"""
-        for res in self.resources:
+        for res in proposal['value']:
             if self not in res.project:
                 raise ValueError('Project/resource pointers misaligned: '
                                  'Ensure that resources point to containing '
@@ -94,44 +90,48 @@ class Project(UserContent):
         self._validate_project_size()
         return True
 
-    def _validate_project_size(self):
+    def _validate_project_size(self, res=None):
+        if res is None:
+            res = self.resources
         if Comms.user.logged_in:
             res_limit = Comms.user.project_resource_limit
-            if len(self.resources) > res_limit:
+            if len(res) > res_limit:
                 raise ValueError(
                     'Total number of resources in project ({res}) '
                     'exceeds limit: {lim}'.format(res=len(self.resources),
                                                   lim=res_limit)
                 )
             size_limit = Comms.user.project_size_limit
-            if self._nbytes() > size_limit:
+            sz = sum(r._nbytes() for r in res)
+            if sz > size_limit:
                 raise ValueError(
                     'Total project size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(file=self._nbytes(),
+                    '{lim} bytes'.format(file=sz,
                                          lim=size_limit)
                 )
         return True
 
-    def _on_property_change(self, name, pre, post):
-        if name == 'resources':
-            if pre is None:
-                pre = []
-            if post is None:
-                post = []
-            for res in post:
-                if res not in pre and self not in res.project:
-                    res.project += [self]
-            for res in pre:
-                if res not in post and self in res.project:
-                    res.project = [p for p in res.project
-                                   if p is not self]
-            if len(set(post)) != len(post):
-                post_post = []
-                for r in post:
-                    if r not in post_post:
-                        post_post += [r]
-                self.resources = post_post
-        super()._on_property_change(name, pre, post)
+    @observe('resources')
+    def _fix_proj_res(self, change):
+        before = change['old']
+        after = change['new']
+        if before in (None, Undefined):
+            before = []
+        if after in (None, Undefined):
+            after = []
+        for res in after:
+            if res not in before and self not in res.project:
+                res.project += [self]
+        for res in before:
+            if res not in after and self in res.project:
+                res.project = [p for p in res.project
+                               if p is not self]
+        if len(set(after)) != len(after):
+            post_post = []
+            for r in after:
+                if r not in post_post:
+                    post_post += [r]
+            self.resources = post_post
 
     def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         dirty = self._dirty
@@ -140,7 +140,7 @@ class Project(UserContent):
 
     def _get_dirty_data(self, force=False, initialize=False):
         datadict = super()._get_dirty_data(force)
-        dirty = self._dirty_props
+        dirty = self._dirty_traits
         if 'public' in dirty or force:
             datadict['public'] = self.public
         if ('resources' in dirty or force) and not initialize:

@@ -47,9 +47,9 @@ class Topography(BaseExample):
                                            download_if_missing=False,
                                            verbose=False)
         return Texture2DImage(
-            O=[443200, 491750, 0],
-            U=[4425, 0, 0],
-            V=[0, 3690, 0],
+            O=[443200., 491750, 0],
+            U=[4425., 0, 0],
+            V=[0., 3690, 0],
             image=image_file
         )
 

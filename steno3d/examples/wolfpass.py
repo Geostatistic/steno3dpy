@@ -301,9 +301,9 @@ class Wolfpass(BaseExample):
     def topo_image_orientation(self):
         """surface image O, U, and V"""
         return dict(
-            O=[443200, 491750, 0],
-            U=[4425, 0, 0],
-            V=[0, 3690, 0]
+            O=[443200., 491750, 0],
+            U=[4425., 0, 0],
+            V=[0., 3690, 0]
         )
 
     def topo_texture(self):

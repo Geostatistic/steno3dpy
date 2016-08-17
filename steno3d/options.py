@@ -7,43 +7,38 @@ from __future__ import unicode_literals
 
 from json import dumps
 
-import properties
+from .traits import Bool, Color, Float, HasSteno3DTraits
 
 
-class Options(properties.PropertyClass):
+class Options(HasSteno3DTraits):
     """Generic options for all steno3d resources"""
 
     @property
     def _json(self):
         """returns json representation of options"""
         opts_json = {}
-        for key in self._properties:
+        for key in self.trait_names():
             opts_json[key] = getattr(self, key)
         return dumps(opts_json)
-
-    @properties.validator
-    def validate(self):
-        """Check if content is built correctly"""
-        return True
 
 
 class ColorOptions(Options):
     """Options related to resource display color"""
-    color = properties.Color(
-        'Solid color',
-        default='random'
+    color = Color(
+        help='Solid color',
+        default_value='random'
     )
-    opacity = properties.Range(
-        'Opacity',
-        default=1.,
-        min_value=0.,
-        max_value=1.
+    opacity = Float(
+        help='Opacity',
+        default_value=1.,
+        min=0.,
+        max=1.
     )
 
 
 class MeshOptions(Options):
     """Options related to mesh display"""
-    wireframe = properties.Bool(
-        'Wireframe',
-        default=False
+    wireframe = Bool(
+        help='Wireframe',
+        default_value=False
     )

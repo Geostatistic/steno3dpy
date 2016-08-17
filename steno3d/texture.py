@@ -90,5 +90,26 @@ class Texture2DImage(BaseTexture2D):
         self.image.seek(0)
         return self.image.read()
 
+    @classmethod
+    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        json = cls._json_from_uid(uid)
+        print('' if json['title'] is None else json['title'])
+        tex = Texture2DImage(
+            title=json['title'],
+            description=json['description'],
+            O=json['OUV']['O'],
+            U=json['OUV']['U'],
+            V=json['OUV']['V'],
+            image=Image.download(json['image'])
+        )
+        if not copy:
+            tex._upload_data = json
+        print('{}...Complete!'.format(tab_level))
+        return tex
+
 
 __all__ = ['Texture2DImage']

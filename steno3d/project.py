@@ -8,13 +8,18 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import super
-from warnings import warn
+from six import integer_types
+from six import string_types
 
 from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
 from .client import Comms, get, needs_login
-from .traits import Bool, KeywordInstance, Repeated
+from .line import Line
+from .point import Point
+from .surface import Surface
+from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
+from .volume import Volume
 
 
 QUOTA_REACHED = """
@@ -54,9 +59,6 @@ class Project(UserContent):
             mapi='app',
             uid=uid)
         return url
-
-    # def _nbytes(self):
-    #     return sum(r._nbytes() for r in self.resources)
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
@@ -197,30 +199,62 @@ class Project(UserContent):
 
 
     @classmethod
-    def _build_from_json(cls, json):
+    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+        print('Downloading project', end=': ')
+        json = cls._json_from_uid(uid)
+        print('' if json['title'] is None else json['title'])
+
         pub = False
         for a in json['access']:
             if a['user'] == 'Special:PUBLIC':
                 pub = True
                 break
+        is_owner = Comms.user.username == json['owner']['uid']
+        if copy is None:
+            copy = not is_owner
+        elif not copy and not is_owner:
+            copy = True
+        if copy:
+            print('This is a copy of the {pub} project'.format(
+                pub='PUBLIC' if pub else 'private'
+            ))
+        else:
+            print('This is the original version of the {pub} project'.format(
+                pub='PUBLIC' if pub else 'private'
+            ))
+            print('>> NOTE: Any changes you upload will overwrite the '
+                  'project on steno3d.com')
+            print('>> ', end='')
+            if len(json['perspectiveUids']) > 0:
+                print('and existing perspectives may be invalidated. ', end='')
+            print('Please upload with caution.')
+
         proj = Project(
             public=pub,
             title=json['title'],
-            description=json['description']
+            description=json['description'],
+            resources=[]
         )
-        proj._public_online = pub
-        proj._upload_data = json
 
         jres = json['resources']
+        for longuid in jres:
+            res_string = longuid.split('Resource')[-1].split(':')[0]
+            res_class = _REGISTRY[res_string]
+            proj.resources += [res_class._build_from_uid(
+                uid=jres[longuid],
+                copy=copy,
+                tab_level=tab_level + '    ',
+                project=proj
+            )]
 
-        proj.resources = [CompositeResource._build_from_json(jres[longuid])
-                          for longuid in jres]
+        if not copy:
+            proj._public_online = pub
+            proj._upload_data = json
+            proj._mark_clean()
 
+        print('... Complete!')
 
-
-
-
-        proj._mark_clean()
+        return proj
 
 
 

@@ -109,6 +109,34 @@ class Mesh2D(BaseMesh):
                 self.traits()['triangles'].serialize(self.triangles)
         return files
 
+    @classmethod
+    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        json = cls._json_from_uid(uid)
+        print('' if json['title'] is None else json['title'])
+        mesh = Mesh2D(
+            title=json['title'],
+            description=json['description'],
+            vertices=Array.download(
+                url=json['vertices'],
+                shape=(json['verticesSize']//12, 3),
+                dtype=json['verticesType']
+            ),
+            triangles=Array.download(
+                url=json['triangles'],
+                shape=(json['trianglesSize']//12, 3),
+                dtype=json['trianglesType']
+            ),
+            opts=json['meta']
+        )
+        if not copy:
+            mesh._upload_data = json
+        print('{}...Complete!'.format(tab_level))
+        return mesh
+
 
 
 class Mesh2DGrid(BaseMesh):
@@ -206,6 +234,32 @@ class Mesh2DGrid(BaseMesh):
         if 'Z' in dirty or (force and getattr(self, 'Z', None) is not None):
             files['Z'] = self.traits()['Z'].serialize(self.Z)
         return files
+
+    @classmethod
+    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        json = cls._json_from_uid(uid)
+        print('' if json['title'] is None else json['title'])
+        mesh = Mesh2DGrid(
+            title=json['title'],
+            description=json['description'],
+            h1=json['tensors']['h1'],
+            h2=json['tensors']['h2'],
+            x0=json['OUV']['O'],
+            Z=Array.download(
+                url=json['Z'],
+                shape=json['ZShape']//4,
+                dtype=json['ZType']
+            ),
+            opts=json['meta']
+        )
+        if not copy:
+            mesh._upload_data = json
+        print('{}...Complete!'.format(tab_level))
+        return mesh
 
 
 class _SurfaceBinder(HasSteno3DTraits):

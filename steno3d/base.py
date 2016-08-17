@@ -9,12 +9,12 @@ from __future__ import unicode_literals
 
 from json import dumps
 from pprint import pformat
-from warnings import warn
+from six import string_types
 
 from traitlets import observe, Undefined, validate
 
-from .traits import HasSteno3DTraits, KeywordInstance, Repeated, String
-from .client import Comms, needs_login, pause, plot, post, put
+from .traits import _REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated, String
+from .client import Comms, get, needs_login, pause, plot, post, put
 
 
 class classproperty(property):
@@ -183,28 +183,23 @@ class UserContent(HasSteno3DTraits):
         return json
 
     @classmethod
-    def _build_from_uid(cls, uid):
+    def _json_from_uid(cls, uid):
         if not isinstance(uid, string_types) or len(uid) != 20:
             raise ValueError('{}: invalid uid'.format(uid))
         resp = get('{api}/{uid}'.format(
-            api=cls._model_api_locaion,
+            api=cls._model_api_location,
             uid=uid
         ))
         if resp.status_code != 200:
-            raise ValueError('{uid}: {cls}} query failed'.format(
+            raise ValueError('{uid}: {cls} query failed'.format(
                 uid=uid,
                 cls=cls._resource_class
             ))
-        return cls._build_from_json(resp.json())
+        return resp.json()
 
     @classmethod
-    def _build_from_json(cls, json):
-        usercont = cls(
-            title=json['title'],
-            description=json['description']
-        )
-        usercont._upload_data = json
-        return usercont
+    def _build_from_json(cls, json, copy=True):
+        raise NotImplementedError()
 
 
 class BaseResource(UserContent):
@@ -246,11 +241,6 @@ class CompositeResource(BaseResource):
                             'containing project(s)')
         super(CompositeResource, self).__init__(**kwargs)
         self.project = project
-        # if project is not None:
-        #     warn('Resources are no longer constructed with their project. '
-        #          'Resources must be added to the project\'s list of '
-        #          'resources, `your_proj.resources`', DeprecationWarning)
-        # super(CompositeResource, self).__init__(**kwargs)
 
     @classmethod
     def _url_view_from_uid(cls, uid):
@@ -357,25 +347,44 @@ class CompositeResource(BaseResource):
             return
         return plot(self._url)
 
+
+
     @classmethod
-    def _build_from_json(cls, json):
-        resource_string = json['longUid'].split('Resource')[-1].split(':')[0]
-        resource_class = getattr(globals()['steno3d'], resource_string)
-        res = resource_class(
+    def _build_from_uid(cls, uid, copy=True, tab_level='', project=None):
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        if isinstance(uid, string_types):
+            json = cls._json_from_uid(uid)
+        else:
+            json = uid
+        print('' if json['title'] is None else json['title'])
+        res = cls(
+            project=project,
             title=json['title'],
-            description=json['description']
+            description=json['description'],
+            opts=json['meta']
         )
         (mesh_string, mesh_uid) = (
             json['mesh']['uid'].split('Resource')[-1].split(':')
         )
-        mesh_class = getattr(globals()['steno3d'], mesh_string)
+        mesh_class = _REGISTRY[mesh_string]
 
-        res.mesh = mesh_class._build_from_uid(mesh_uid)
+        res.mesh = mesh_class._build_from_uid(
+            mesh_uid, copy, tab_level + '    '
+        )
 
         if 'textures' in json:
             res.textures = []
-            for t in json['textures']
-
+            for t in json['textures']:
+                (tex_string, tex_uid) = (
+                    t['uid'].split('Resource')[-1].split(':')
+                )
+                tex_class = _REGISTRY[tex_string]
+                res.textures += [tex_class._build_from_uid(
+                    tex_uid, copy, tab_level + '    '
+                )]
 
         if 'data' in json:
             res.data = []
@@ -383,15 +392,20 @@ class CompositeResource(BaseResource):
                 (data_string, data_uid) = (
                     d['uid'].split('Resource')[-1].split(':')
                 )
-                data_class = getattr(globals()['steno3d'], data_string)
+                data_class = _REGISTRY[data_string]
                 res.data += [dict(
                     location=d['location'],
-                    data=data_class._build_from_uid(data_uid)
+                    data=data_class._build_from_uid(
+                        data_uid, copy, tab_level + '    '
+                    )
                 )]
 
-        if 'meta' in json:
-            for key in json['meta']:
-                setattr(res, key, json['meta'][key])
+        if not copy:
+            res._upload_data = json
+
+        print('{}...Complete!'.format(tab_level))
+
+        return res
 
 
 class BaseMesh(BaseResource):

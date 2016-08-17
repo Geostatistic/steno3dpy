@@ -111,6 +111,34 @@ class Mesh1D(BaseMesh):
                 self.traits()['segments'].serialize(self.segments)
         return files
 
+    @classmethod
+    def _build_from_uid(cls, uid, copy=True, tab_level=''):
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        json = cls._json_from_uid(uid)
+        print('' if json['title'] is None else json['title'])
+        mesh = Mesh1D(
+            title=json['title'],
+            description=json['description'],
+            vertices=Array.download(
+                url=json['vertices'],
+                shape=(json['verticesSize']//12, 3),
+                dtype=json['verticesType']
+            ),
+            segments=Array.download(
+                url=json['segments'],
+                shape=(json['segmentsSize']//8, 2),
+                dtype=json['segmentsType']
+            ),
+            opts=json['meta']
+        )
+        if not copy:
+            mesh._upload_data = json
+        print('{}...Complete!'.format(tab_level))
+        return mesh
+
 
 class _LineBinder(HasSteno3DTraits):
     """Contains the data on a 1D line set with location information"""

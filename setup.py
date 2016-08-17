@@ -31,7 +31,7 @@ setup(
                         'pypng',
                         'requests',
                         'six',
-                        'traitlets',
+                        'traitlets>=4.1',
                        ],
     author = '3point Science',
     author_email = 'info@3ptscience.com',

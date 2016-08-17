@@ -74,4 +74,19 @@ class DataArray(BaseData):
             files['array'] = self.traits()['array'].serialize(self.array)
         return files
 
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        data = DataArray(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            order=json['order'],
+            array=Array.download(
+                url=json['array'],
+                shape=json['arraySize']//4,
+                dtype=json['arrayType']
+            )
+        )
+        return data
+
+
 __all__ = ['DataArray']

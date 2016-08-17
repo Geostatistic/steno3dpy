@@ -90,5 +90,17 @@ class Texture2DImage(BaseTexture2D):
         self.image.seek(0)
         return self.image.read()
 
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        tex = Texture2DImage(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            O=json['OUV']['O'],
+            U=json['OUV']['U'],
+            V=json['OUV']['V'],
+            image=Image.download(json['image'])
+        )
+        return tex
+
 
 __all__ = ['Texture2DImage']

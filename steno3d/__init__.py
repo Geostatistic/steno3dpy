@@ -26,6 +26,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from . import parsers
+from . import query
 from . import client
 from .project import *
 from .data import *
@@ -44,7 +45,7 @@ login = client.Comms.login
 logout = client.Comms.logout
 
 try:
-    del project, data, line, point, surface, texture, tratis, volume
+    del project, data, line, point, surface, texture, traits, volume
     del base, client, options, user
     del absolute_import, division, print_function, unicode_literals
 except NameError:

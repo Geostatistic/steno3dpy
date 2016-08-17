@@ -9,12 +9,13 @@ from __future__ import unicode_literals
 
 from json import dumps
 from pprint import pformat
-from warnings import warn
+from six import string_types
 
 from traitlets import observe, Undefined, validate
 
-from .traits import HasSteno3DTraits, KeywordInstance, Repeated, String
-from .client import Comms, needs_login, pause, plot, post, put
+from .client import Comms, get, needs_login, pause, plot, post, put
+from .traits import (_REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated,
+                     String)
 
 
 class classproperty(property):
@@ -182,6 +183,47 @@ class UserContent(HasSteno3DTraits):
             raise ValueError('JSON not available: Data not uploaded')
         return json
 
+    @classmethod
+    def _json_from_uid(cls, uid):
+        if not isinstance(uid, string_types) or len(uid) != 20:
+            raise ValueError('{}: invalid uid'.format(uid))
+        resp = get('{api}/{uid}'.format(
+            api=cls._model_api_location,
+            uid=uid
+        ))
+        if resp.status_code != 200:
+            raise ValueError('{uid}: {cls} query failed'.format(
+                uid=uid,
+                cls=cls._resource_class
+            ))
+        return resp.json()
+
+    @classmethod
+    def _build(cls, src, copy=True, tab_level='', **kwargs):
+        if isinstance(src, HasSteno3DTraits):
+            raise NotImplementedError('Copying instances not supported')
+        print('{tl}Downloading {cls}'.format(
+            tl=tab_level,
+            cls=cls._resource_class
+        ), end=': ')
+        if isinstance(src, string_types):
+            json = cls._json_from_uid(src)
+        else:
+            json = src
+        title = '' if json['title'] is None else json['title']
+        desc = '' if json['description'] is None else json['description']
+        print(title)
+        res = cls._build_from_json(json, copy=copy, tab_level=tab_level,
+                                   title=title, description=desc, **kwargs)
+        if not copy:
+            res._upload_data = json
+        print('{}...Complete!'.format(tab_level))
+        return res
+
+    @classmethod
+    def _build_from_json(cls, json, copy=True, tab_level='', **kwargs):
+        raise NotImplementedError('Cannot build raw UserContent from json')
+
 
 class BaseResource(UserContent):
     """Base class for all resources that are added to projects and
@@ -215,12 +257,6 @@ class CompositeResource(BaseResource):
         help='Project',
         trait=KeywordInstance(klass='Project')
     )
-
-    _children = {
-        'mesh': None,
-        'data': 'data',
-        'textures': None,
-    }
 
     def __init__(self, project=None, **kwargs):
         if project is None:
@@ -335,6 +371,53 @@ class CompositeResource(BaseResource):
         return plot(self._url)
 
 
+
+    @classmethod
+    def _build_from_json(cls, json, copy=True, tab_level='', **kwargs):
+        if 'project' not in kwargs:
+            raise KeyError('Building CompositeResource from json requires '
+                           'project input.')
+        res = cls(
+            project=kwargs['project'],
+            title=kwargs['title'],
+            description=kwargs['description'],
+            opts=json['meta']
+        )
+        (mesh_string, mesh_uid) = (
+            json['mesh']['uid'].split('Resource')[-1].split(':')
+        )
+        mesh_class = _REGISTRY[mesh_string]
+
+        res.mesh = mesh_class._build(mesh_uid, copy, tab_level + '    ')
+
+        if 'textures' in json:
+            res.textures = []
+            for t in json['textures']:
+                (tex_string, tex_uid) = (
+                    t['uid'].split('Resource')[-1].split(':')
+                )
+                tex_class = _REGISTRY[tex_string]
+                res.textures += [tex_class._build(
+                    tex_uid, copy, tab_level + '    '
+                )]
+
+        if 'data' in json:
+            res.data = []
+            for d in json['data']:
+                (data_string, data_uid) = (
+                    d['uid'].split('Resource')[-1].split(':')
+                )
+                data_class = _REGISTRY[data_string]
+                res.data += [dict(
+                    location=d['location'],
+                    data=data_class._build(
+                        data_uid, copy, tab_level + '    '
+                    )
+                )]
+
+        return res
+
+
 class BaseMesh(BaseResource):
     """Base class for all mesh resources. These are contained within
     each composite resources and define its structure
@@ -365,6 +448,6 @@ class BaseTexture2D(BaseResource):
     def _model_api_location(cls):
         """api destination for texture resource"""
         if getattr(cls, '__model_api_location', None) is None:
-            cls.__model_api_location = 'resource/texture2d/{class_name}'.format(
-                class_name=cls._resource_class)
+            cls.__model_api_location = 'resource/texture2d/{cls_name}'.format(
+                cls_name=cls._resource_class)
         return cls.__model_api_location

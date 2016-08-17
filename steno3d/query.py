@@ -4,24 +4,28 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from six import integer_types
-from six import string_types
 
-from .client import Comms, get, needs_login
+from .client import get, needs_login
 from .project import Project
 
 
-def _mine(queue=10):
+MINE = 'project/steno3ds/mine'
+
+
+def _query(url, queue=10):
     cursor = ''
     more = True
+    print('Fetching projects from the database ...')
     while more:
-        print('Queuing {} projects...'.format(queue))
-        resp = get('project/steno3ds/mine?brief=True&'
-                   'num={n}&cursor={c}'.format(n=queue, c=cursor))
+        resp = get('{url}?brief=True&num={n}&cursor={c}'.format(
+            url=url, n=queue, c=cursor
+        ))
         rjson = resp.json()
         cursor = rjson['cursor']
         more = rjson['more']
         for proj in rjson['data']:
             yield proj
+        print('Fetching more projects from the database ...')
 
 
 def _short_json(proj_json):
@@ -32,16 +36,15 @@ def _short_json(proj_json):
 
 
 @needs_login
-def all_my_projects(queue=100):
-    return [_short_json(p) for p in _mine(queue)]
-
-
-@needs_login
-def last_n_projects(n, queue=10):
+def my_projects(n=None, queue=100):
+    if n is None:
+        print('Querying all your projects ...')
+        return [_short_json(p) for p in _query(MINE, queue)]
     if not isinstance(n, integer_types):
         raise ValueError('{}: n must be int'.format(n))
+    print('Querying your most recent {} project(s) ...'.format(n))
     projs = []
-    projit = _mine(queue)
+    projit = _query(MINE, queue)
     for i in range(n):
         try:
             projs += [_short_json(next(projit))]
@@ -50,33 +53,18 @@ def last_n_projects(n, queue=10):
                 n=n, p=len(projs)
             ))
             break
+    print('...Complete!')
     return projs
 
 
 @needs_login
-def project_by_uid(uid):
-    return Project._build_from_uid(uid)
-    if not isinstance(uid, string_types) or len(uid) != 20:
-        raise ValueError('{}: invalid uid'.format(uid))
-    resp = get('project/steno3d/{uid}'.format(uid=uid))
-    if resp.status_code != 200:
-        raise ValueError('{}: project query failed'.format(uid))
-    return Project._build_from_json(resp.json())
+def project_by_uid(uid, copy=None):
+    return Project._build_from_uid(uid, copy)
 
 
 @needs_login
-def project_by_title(title):
-    if not isinstance(title, string_types):
-        raise ValueError('{}: title must be string'.format(title))
-    for p in _mine():
-        if p['title'] == title:
-            return project_by_uid(p['uid'])
-    raise ValueError('{}: no project with this title found'.format(title))
-
-
-@needs_login
-def last_project_created():
+def last_project(copy=None):
     try:
-        return project_by_uid(next(_mine())['uid'])
+        return project_by_uid(next(_query(MINE, 1))['uid'], copy)
     except StopIteration:
         print('No projects available!')

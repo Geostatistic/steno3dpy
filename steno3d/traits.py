@@ -13,6 +13,7 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 from png import Reader
+from requests import get
 import traitlets as tr
 
 
@@ -342,6 +343,18 @@ class Image(Steno3DTrait, tr.TraitType):
         fp.close()
         return output
 
+    @classmethod
+    def download(cls, url):
+        im_resp = get(url)
+        if im_resp.status_code != 200:
+            raise IOError('Failed to download image.')
+        output = BytesIO()
+        output.name = 'texture.png'
+        for chunk in im_resp:
+            output.write(chunk)
+        output.seek(0)
+        return output
+
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
@@ -420,6 +433,18 @@ class Array(Steno3DTrait, tr.TraitType):
         data_file.seek(0)
         return FileProp(data_file, use_dtype)
 
+    @classmethod
+    def download(cls, url, shape, dtype=float):
+        arr_resp = get(url)
+        if arr_resp.status_code != 200:
+            raise IOError('Failed to download array.')
+        data_file = NamedTemporaryFile()
+        for chunk in arr_resp:
+            data_file.write(chunk)
+        data_file.seek(0)
+        arr = np.fromfile(data_file.file, dtype).reshape(shape)
+        data_file.close()
+        return arr
 
 class Vector(Array):
     """A trait for 3D vectors"""

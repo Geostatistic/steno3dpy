@@ -228,11 +228,6 @@ class CompositeResource(BaseResource):
                             'containing project(s)')
         super(CompositeResource, self).__init__(**kwargs)
         self.project = project
-        # if project is not None:
-        #     warn('Resources are no longer constructed with their project. '
-        #          'Resources must be added to the project\'s list of '
-        #          'resources, `your_proj.resources`', DeprecationWarning)
-        # super(CompositeResource, self).__init__(**kwargs)
 
     @classmethod
     def _url_view_from_uid(cls, uid):

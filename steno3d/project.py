@@ -190,7 +190,9 @@ class Project(UserContent):
     def _build(cls, uid, copy=True, tab_level=''):
         print('Downloading project', end=': ')
         json = cls._json_from_uid(uid)
-        print('' if json['title'] is None else json['title'])
+        title = '' if json['title'] is None else json['title']
+        desc = '' if json['description'] is None else json['description']
+        print(title)
         pub = False
         for a in json['access']:
             if a['user'] == 'Special:PUBLIC':
@@ -218,8 +220,8 @@ class Project(UserContent):
 
         proj = Project(
             public=pub,
-            title=json['title'],
-            description=json['description'],
+            title=title,
+            description=desc,
             resources=[]
         )
         jres = json['resources']

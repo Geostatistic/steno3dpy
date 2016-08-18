@@ -466,7 +466,18 @@ class Vector(Array):
                 value = [0., 1, 0]
             elif value.upper() == 'Z':
                 value = [0., 0, 1]
-        return super(Vector, self).validate(obj, value)
+        if not isinstance(value, (list, np.ndarray)):
+            self.error(obj, value)
+        value = np.array(value)
+        if value.dtype.kind != 'f':
+            self.error(obj, value)
+        if value.ndim == 2 and value.shape[0] == 1:
+            value = value[0]
+        if value.ndim != 1:
+            self.error(obj, value)
+        if len(value) != 3:
+            self.error(obj, value)
+        return value
 
 
 class KeywordInstance(Steno3DTrait, tr.Instance):

@@ -131,6 +131,7 @@ class Mesh2DGrid(BaseMesh):
         help='Node topography',
         shape=('*',),
         dtype=float,
+        default_value=None,
         allow_none=True
     )
     opts = KeywordInstance(

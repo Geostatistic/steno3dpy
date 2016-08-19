@@ -442,6 +442,7 @@ class Vector(Array):
         value = np.array(value)
         if value.dtype.kind not in ('f', 'i'):
             self.error(obj, value)
+        value = value.astype('float')
         if value.ndim == 2 and value.shape[0] == 1:
             value = value[0]
         if value.ndim != 1:

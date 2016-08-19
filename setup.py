@@ -24,7 +24,7 @@ with open('README.rst') as f:
 
 setup(
     name = 'steno3d',
-    version = '0.2.4',
+    version = '0.2.5',
     packages = find_packages(),
     install_requires = ['future',
                         'numpy>=1.7',

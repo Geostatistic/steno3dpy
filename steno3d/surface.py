@@ -131,7 +131,7 @@ class Mesh2DGrid(BaseMesh):
         help='Node topography',
         shape=('*',),
         dtype=float,
-        default_value=None,
+        default_value=[],
         allow_none=True
     )
     opts = KeywordInstance(
@@ -174,6 +174,8 @@ class Mesh2DGrid(BaseMesh):
     @validate('Z')
     def _validate_Z(self, proposal):
         """Check if mesh content is built correctly"""
+        if proposal['value'] == []:
+            return proposal['value']
         if len(proposal['value']) != proposal['owner'].nN:
             raise ValueError(
                 'Length of Z, {zlen}, must equal number of nodes, '
@@ -204,7 +206,7 @@ class Mesh2DGrid(BaseMesh):
     def _get_dirty_files(self, force=False):
         files = super()._get_dirty_files(force)
         dirty = self._dirty_traits
-        if 'Z' in dirty or (force and getattr(self, 'Z', None) is not None):
+        if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
             files['Z'] = self.traits()['Z'].serialize(self.Z)
         return files
 

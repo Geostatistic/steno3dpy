@@ -13,6 +13,7 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 from png import Reader
+from requests import get
 import traitlets as tr
 
 
@@ -86,7 +87,9 @@ def validator(func):
                             if isinstance(v, DelayedValidator):
                                 v.validate()
                 elif not trait_dict[k].allow_none:
-                    raise tr.TraitError('Required property not set: {}'.format(k))
+                    raise tr.TraitError(
+                        'Required property not set: {}'.format(k)
+                    )
         finally:
             self._cross_validation_lock = True
             self._validating = False
@@ -146,11 +149,13 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
             traits = self.traits()
             for trait in traits:
                 value = getattr(self, trait)
-                if isinstance(value, HasSteno3DTraits) and len(value._dirty) > 0:
+                if (isinstance(value, HasSteno3DTraits) and
+                        len(value._dirty) > 0):
                     dirty_instances.add(trait)
                 if isinstance(value, (list, tuple)):
                     for v in value:
-                        if isinstance(v, HasSteno3DTraits) and len(v._dirty) > 0:
+                        if (isinstance(v, HasSteno3DTraits) and
+                                len(v._dirty) > 0):
                             dirty_instances.add(trait)
         finally:
             self._inside_dirty = False
@@ -182,11 +187,12 @@ class Steno3DNumber(Steno3DTrait):
 
     @property
     def sphinx_extra(self):
-        if self.min is None and self.max is None:
+        if (getattr(self, 'min', None) is None and
+                getattr(self, 'max', None) is None):
             return ''
         return ', Range: [{mn}, {mx}]'.format(
-            mn='-inf' if self.min is None else self.min,
-            mx='inf' if self.max is None else self.max
+            mn='-inf' if getattr(self, 'min', None) is None else self.min,
+            mx='inf' if getattr(self, 'max', None) is None else self.max
         )
 
 
@@ -220,7 +226,7 @@ class Color(Steno3DTrait, tr.TraitType):
 
     default_value = 'RANDOM'
     info_text = ('a color (RGB with values 0-255, hex color e.g. \'#FF0000\', '
-                'string color name, or \'random\')')
+                 'string color name, or \'random\')')
     sphinx_extra = ', Format: RGB, hex, or predefined color'
 
     def validate(self, obj, value):
@@ -242,9 +248,9 @@ class Color(Steno3DTrait, tr.TraitType):
             except ValueError:
                 self.error(obj, value)
         if not isinstance(value, (list, tuple)):
-                self.error(obj, value)
+            self.error(obj, value)
         if len(value) != 3:
-                self.error(obj, value)
+            self.error(obj, value)
         for v in value:
             if not isinstance(v, integer_types) or not 0 <= v <= 255:
                 self.error(obj, value)
@@ -254,7 +260,7 @@ class Color(Steno3DTrait, tr.TraitType):
 class String(Steno3DTrait, tr.TraitType):
     """A trait for strings, where you can map several values to one"""
 
-    def __init__(self, choices={}, lowercase=False, strip=' ',
+    def __init__(self, choices=None, lowercase=False, strip=' ',
                  default_value=tr.Undefined, **metadata):
         if choices is None:
             choices = {}
@@ -342,6 +348,18 @@ class Image(Steno3DTrait, tr.TraitType):
         fp.close()
         return output
 
+    @classmethod
+    def download(cls, url):
+        im_resp = get(url)
+        if im_resp.status_code != 200:
+            raise IOError('Failed to download image.')
+        output = BytesIO()
+        output.name = 'texture.png'
+        for chunk in im_resp:
+            output.write(chunk)
+        output.seek(0)
+        return output
+
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
@@ -420,12 +438,27 @@ class Array(Steno3DTrait, tr.TraitType):
         data_file.seek(0)
         return FileProp(data_file, use_dtype)
 
+    @classmethod
+    def download(cls, url, shape, dtype=float):
+        arr_resp = get(url)
+        if arr_resp.status_code != 200:
+            raise IOError('Failed to download array.')
+        data_file = NamedTemporaryFile()
+        for chunk in arr_resp:
+            data_file.write(chunk)
+        data_file.seek(0)
+        arr = np.fromfile(data_file.file, dtype).reshape(shape)
+        data_file.close()
+        return arr
+
 
 class Vector(Array):
     """A trait for 3D vectors"""
 
     def __init__(self, **metadata):
-        super(Vector, self).__init__(shape=(3,), dtype=float, **metadata)
+        super(Vector, self).__init__(
+            shape=(3,), dtype=(float, int), **metadata
+        )
 
     def validate(self, obj, value):
         if isinstance(value, string_types):
@@ -435,7 +468,19 @@ class Vector(Array):
                 value = [0., 1, 0]
             elif value.upper() == 'Z':
                 value = [0., 0, 1]
-        return super(Vector, self).validate(obj, value)
+        if not isinstance(value, (list, np.ndarray)):
+            self.error(obj, value)
+        value = np.array(value)
+        if value.dtype.kind not in ('f', 'i'):
+            self.error(obj, value)
+        value = value.astype('float')
+        if value.ndim == 2 and value.shape[0] == 1:
+            value = value[0]
+        if value.ndim != 1:
+            self.error(obj, value)
+        if len(value) != 3:
+            self.error(obj, value)
+        return value
 
 
 class KeywordInstance(Steno3DTrait, tr.Instance):
@@ -484,6 +529,7 @@ class KeywordInstance(Steno3DTrait, tr.Instance):
             kls = self.klass.__name__
         return ':class:`{cls} <.{cls}>`'.format(cls=kls)
 
+
 class Repeated(Steno3DTrait, tr.List):
     """A list trait that creates a length-1 list if given an instance"""
 
@@ -508,7 +554,6 @@ class Repeated(Steno3DTrait, tr.List):
         if not isinstance(value, (list, tuple)):
             value = [value]
         return super(Repeated, self).validate(obj, value)
-
 
 
 COLORS_20 = [

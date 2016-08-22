@@ -16,7 +16,8 @@ from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Vector
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
+                     String, Vector)
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -47,8 +48,7 @@ class Mesh3DGrid(BaseMesh):
     )
     x0 = Vector(
         help='Origin vector',
-        default_value=[0., 0., 0.],
-        allow_none=True
+        default_value=[0., 0., 0.]
     )
     opts = KeywordInstance(
         help='Mesh3D Options',
@@ -97,6 +97,19 @@ class Mesh3DGrid(BaseMesh):
                 Z=[0, 0, self.h3.sum().astype(float)]
             ))
         return datadict
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        mesh = Mesh3DGrid(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            h1=json['tensors']['h1'],
+            h2=json['tensors']['h2'],
+            h3=json['tensors']['h3'],
+            x0=json['OUVZ']['O'],
+            opts=json['meta']
+        )
+        return mesh
 
 
 class _VolumeBinder(HasSteno3DTraits):

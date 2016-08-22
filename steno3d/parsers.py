@@ -99,8 +99,8 @@ class BaseParser(_with_metaclass(_BaseParserMetaClass,
         if file_name.split('.')[-1] not in self.extensions:
             raise IOError('{name}: Unsupported extension. Supported '
                           'extensions are {exts}'.format(
-                             name=file_name,
-                             exts='(' + ', '.join(self.extensions) + ')'
+                              name=file_name,
+                              exts='(' + ', '.join(self.extensions) + ')'
                           ))
         return file_name
 

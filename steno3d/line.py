@@ -30,7 +30,8 @@ class _Mesh1DOptions(Options):
                      'borehole', 'boreholes')
         },
         default_value='line',
-        lowercase=True
+        lowercase=True,
+        allow_none=True
     )
 
 

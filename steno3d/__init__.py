@@ -35,7 +35,7 @@ from .surface import *
 from .texture import *
 from .volume import *
 
-__version__ = '0.2.4'
+__version__ = '0.2.5'
 __author__ = '3point Science'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2016 3point Science'

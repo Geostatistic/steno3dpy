@@ -456,7 +456,9 @@ class Vector(Array):
     """A trait for 3D vectors"""
 
     def __init__(self, **metadata):
-        super(Vector, self).__init__(shape=(3,), dtype=float, **metadata)
+        super(Vector, self).__init__(
+            shape=(3,), dtype=(float, int), **metadata
+        )
 
     def validate(self, obj, value):
         if isinstance(value, string_types):
@@ -469,8 +471,9 @@ class Vector(Array):
         if not isinstance(value, (list, np.ndarray)):
             self.error(obj, value)
         value = np.array(value)
-        if value.dtype.kind != 'f':
+        if value.dtype.kind not in ('f', 'i'):
             self.error(obj, value)
+        value = value.astype('float')
         if value.ndim == 2 and value.shape[0] == 1:
             value = value[0]
         if value.ndim != 1:

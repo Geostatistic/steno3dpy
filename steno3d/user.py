@@ -13,26 +13,31 @@ class User(HasSteno3DTraits):
     _model_api_location = "user"
     email = String(
         help='Email',
+        default_value=None,
         allow_none=True,
         read_only=True
     )
     name = String(
         help='Name',
+        default_value=None,
         allow_none=True,
         read_only=True
     )
     url = String(
         help='URL',
+        default_value=None,
         allow_none=True,
         read_only=True
     )
     affiliation = String(
         help='Affiliation',
+        default_value=None,
         allow_none=True,
         read_only=True
     )
     location = String(
         help='Location',
+        default_value=None,
         allow_none=True,
         read_only=True
     )
@@ -45,6 +50,7 @@ class User(HasSteno3DTraits):
 
     devel_key = String(
         help='Developer API Key',
+        default_value=None,
         allow_none=True,
         read_only=True
     )

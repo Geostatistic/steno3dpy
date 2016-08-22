@@ -427,7 +427,7 @@ class Vector(Array):
     def __init__(self, **metadata):
         super(Vector, self).__init__(
             shape=(3,), dtype=(float, int), **metadata
-    )
+        )
 
     def validate(self, obj, value):
         if isinstance(value, string_types):

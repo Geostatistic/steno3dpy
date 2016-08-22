@@ -174,7 +174,7 @@ class Mesh2DGrid(BaseMesh):
     @validate('Z')
     def _validate_Z(self, proposal):
         """Check if mesh content is built correctly"""
-        if proposal['value'] == []:
+        if len(proposal['value']) == 0:
             return proposal['value']
         if len(proposal['value']) != proposal['owner'].nN:
             raise ValueError(

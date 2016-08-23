@@ -22,7 +22,7 @@ from zipfile import ZipFile
 
 
 class exampleproperty(object):
-    """wrapper that sets class method as saved property"""
+    """wrapper that sets class method as property"""
 
     def __init__(self, func):
         self.func = classmethod(func)
@@ -31,7 +31,7 @@ class exampleproperty(object):
         return self.func.__get__(None, owner)()
 
 
-class BaseExample(object): #with_metaclass(_ExampleMetaClass, object)):
+class BaseExample(object):
     """basic class that all examples inherit from"""
 
     def __init__(self, *args, **kwargs):
@@ -62,6 +62,23 @@ class BaseExample(object): #with_metaclass(_ExampleMetaClass, object)):
     @classmethod
     def fetch_data(cls, directory=None, download_if_missing=True,
                    filename=None, verbose=True):
+        """method fetch_data
+
+        This method checks for example data locally and downloads and
+        extracts the archive if necessary.
+
+        Inputs:
+            directory:           Local folder to save the archive and
+                                 extracted data.
+                                 (default: ~/.steno3d_client/assets/)
+            download_if_missing: Download the data archive if it is not
+                                 found locally. (default: True)
+            filename:            Specific data file to fetch. If none,
+                                 fetch all example data. (default: None)
+            verbose:             Print download/extraction status.
+                                 (default: True)
+        """
+
         if filename is not None and not isinstance(filename, string_types):
             raise ValueError('filename: must be the name of one file')
         if cls.filenames == []:

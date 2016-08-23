@@ -22,6 +22,10 @@ from ..volume import Volume
 
 
 class Wolfpass(BaseExample):
+    """Wolfpass example
+
+    This module provides example data for a geology exploration project.
+    """
 
     @exampleproperty
     def example_name(self):
@@ -81,7 +85,6 @@ class Wolfpass(BaseExample):
             'xsect_v.xsurf.npy',
         ]
 
-    # Borehole drill Points:
     @exampleproperty
     def drill_vertices(self):
         """drill point vertices"""
@@ -91,10 +94,7 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def drill_data(self):
-        """drill location raw data
-
-        list of dicts of 'location' and 'data' with 'title' and 'array'
-        """
+        """dictionry of drill point data"""
         if getattr(self, '_drill_data', None) is None:
             self._drill_data = dict()
             for npyfile in self.filenames:
@@ -109,7 +109,6 @@ class Wolfpass(BaseExample):
                 )
         return self._drill_data
 
-    # Borehole Lines:
     @exampleproperty
     def borehole_vertices(self):
         """borehole line vertices"""
@@ -126,7 +125,7 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def borehole_data(self):
-        """list of title/array dictionaries for borehole data"""
+        """dictionary of borehole data"""
         if getattr(self, '_borehole_data', None) is None:
             self._borehole_data = dict()
             for npyfile in self.filenames:
@@ -142,10 +141,9 @@ class Wolfpass(BaseExample):
                 )
         return self._borehole_data
 
-    # CU Percentage Surfaces:
     @exampleproperty
     def cu_names(self):
-        """list of prefixes for the different cu pct surfaces"""
+        """list of names for the different cu pct surfaces"""
         return [fname[:-13] for fname in self.filenames
                 if fname.endswith('_v.cusurf.npy')]
 
@@ -165,11 +163,9 @@ class Wolfpass(BaseExample):
                                            verbose=False))
                 for prefix in self.cu_names]
 
-
-    # Lithology Surfaces:
     @exampleproperty
     def lith_names(self):
-        """list of prefixes for the different lithology surfaces"""
+        """list of names for the different lithology surfaces"""
         return [fname[:-15] for fname in self.filenames
                 if fname.endswith('_v.lithsurf.npy')]
 
@@ -198,7 +194,6 @@ class Wolfpass(BaseExample):
             verbose=False
         ))
 
-    # Topography Surfaces:
     @exampleproperty
     def topo_vertices(self):
         """topography vertices"""
@@ -215,7 +210,7 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def topo_image(self):
-        """surface image"""
+        """surface image PNG"""
         return Wolfpass.fetch_data(filename='topography.png',
                                    download_if_missing=False,
                                    verbose=False)
@@ -231,11 +226,11 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def topo_data(self):
+        """elevation data"""
         return npload(Wolfpass.fetch_data(filename='elevation.toposurf.npy',
                                           download_if_missing=False,
                                           verbose=False))
 
-    # Cross-section Surface:
     @exampleproperty
     def xsect_vertices(self):
         """cross section vertices"""
@@ -252,7 +247,7 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def xsect_data(self):
-        """cross section raw data"""
+        """dictionary of cross section data"""
         if getattr(self, '_xsect_data', None) is None:
             self._xsect_data = dict()
             for npyfile in self.filenames:
@@ -268,10 +263,9 @@ class Wolfpass(BaseExample):
                 )
         return self._xsect_data
 
-    # Lithology Volume:
     @exampleproperty
     def lith_tensor(self):
-        """h1, h2, h3 for lith volume"""
+        """h1, h2, h3 dictionary for lith volume"""
         return dict(
             h1=npload(Wolfpass.fetch_data(filename='vol_h1.vol.npy',
                                           download_if_missing=False,
@@ -293,7 +287,7 @@ class Wolfpass(BaseExample):
 
     @exampleproperty
     def lith_data(self):
-        """raw data for lith volume"""
+        """dictionary of data for lith volume"""
         if getattr(self, '_lith_data', None) is None:
             self._lith_data = dict()
             for npyfile in self.filenames:
@@ -310,6 +304,7 @@ class Wolfpass(BaseExample):
 
     @classmethod
     def get_project(self):
+        """Return a project with all the Wolf Pass data"""
         proj = Project(
             title='Wolf Pass'
         )
@@ -324,6 +319,7 @@ class Wolfpass(BaseExample):
 
     @classmethod
     def get_project_topo(self):
+        """Return a project with Wolf Pass topography data"""
         proj = Project(
             title='Topography',
             description='Topography, surface imagery, and drill locations'
@@ -334,6 +330,7 @@ class Wolfpass(BaseExample):
 
     @classmethod
     def get_project_dacite(self):
+        """Return a project with Wolf Pass dacite data"""
         proj = Project(
             title='Wolf Pass',
             description='Boreholes and dacite formation'
@@ -344,7 +341,6 @@ class Wolfpass(BaseExample):
 
     @classmethod
     def _add_points(self, proj):
-        """Steno3D point resource for borehole drill locations"""
         Point(
             project=proj,
             mesh=Mesh0D(
@@ -364,7 +360,6 @@ class Wolfpass(BaseExample):
 
     @classmethod
     def _add_lines(self, proj):
-        """Steno3D line resource for boreholes"""
         Line(
             project=proj,
             mesh=Mesh1D(
@@ -481,4 +476,3 @@ class Wolfpass(BaseExample):
             ],
             title='Lithology Volume'
         )
-

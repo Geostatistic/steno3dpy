@@ -18,9 +18,9 @@ from ..surface import Surface
 
 
 class Teapot(BaseExample):
-    """Class containing components of teapot project. Components can be
-    viewed individually or copied into new resources or projects with
-    get_resources() and get_project(), respectively.
+    """Teapot example
+
+    This module provides example data for a teapot.
     """
 
     @exampleproperty
@@ -29,7 +29,6 @@ class Teapot(BaseExample):
 
     @exampleproperty
     def filenames(self):
-        """teapot json file"""
         return ['teapot.json']
 
     @exampleproperty
@@ -55,6 +54,7 @@ class Teapot(BaseExample):
 
     @classmethod
     def get_project(self):
+        """return teapot project"""
         proj = Project(
             title='Teapot',
             description='Project with surface and points at vertices'
@@ -75,4 +75,3 @@ class Teapot(BaseExample):
             title='Teapot Surface'
         )
         return proj
-

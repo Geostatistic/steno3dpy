@@ -11,7 +11,10 @@ from .base import BaseExample, exampleproperty
 
 
 class Images(BaseExample):
-    """Class containing miscellaneous image files."""
+    """Images example
+
+    Class containing miscellaneous image files.
+    """
 
     @exampleproperty
     def example_name(self):
@@ -45,20 +48,14 @@ class Images(BaseExample):
 
     @exampleproperty
     def logo(self):
-        """wood texture png"""
+        """steno3d logo png"""
         return Images.fetch_data(filename='steno3d.png',
                                  download_if_missing=False,
                                  verbose=False)
 
     @exampleproperty
     def logo_with_text(self):
-        """wood texture png"""
+        """steno3d logo with text png"""
         return Images.fetch_data(filename='steno3d_logo_text.png',
                                  download_if_missing=False,
                                  verbose=False)
-
-try:
-    del absolute_import, division, print_function, unicode_literals
-except NameError:
-    # Error cleaning namespace
-    pass

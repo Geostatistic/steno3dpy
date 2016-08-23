@@ -17,6 +17,10 @@ from ..texture import Texture2DImage
 
 
 class Topography(BaseExample):
+    """Topography example
+
+    This module provides example data for a topography surface.
+    """
 
     @exampleproperty
     def example_name(self):
@@ -65,7 +69,7 @@ class Topography(BaseExample):
 
     @classmethod
     def get_project(self):
-
+        """return topography project"""
         elev = self.vertices[:, 2]
         proj = Project(
             title='Topography'
@@ -103,4 +107,3 @@ class Topography(BaseExample):
                          'data as well as surface imagery')
         )
         return proj
-

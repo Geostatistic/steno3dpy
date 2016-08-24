@@ -26,7 +26,7 @@ class Airports(BaseExample):
     @exampleproperty
     def filenames(self):
         """teapot json file"""
-        return ['latitude.npy', 'longitude.npy', 'altitude.npy']
+        return ['latitude.npy', 'longitude.npy', 'altitude.npy', 'license.txt']
 
     @exampleproperty
     def latitude(self):

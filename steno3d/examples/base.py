@@ -15,7 +15,6 @@ from os.path import isdir
 from os.path import realpath
 from os.path import sep
 
-# from future.utils import with_metaclass
 from requests import get
 from six import string_types
 from zipfile import ZipFile

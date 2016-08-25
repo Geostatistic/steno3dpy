@@ -92,16 +92,18 @@ class BaseParser(_with_metaclass(_BaseParserMetaClass,
         it returns the file_name.
         """
         if not isinstance(file_name, _string_types):
-            raise IOError('{}: file_name must be a string'.format(file_name))
+            raise ParseError(
+                '{}: file_name must be a string'.format(file_name)
+            )
         file_name = _realpath(_expanduser(file_name))
         if not _isfile(file_name):
-            raise IOError('{}: File not found.'.format(file_name))
+            raise ParseError('{}: File not found.'.format(file_name))
         if file_name.split('.')[-1] not in self.extensions:
-            raise IOError('{name}: Unsupported extension. Supported '
-                          'extensions are {exts}'.format(
-                              name=file_name,
-                              exts='(' + ', '.join(self.extensions) + ')'
-                          ))
+            raise ParseError('{name}: Unsupported extension. Supported '
+                             'extensions are {exts}'.format(
+                                 name=file_name,
+                                 exts='(' + ', '.join(self.extensions) + ')'
+                             ))
         return file_name
 
     def _initialize(self):
@@ -207,7 +209,7 @@ class AllParsers(_with_metaclass(_BaseAllParserMetaClass,
             if filename.split('.')[-1] == ext:
                 if not issubclass(type(cls.extensions[ext]),
                                   _BaseParserMetaClass):
-                    raise ValueError(
+                    raise ParseError(
                         '{ext}: file type supported by more than one parser. '
                         'Please specify one of ({parsers})'.format(
                             ext=ext,
@@ -216,12 +218,19 @@ class AllParsers(_with_metaclass(_BaseAllParserMetaClass,
                     )
                 return cls.extensions[ext](filename, **kwargs)
 
-        raise ValueError(
+        raise ParseError(
             '{bad}: unsupported file extensions. Must be in ({ok})'.format(
                 bad=filename.split('.')[-1],
                 ok=', '.join(list(cls.extensions))
             )
         )
+
+
+class ParseError(IOError):
+    """class ParseError
+
+    Custom exception to raise for errors during file parsing
+    """
 
 try:
     del absolute_import, division, print_function, unicode_literals

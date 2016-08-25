@@ -15,112 +15,69 @@ from os.path import isdir
 from os.path import realpath
 from os.path import sep
 
-from future.utils import with_metaclass
 from requests import get
 from six import string_types
 from zipfile import ZipFile
 
 
 class exampleproperty(object):
-    """wrapper that sets class method as saved property"""
+    """wrapper that sets class method as property"""
 
     def __init__(self, func):
         self.func = classmethod(func)
-        self.propname = '_' + func.__name__
 
     def __get__(self, cls, owner):
-        if getattr(owner, self.propname, None) is None:
-            setattr(owner, self.propname, self.func.__get__(None, owner)())
-        return getattr(owner, self.propname)
+        return self.func.__get__(None, owner)()
 
 
-class exampleoutput(object):
-    """wrapper that sets class method to remove saved properties"""
-
-    def __init__(self, func, directory):
-        self.func = classmethod(func)
-        self._directory = ['_' + prop for prop in directory]
-        self._stash = [None for prop in directory]
-
-    def __get__(self, cls, owner):
-        def _output():
-            """return the original function surrounded by stash and unstash"""
-            self.stash(owner)
-            out = self.func.__get__(None, owner)()
-            self.unstash(owner)
-            return out
-        return _output
-
-    def stash(self, owner):
-        """stash saved properties during example output"""
-        for i, prop in enumerate(self._directory):
-            self._stash[i] = getattr(owner, prop, None)
-            setattr(owner, prop, None)
-
-    def unstash(self, owner):
-        """unstash saved properties after example output"""
-        for i, prop in enumerate(self._directory):
-            setattr(owner, prop, self._stash[i])
-
-
-class _ExampleMetaClass(type):
-    """metaclass that wraps every function with exampleproperty()"""
-
-    def __new__(mcs, name, bases, attrs):
-        if name not in ('BaseExample', 'Images'):
-            assert ('get_resources' in attrs and
-                    callable(attrs['get_resources'])), \
-                'Example {cls} class must have method get_resources()'.format(
-                    cls=name
-                )
-            assert ('get_project' in attrs and
-                    callable(attrs['get_project'])), \
-                'Example class {cls} must have method get_project()'.format(
-                    cls=name
-                )
-
-        example_directory = []
-        for attr in attrs:
-            value = attrs[attr]
-            if not attr.startswith('get_') and not attr == 'fetch_data' and \
-                    callable(value):
-                attrs[attr] = exampleproperty(value)
-                example_directory.append(attr)
-
-        for attr in attrs:
-            value = attrs[attr]
-            if attr.startswith('get_') and callable(value):
-                attrs[attr] = exampleoutput(value, example_directory)
-
-        return type.__new__(mcs, name, bases, attrs)
-
-
-class BaseExample(with_metaclass(_ExampleMetaClass, object)):
+class BaseExample(object):
     """basic class that all examples inherit from"""
 
     def __init__(self, *args, **kwargs):
         raise TypeError('Examples cannot be instantiated. Please access '
                         'the properties directly.')
 
+    @exampleproperty
     def example_name(self):
         return 'BaseExample'
 
+    @exampleproperty
     def data_directory(self):
         """path to directory containing all assets"""
         return sep.join([expanduser('~'), '.steno3d_client', 'assets'])
 
+    @exampleproperty
     def sub_directory(self):
         return self.example_name.lower()
 
+    @exampleproperty
     def filenames(self):
         return []
 
+    @exampleproperty
     def data_url(self):
         return 'https://storage.googleapis.com/steno3d-examples'
 
     @classmethod
     def fetch_data(cls, directory=None, download_if_missing=True,
                    filename=None, verbose=True):
+        """method fetch_data
+
+        This method checks for example data locally and downloads and
+        extracts the archive if necessary.
+
+        Inputs:
+            directory:           Local folder to save the archive and
+                                 extracted data.
+                                 (default: ~/.steno3d_client/assets/)
+            download_if_missing: Download the data archive if it is not
+                                 found locally. (default: True)
+            filename:            Specific data file to fetch. If none,
+                                 fetch all example data. (default: None)
+            verbose:             Print download/extraction status.
+                                 (default: True)
+        """
+
         if filename is not None and not isinstance(filename, string_types):
             raise ValueError('filename: must be the name of one file')
         if cls.filenames == []:
@@ -170,7 +127,7 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
                     for chunk in resp:
                         arch.write(chunk)
                 if verbose:
-                    print('        Archive downloaded successfully')
+                    print('        Archive downloaded successfully!')
             if exists(archive):
                 if verbose:
                     print('        Local archive found: extracting...')
@@ -178,7 +135,7 @@ class BaseExample(with_metaclass(_ExampleMetaClass, object)):
                     zf = ZipFile(archive)
                     zf.extract(fname, destination)
                     if verbose:
-                        print('        File extracted successfully')
+                        print('        File extracted successfully!')
                     if filename is not None:
                         return destination_file
                 except KeyError:

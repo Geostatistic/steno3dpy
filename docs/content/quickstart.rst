@@ -26,7 +26,7 @@ Want to start using Steno3D with your own data? It is available on
 
     pip install steno3d
 
-or install from `source <https://github.com/3ptscience/steno3dpy>`_
+or install from `source <https://github.com/3ptscience/steno3dpy>`_:
 
 .. code::
 

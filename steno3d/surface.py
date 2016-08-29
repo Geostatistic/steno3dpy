@@ -20,7 +20,8 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String, Union, Vector
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
+                     String, Union, Vector)
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -97,7 +98,6 @@ class Mesh2D(BaseMesh):
         proposal['owner']._validate_file_size('vertices', proposal['value'])
         return proposal['value']
 
-
     def _get_dirty_files(self, force=False):
         files = {}
         dirty = self._dirty_traits
@@ -109,6 +109,24 @@ class Mesh2D(BaseMesh):
                 self.traits()['triangles'].serialize(self.triangles)
         return files
 
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        mesh = Mesh2D(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            vertices=Array.download(
+                url=json['vertices'],
+                shape=(json['verticesSize']//12, 3),
+                dtype=json['verticesType']
+            ),
+            triangles=Array.download(
+                url=json['triangles'],
+                shape=(json['trianglesSize']//12, 3),
+                dtype=json['trianglesType']
+            ),
+            opts=json['meta']
+        )
+        return mesh
 
 
 class Mesh2DGrid(BaseMesh):
@@ -209,6 +227,23 @@ class Mesh2DGrid(BaseMesh):
         if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
             files['Z'] = self.traits()['Z'].serialize(self.Z)
         return files
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        mesh = Mesh2DGrid(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            h1=json['tensors']['h1'],
+            h2=json['tensors']['h2'],
+            x0=json['OUV']['O'],
+            Z=Array.download(
+                url=json['Z'],
+                shape=json['ZShape']//4,
+                dtype=json['ZType']
+            ),
+            opts=json['meta']
+        )
+        return mesh
 
 
 class _SurfaceBinder(HasSteno3DTraits):

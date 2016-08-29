@@ -8,7 +8,7 @@ from json import loads
 from numpy import array
 from numpy import mean
 
-from .base import BaseExample
+from .base import BaseExample, exampleproperty
 from ..data import DataArray
 from ..project import Project
 from ..surface import Mesh2D
@@ -17,68 +17,65 @@ from ..texture import Texture2DImage
 
 
 class Topography(BaseExample):
+    """Topography example
 
+    This module provides example data for a topography surface.
+    """
+
+    @exampleproperty
     def example_name(self):
         return 'Topography'
 
+    @exampleproperty
     def filenames(self):
         return ['topography.json', 'topography.png']
 
-    def data(self):
+    @exampleproperty
+    def _data(self):
         """topography data from json"""
-        json_file = Topography.fetch_data(filename='topography.json',
-                                          download_if_missing=False,
-                                          verbose=False)
-        with open(json_file, 'r') as f:
-            data = loads(f.read())
-        return data
+        if getattr(self, '__data', None) is None:
+            json_file = Topography.fetch_data(filename='topography.json',
+                                              download_if_missing=False,
+                                              verbose=False)
+            with open(json_file, 'r') as f:
+                self.__data = loads(f.read())
+        return self.__data
 
+    @exampleproperty
     def vertices(self):
         """n x 3 topography vertices"""
-        return array(self.data['vertices'])
+        return array(self._data['vertices'])
 
+    @exampleproperty
     def triangles(self):
         """n x 3 topography triangles"""
-        return array(self.data['triangles'])
+        return array(self._data['triangles'])
 
-    def texture(self):
-        """topography surface image texture"""
-        image_file = Topography.fetch_data(filename='topography.png',
-                                           download_if_missing=False,
-                                           verbose=False)
-        return Texture2DImage(
+    @exampleproperty
+    def topo_image(self):
+        """surface image"""
+        return Topography.fetch_data(filename='topography.png',
+                                     download_if_missing=False,
+                                     verbose=False)
+
+    @exampleproperty
+    def topo_image_orientation(self):
+        """surface image O, U, and V"""
+        return dict(
             O=[443200., 491750, 0],
             U=[4425., 0, 0],
-            V=[0., 3690, 0],
-            image=image_file
+            V=[0., 3690, 0]
         )
 
-    def vertex_elevation(self):
-        """z-coordinate of vertex"""
-        return self.vertices[:, 2]
-
-    def vertex_elevation_data(self):
-        """elevation as Steno3D data"""
-        return DataArray(
-            array=self.vertex_elevation,
-            title='Elevation, vertices'
+    @classmethod
+    def get_project(self):
+        """return topography project"""
+        elev = self.vertices[:, 2]
+        proj = Project(
+            title='Topography'
         )
-
-    def face_elevation(self):
-        """average z-coordinate of face"""
-        return mean(self.vertex_elevation[self.triangles], axis=1)
-
-    def face_elevation_data(self):
-        """elevation as Steno3D data"""
-        return DataArray(
-            array=self.face_elevation,
-            title='Elevation, faces'
-        )
-
-    def surface(self):
-        """ground surface with topo data and surface imagery"""
-        return Surface(
-            project=self._dummy_project,
+        Surface(
+            project=proj,
             mesh=Mesh2D(
                 vertices=self.vertices,
                 triangles=self.triangles
@@ -86,40 +83,27 @@ class Topography(BaseExample):
             data=[
                 dict(
                     location='N',
-                    data=self.vertex_elevation_data
+                    data=DataArray(
+                        array=elev,
+                        title='Elevation, vertices'
+                    )
                 ),
                 dict(
                     location='CC',
-                    data=self.face_elevation_data
+                    data=DataArray(
+                        array=mean(elev[self.triangles], axis=1),
+                        title='Elevation, faces'
+                    )
                 )
             ],
-            textures=self.texture,
+            textures=[
+                Texture2DImage(
+                    image=self.topo_image,
+                    **self.topo_image_orientation
+                )
+            ],
             title='Topography Surface',
             description=('This surface has face and vertex elevation '
                          'data as well as surface imagery')
         )
-
-    def project(self):
-        """empty Steno3D project"""
-        return Project(
-            title='Topography'
-        )
-
-    def _dummy_project(self):
-        """Steno3D project for initializing resources"""
-        return Project()
-
-    def get_resources(self):
-        """get a copy of the topography resources
-
-        tuple(topography surface,)
-        """
-        return (self.surface,)
-
-    def get_project(self):
-        """get a copy of the topography project"""
-        proj = self.project
-        proj.resources = self.get_resources()
-        for r in proj.resources:
-            r.project = proj
         return proj

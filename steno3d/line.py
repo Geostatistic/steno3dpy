@@ -22,7 +22,17 @@ from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 
 class _Mesh1DOptions(Options):
-    pass
+    view_type = String(
+        help='Display 1D lines or tubes/boreholes/extruded lines',
+        choices={
+            'line': ('lines', 'thin', '1d'),
+            'tube': ('tubes', 'extruded line', 'extruded lines',
+                     'borehole', 'boreholes')
+        },
+        default_value='line',
+        lowercase=True,
+        allow_none=True
+    )
 
 
 class _LineOptions(ColorOptions):
@@ -101,6 +111,25 @@ class Mesh1D(BaseMesh):
             files['segments'] = \
                 self.traits()['segments'].serialize(self.segments)
         return files
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        mesh = Mesh1D(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            vertices=Array.download(
+                url=json['vertices'],
+                shape=(json['verticesSize']//12, 3),
+                dtype=json['verticesType']
+            ),
+            segments=Array.download(
+                url=json['segments'],
+                shape=(json['segmentsSize']//8, 2),
+                dtype=json['segmentsType']
+            ),
+            opts=json['meta']
+        )
+        return mesh
 
 
 class _LineBinder(HasSteno3DTraits):

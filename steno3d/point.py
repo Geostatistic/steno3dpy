@@ -13,6 +13,7 @@ from traitlets import observe, validate
 
 from .base import BaseMesh
 from .base import CompositeResource
+from .data import DataArray
 from .options import ColorOptions
 from .options import Options
 from .texture import Texture2DImage
@@ -46,7 +47,8 @@ class Mesh0D(BaseMesh):
         return len(self.vertices)
 
     def _nbytes(self, arr=None):
-        if arr is None or (isinstance(arr, string_types) and arr == 'vertices'):
+        if arr is None or (isinstance(arr, string_types) and
+                           arr == 'vertices'):
             arr = self.vertices
         if isinstance(arr, ndarray):
             return arr.astype('f4').nbytes
@@ -75,6 +77,20 @@ class Mesh0D(BaseMesh):
                 self.traits()['vertices'].serialize(self.vertices)
         return files
 
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        mesh = Mesh0D(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            vertices=Array.download(
+                url=json['vertices'],
+                shape=(json['verticesSize']//12, 3),
+                dtype=json['verticesType']
+            ),
+            opts=json['meta']
+        )
+        return mesh
+
 
 class _PointBinder(HasSteno3DTraits):
     """Contains the data on a 0D point cloud"""
@@ -87,7 +103,7 @@ class _PointBinder(HasSteno3DTraits):
     )
     data = KeywordInstance(
         help='Data',
-        klass='DataArray'
+        klass=DataArray
     )
 
 

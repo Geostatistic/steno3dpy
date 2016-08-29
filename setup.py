@@ -42,5 +42,6 @@ setup(
     download_url = 'http://github.com/3ptscience/steno3dpy',
     classifiers=CLASSIFIERS,
     platforms = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix'],
+    license='MIT License',
     use_2to3 = False,
 )

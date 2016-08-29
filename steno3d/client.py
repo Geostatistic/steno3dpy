@@ -12,7 +12,7 @@ from builtins import str
 from functools import wraps
 from os import mkdir
 from os import path
-from time import sleep
+from time import sleep, time
 
 import requests
 from six import string_types
@@ -344,6 +344,7 @@ class _Comms(object):
             return
         self.user.login_with_json(resp.json())
         self.user.set_key(devel_key)
+        self.user._cookies = {}
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
                 name=self.user.username
@@ -416,13 +417,18 @@ def upload(request_fcn, url, data, files):
             filedict[filename + 'Type'] = files[filename].dtype
         else:
             filedict[filename] = files[filename]
+    t = time()
     req = request_fcn(
         Comms.url + url,
         data=data,
         files=filedict,
         headers={'sshKey': Comms.user.devel_key,
-                 'client': 'steno3dpy:{}'.format(__version__)}
+                 'client': 'steno3dpy:{}'.format(__version__)},
+        cookies=Comms.user._cookies
     )
+    if req.status_code < 210:
+        Comms.user._cookies = req.cookies
+    print(time() - t)
     for key in files:
         files[key].file.close()
     return req

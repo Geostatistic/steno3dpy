@@ -11,6 +11,9 @@ from .traits import HasSteno3DTraits, Int, String
 class User(HasSteno3DTraits):
     """Class representing a user instance"""
     _model_api_location = "user"
+
+    _cookies = {}
+
     email = String(
         help='Email',
         default_value=None,
@@ -90,6 +93,7 @@ class User(HasSteno3DTraits):
         self.set_trait('affiliation', None)
         self.set_trait('location', None)
         self.set_trait('devel_key', None)
+        self._cookies = {}
 
     @property
     def logged_in(self):

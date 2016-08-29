@@ -3,9 +3,8 @@
 This library is used to construct 3D projects and upload them to
 steno3d.com - if you do not have an account you can go to
 steno3d.com/signup and sign up. You will also need to request a developer
-API key at steno3d.com/settings/developer. Online documentation for this python client
-is found on steno3d.readthedocs.io/en/latest, and tutorials and examples
-can be found at steno3d.com.
+API key at steno3d.com/settings/developer. Online documentation for this
+python client is found at steno3d.com/docs.
 
 Steno3D is built with tab-completion in mind; if you are in an
 interacitve environment such as a Jupyter Notebook it is easy to explore

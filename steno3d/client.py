@@ -12,7 +12,7 @@ from builtins import str
 from functools import wraps
 from os import mkdir
 from os import path
-from time import sleep, time
+from time import sleep
 
 import requests
 from six import string_types
@@ -417,7 +417,6 @@ def upload(request_fcn, url, data, files):
             filedict[filename + 'Type'] = files[filename].dtype
         else:
             filedict[filename] = files[filename]
-    t = time()
     req = request_fcn(
         Comms.url + url,
         data=data,
@@ -428,7 +427,6 @@ def upload(request_fcn, url, data, files):
     )
     if req.status_code < 210:
         Comms.user._cookies = req.cookies
-    print(time() - t)
     for key in files:
         files[key].file.close()
     return req

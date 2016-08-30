@@ -342,9 +342,9 @@ class _Comms(object):
             print(LOGIN_FAILED.format(base_url=self.base_url))
             self.logout()
             return
+        self.user._cookies = dict(resp.cookies)
         self.user.login_with_json(resp.json())
         self.user.set_key(devel_key)
-        self.user._cookies = {}
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
                 name=self.user.username
@@ -426,7 +426,7 @@ def upload(request_fcn, url, data, files):
         cookies=Comms.user._cookies
     )
     if req.status_code < 210:
-        Comms.user._cookies = req.cookies
+        Comms.user._cookies.update(req.cookies)
     for key in files:
         files[key].file.close()
     return req

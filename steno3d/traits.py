@@ -225,8 +225,9 @@ class Color(Steno3DTrait, tr.TraitType):
     """A trait for rgb, hex, or string colors. Converts to rgb."""
 
     default_value = 'RANDOM'
-    info_text = ('a color (RGB with values 0-255, hex color e.g. \'#FF0000\', '
-                 'string color name, or \'random\')')
+    info_text = ('a color (RGB with values 0-255 or 0.0-1.0, '
+                 'hex color e.g. \'#FF0000\', string color name, or'
+                 '\'random\')')
     sphinx_extra = ', Format: RGB, hex, or predefined color'
 
     def validate(self, obj, value):
@@ -251,6 +252,8 @@ class Color(Steno3DTrait, tr.TraitType):
             self.error(obj, value)
         if len(value) != 3:
             self.error(obj, value)
+        if all([isinstance(v, float) and 0 <= v <= 1 for v in value]):
+            value = [int(255*v) for v in value]
         for v in value:
             if not isinstance(v, integer_types) or not 0 <= v <= 255:
                 self.error(obj, value)

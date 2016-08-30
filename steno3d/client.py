@@ -355,8 +355,9 @@ class _Comms(object):
 
     def logout(self):
         """Logout current user"""
-        get('signout')
         if self.user.logged_in:
+            print('Logging out of steno3d...')
+            get('signout')
             print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL
         self.user.logout()

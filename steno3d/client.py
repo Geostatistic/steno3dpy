@@ -24,7 +24,6 @@ from .user import User
 __version__ = '0.2.6'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
-API_SUBPATH = 'api/'
 SLEEP_TIME = .75
 
 DEVKEY_PROMPT = "If you have a Steno3D developer key, please enter it here > "
@@ -139,11 +138,6 @@ class _Comms(object):
         """hostname of url"""
         parseresult = urlparse(self.base_url)
         return parseresult.hostname
-
-    @property
-    def url(self):
-        """url endpoint for uploading"""
-        return self.base_url + API_SUBPATH
 
     @property
     def base_url(self):
@@ -277,7 +271,7 @@ class _Comms(object):
         """Check current Steno3D client version in the database"""
         try:
             resp = requests.post(
-                self.url + 'client/steno3dpy',
+                self.base_url + 'api/client/steno3dpy',
                 dict(version=__version__)
             )
         except requests.ConnectionError:
@@ -331,7 +325,7 @@ class _Comms(object):
             return
         try:
             resp = requests.get(
-                self.url + 'me',
+                self.base_url + 'api/me',
                 headers={'sshKey': devel_key,
                          'client': 'steno3dpy:{}'.format(__version__)}
             )
@@ -342,9 +336,9 @@ class _Comms(object):
             print(LOGIN_FAILED.format(base_url=self.base_url))
             self.logout()
             return
-        self.user._cookies = dict(resp.cookies)
         self.user.login_with_json(resp.json())
         self.user.set_key(devel_key)
+        self._cookies = dict(resp.cookies)
         print(
             'Welcome to Steno3D! You are logged in as @{name}'.format(
                 name=self.user.username
@@ -361,6 +355,7 @@ class _Comms(object):
 
     def logout(self):
         """Logout current user"""
+        get('signout')
         if self.user.logged_in:
             print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL
@@ -383,30 +378,29 @@ def needs_login(func):
 
 def pause():
     """Brief pause on localhost to simulate network delay"""
-    if 'localhost' in Comms.url:
+    if 'localhost' in Comms.base_url:
         sleep(SLEEP_TIME)
 
 
 @needs_login
 def post(url, data=None, files=None):
     """Post data and files to the steno3d online endpoint"""
-    return upload(requests.post, url, data, files)
+    return _communicate(requests.post, url, data, files)
 
 
 @needs_login
 def put(url, data=None, files=None):
     """Put data and files to the steno3d online endpoint"""
-    return upload(requests.put, url, data, files)
+    return _communicate(requests.put, url, data, files)
 
 
 @needs_login
 def get(url):
     """Make a get request from a steno3d online endpoint"""
-    return upload(requests.get, url, None, None)
+    return _communicate(requests.get, url, None, None)
 
 
-@needs_login
-def upload(request_fcn, url, data, files):
+def _communicate(request_fcn, url, data, files):
     """Post data and files to the steno3d online endpoint"""
     data = {} if data is None else data
     files = {} if files is None else files
@@ -417,16 +411,19 @@ def upload(request_fcn, url, data, files):
             filedict[filename + 'Type'] = files[filename].dtype
         else:
             filedict[filename] = files[filename]
+    import time
+    t = time.time()
     req = request_fcn(
-        Comms.url + url,
+        Comms.base_url + url,
         data=data,
         files=filedict,
         headers={'sshKey': Comms.user.devel_key,
                  'client': 'steno3dpy:{}'.format(__version__)},
-        cookies=Comms.user._cookies
+        cookies=Comms._cookies
     )
+    print (time.time() - t)
     if req.status_code < 210:
-        Comms.user._cookies.update(req.cookies)
+        Comms._cookies.update(req.cookies)
     for key in files:
         files[key].file.close()
     return req

@@ -411,8 +411,6 @@ def _communicate(request_fcn, url, data, files):
             filedict[filename + 'Type'] = files[filename].dtype
         else:
             filedict[filename] = files[filename]
-    import time
-    t = time.time()
     req = request_fcn(
         Comms.base_url + url,
         data=data,
@@ -421,7 +419,6 @@ def _communicate(request_fcn, url, data, files):
                  'client': 'steno3dpy:{}'.format(__version__)},
         cookies=Comms._cookies
     )
-    print (time.time() - t)
     if req.status_code < 210:
         Comms._cookies.update(req.cookies)
     for key in files:

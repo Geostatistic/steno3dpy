@@ -82,7 +82,12 @@ def validator(func):
                     trait_dict[k]._validate(self, val)
                     if isinstance(val, DelayedValidator):
                         val.validate()
-                    if isinstance(val, (list, tuple)):
+                    if isinstance(trait_dict[k], Repeated):
+                        if len(val) == 0 and not trait_dict[k].allow_none:
+                            raise tr.TraitError(
+                                'Repeated property must have at least '
+                                'one value: {}'.format(k)
+                            )
                         for v in val:
                             if isinstance(v, DelayedValidator):
                                 v.validate()

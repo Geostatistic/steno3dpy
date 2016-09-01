@@ -616,5 +616,7 @@ COLORS_NAMED = dict(
     tan="D2B48C", teal="008080", thistle="D8BFD8",
     tomato="FF6347", turquoise="40E0D0", violet="EE82EE",
     wheat="F5DEB3", white="FFFFFF", whitesmoke="F5F5F5",
-    yellow="FFFF00", yellowgreen="9ACD32"
+    yellow="FFFF00", yellowgreen="9ACD32",
+    k="000000", b="0000FF", c="00FFFF", g="00FF00",
+    m="FF00FF", r="FF0000", w="FFFFFF", y="FFFF00"
 )

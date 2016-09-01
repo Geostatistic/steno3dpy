@@ -71,6 +71,9 @@ Links to Parsers
 - obj parser for Wavefront .obj files
   (`github <https://github.com/3ptscience/steno3d-obj>`_,
   `pip <https://pypi.python.org/pypi/steno3d_obj>`_)
+- stl parser for binary and ASCII stereolithography .stl files
+  (`github <https://github.com/3ptscience/steno3d-stl>`_,
+  `pip <https://pypi.python.org/pypi/steno3d_stl>`_)
 
 
 .. _contributing:

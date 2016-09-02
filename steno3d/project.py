@@ -155,7 +155,7 @@ class Project(UserContent):
             privacy = 'private'
         if verbose:
             print('Verifying your quota for ' + privacy + ' projects...')
-        resp = get('check/quota?test=ProjectSteno3D')
+        resp = get('api/check/quota?test=ProjectSteno3D')
         resp = resp.json()[privacy]
         if resp['quota'] == 'Unlimited':
             pass

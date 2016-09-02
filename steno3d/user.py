@@ -11,6 +11,7 @@ from .traits import HasSteno3DTraits, Int, String
 class User(HasSteno3DTraits):
     """Class representing a user instance"""
     _model_api_location = "user"
+
     email = String(
         help='Email',
         default_value=None,

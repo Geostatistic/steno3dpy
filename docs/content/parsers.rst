@@ -18,13 +18,13 @@ Installing and Using Parsers
 ----------------------------
 
 An example parser for Wavefront .obj files is available on
-`pip <https://pypi.python.org/pypi/steno3d_obj>`_:
+`pip <https://pypi.python.org/pypi/steno3d_obj>`__:
 
 .. code::
 
     pip install steno3d_obj
 
-or install from `source <https://github.com/3ptscience/steno3d-obj>`_:
+or install from `source <https://github.com/3ptscience/steno3d-obj>`__:
 
 .. code::
 
@@ -69,8 +69,11 @@ Links to Parsers
 -----------------------------
 
 - obj parser for Wavefront .obj files
-  (`github <https://github.com/3ptscience/steno3d-obj>`_,
-  `pip <https://pypi.python.org/pypi/steno3d_obj>`_)
+  (`github <https://github.com/3ptscience/steno3d-obj>`__,
+  `pip <https://pypi.python.org/pypi/steno3d_obj>`__)
+- stl parser for binary and ASCII stereolithography .stl files
+  (`github <https://github.com/3ptscience/steno3d-stl>`__,
+  `pip <https://pypi.python.org/pypi/steno3d_stl>`__)
 
 
 .. _contributing:
@@ -104,7 +107,7 @@ Implementation
 ++++++++++++++
 
 The following steps describe how to implement a Steno3D parser. Please
-refer to the `obj parser source code <https://github.com/3ptscience/steno3d-obj>`_
+refer to the `obj parser source code <https://github.com/3ptscience/steno3d-obj>`__
 as an example.
 
 Class Definition

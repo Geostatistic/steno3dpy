@@ -24,6 +24,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from atexit import register
+
 from . import parsers
 from . import query
 from . import client
@@ -35,18 +37,20 @@ from .surface import *
 from .texture import *
 from .volume import *
 
-__version__ = '0.2.6'
+__version__ = '0.2.7'
 __author__ = '3point Science'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2016 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
+register(logout)
 
 try:
     del project, data, line, point, surface, texture, traits, volume
     del base, client, options, user
     del absolute_import, division, print_function, unicode_literals
+    del register
 except NameError:
     # Error cleaning namespace
     pass

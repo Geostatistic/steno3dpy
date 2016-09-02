@@ -12,7 +12,7 @@ from builtins import super
 from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
-from .client import Comms, get, needs_login
+from .client import Comms, get, needs_login, plot
 from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
 
 
@@ -185,6 +185,15 @@ class Project(UserContent):
             print('Project not uploaded: Please upload() '
                   'before accessing the URL.')
         return self._url
+
+    @needs_login
+    def plot(self):
+        """Display the 3D representation of the content"""
+        if getattr(self, '_upload_data', None) is None:
+            print('Project not uploaded: Please upload() '
+                  'before plotting.')
+            return
+        return plot(self._url)
 
     @classmethod
     def _build(cls, uid, copy=True, tab_level=''):

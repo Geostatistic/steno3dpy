@@ -42,6 +42,8 @@ At that point, you can
 then start building your 3D project. API documentation is available on
 `online <https://steno3d.com/docs>`_. Tutorials and
 Examples are available as `Jupyter notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_.
-Steno3D is built with tab-completion in mind for interactive environments like
-the Jupyter notebook. Class documentation can also be accessed in the python environment
+Class documentation can also be accessed in the IPython environment
 with `?` and tab completion.
+
+The latest version of Steno3D is 0.2.8. Detailed release notes are available
+on `github <https://github.com/3ptscience/steno3dpy/releases>`_.

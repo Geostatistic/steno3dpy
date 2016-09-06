@@ -50,6 +50,8 @@ to start using Steno3D yourself.
    content/quickstart
    content/what_is_steno3d
    content/api/index
+   content/parsers
+   content/release
 
 
 .. TODO: add content to these!

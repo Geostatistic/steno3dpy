@@ -9,7 +9,7 @@ from .client import get, needs_login
 from .project import Project
 
 
-MINE = 'project/steno3ds/mine'
+MINE = 'api/project/steno3ds/mine'
 
 
 def _query(url, queue=10):

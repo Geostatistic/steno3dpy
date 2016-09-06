@@ -118,13 +118,13 @@ class UserContent(HasSteno3DTraits):
             self._upload(self._sync)
 
     def _post(self, datadict=None, files=None):
-        self._client_upload(post, self._model_api_location,
+        self._client_upload(post, 'api/' + self._model_api_location,
                             datadict, files)
 
     def _put(self, datadict=None, files=None):
         pause()
-        api_uid = '{mapi}/{uid}'.format(mapi=self._model_api_location,
-                                        uid=self._upload_data['uid'])
+        api_uid = 'api/{mapi}/{uid}'.format(mapi=self._model_api_location,
+                                            uid=self._upload_data['uid'])
         self._client_upload(put, api_uid, datadict, files)
 
     def _client_upload(self, request_fcn, url,
@@ -187,7 +187,7 @@ class UserContent(HasSteno3DTraits):
     def _json_from_uid(cls, uid):
         if not isinstance(uid, string_types) or len(uid) != 20:
             raise ValueError('{}: invalid uid'.format(uid))
-        resp = get('{api}/{uid}'.format(
+        resp = get('api/{mapi}/{uid}'.format(
             api=cls._model_api_location,
             uid=uid
         ))

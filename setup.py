@@ -24,7 +24,7 @@ with open('README.rst') as f:
 
 setup(
     name = 'steno3d',
-    version = '0.2.6b0',
+    version = '0.2.8',
     packages = find_packages(),
     install_requires = ['future',
                         'numpy>=1.7',
@@ -42,5 +42,6 @@ setup(
     download_url = 'http://github.com/3ptscience/steno3dpy',
     classifiers=CLASSIFIERS,
     platforms = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix'],
+    license='MIT License',
     use_2to3 = False,
 )

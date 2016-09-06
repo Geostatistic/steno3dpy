@@ -3,13 +3,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from .airports import Airports
+from .misc import Images
 from .teapot import Teapot
 from .topography import Topography
 from .wolfpass import Wolfpass
-from .misc import Images
 
 try:
-    del misc, teapot, topography, wolfpass
+    del airports, misc, teapot, topography, wolfpass
     del base
     del absolute_import, division, print_function, unicode_literals
 except NameError:

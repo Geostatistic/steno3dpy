@@ -3,9 +3,8 @@
 This library is used to construct 3D projects and upload them to
 steno3d.com - if you do not have an account you can go to
 steno3d.com/signup and sign up. You will also need to request a developer
-API key at steno3d.com/settings/developer. Online documentation for this python client
-is found on steno3d.readthedocs.io/en/latest, and tutorials and examples
-can be found at steno3d.com.
+API key at steno3d.com/settings/developer. Online documentation for this
+python client is found at steno3d.com/docs.
 
 Steno3D is built with tab-completion in mind; if you are in an
 interacitve environment such as a Jupyter Notebook it is easy to explore
@@ -25,6 +24,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from atexit import register
+
 from . import parsers
 from . import query
 from . import client
@@ -36,18 +37,20 @@ from .surface import *
 from .texture import *
 from .volume import *
 
-__version__ = '0.2.6b0'
+__version__ = '0.2.8'
 __author__ = '3point Science'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2016 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
+register(logout)
 
 try:
     del project, data, line, point, surface, texture, traits, volume
     del base, client, options, user
     del absolute_import, division, print_function, unicode_literals
+    del register
 except NameError:
     # Error cleaning namespace
     pass

@@ -15,12 +15,16 @@ from os.path import realpath as _realpath
 from future.utils import with_metaclass as _with_metaclass
 from six import string_types as _string_types
 
+from .project import Project as _Project
 from .traits import HasSteno3DTraits as _HasSteno3DTraits
 from .traits import String as _String
+from .traits import KeywordInstance as _KWInst
 
 
-class _ParserMetaClass(type):
-    """Metaclass to ensure Parser classes fit the requried format and
+class _ParserMetaClass(_HasSteno3DTraits.__class__):
+    """metaclass ParserMetaclass
+
+    Metaclass to ensure Parser classes fit the required format and
     get added to the steno3d.parsers namespace
     """
 
@@ -51,28 +55,38 @@ class _ParserMetaClass(type):
         return new_class
 
 
-class _BaseParserMetaClass(_ParserMetaClass,
-                           _HasSteno3DTraits.__class__):
-    """Augmented metaclass for parsers, inherits from properties
-    metaclass
-    """
-
-
-class BaseParser(_with_metaclass(_BaseParserMetaClass,
+class BaseParser(_with_metaclass(_ParserMetaClass,
                                  _HasSteno3DTraits)):
-    """Base class for Steno3D parser objects"""
+    """Base class for Steno3D parser objects
+
+    BaseParser itself cannot be instantiated. Please use the specific
+    parser corresponding to your file type or `AllParsers` instead.
+    For more information about parsers, see
+    https://python.steno3d.com/en/latest/content/parser.html
+    """
 
     extensions = (None,)
     file_name = _String(
-        help='The main file to parse'
+        help='The {} file to parse'.format(
+            '/'.join([str(e) for e in extensions])
+        )
+    )
+    project = _KWInst(
+        help='The project to parse file_name into',
+        klass=_Project,
+        kw=dict(description='Project imported from {} ' 'file'.format(
+            '/'.join([str(e) for e in extensions])
+        ))
     )
 
-    def __init__(self, file_name, **kwargs):
-        super(BaseParser, self).__init__(**kwargs)
+    def __init__(self, file_name):
+        super(BaseParser, self).__init__()
         if self.extensions[0] is None:
-            raise NotImplementedError(
-                'Please use the specific parser corresponding to your '
-                'file type or `AllParsers`, not `BaseParser`'
+            raise ParseError(
+                '\nPlease use the specific parser corresponding to your '
+                'file type or \n`AllParsers`, not `BaseParser`. For more '
+                'information about parsers, see\n'
+                'https://python.steno3d.com/en/latest/content/parsers.html'
             )
         self.file_name = self._validate_file(file_name)
         self._initialize()
@@ -88,69 +102,61 @@ class BaseParser(_with_metaclass(_BaseParserMetaClass,
 
         _validate_file verifies the file exists and the extension matches
         the parser extension(s) before proceeding. This hook can be
-        overwritten to remove or perform different file checks as long as
-        it returns the file_name.
+        overwritten to perform different file checks or remove the checks
+        entirely as long as it returns the file_name.
         """
         if not isinstance(file_name, _string_types):
-            raise IOError('{}: file_name must be a string'.format(file_name))
+            raise ParseError(
+                '{}: file_name must be a string'.format(file_name)
+            )
         file_name = _realpath(_expanduser(file_name))
         if not _isfile(file_name):
-            raise IOError('{}: File not found.'.format(file_name))
-        if file_name.split('.')[-1] not in self.extensions:
-            raise IOError('{name}: Unsupported extension. Supported '
-                          'extensions are {exts}'.format(
-                              name=file_name,
-                              exts='(' + ', '.join(self.extensions) + ')'
-                          ))
+            raise ParseError('{}: File not found.'.format(file_name))
+        fnsplit = file_name.split('.')
+        if len(fnsplit) < 2 or fnsplit[-1] not in self.extensions:
+            raise ParseError('{name}: Unsupported extension. Supported '
+                             'extensions are {exts}'.format(
+                                 name=file_name,
+                                 exts='(' + ', '.join(self.extensions) + ')'
+                             ))
         return file_name
 
     def _initialize(self):
         """function _initialize
 
-        _initialize is a hook that is called during parser __init__. The
-        BaseParser sets the file_name and any additional keyword
-        arguments, but _initialize can be overwritten to perform any
+        _initialize is a hook that is called during parser __init__
+        after _validate_file. It can be overwritten to perform any
         additional startup tasks
         """
 
     def parse(self, project=None, **kwargs):
         """function parse
 
+        Parses the file provided at parser instantiation into a
+        Steno3D project.
+
         Optional input:
             project - Preexisting project to add resources to. If not
-                      provided, a new project will be created
+                      provided, a new project will be created.
 
         Output:
-            tuple of project(s) parsed from file_name
-        """
-        raise NotImplementedError()
-
-    def export(self, project, **kwargs):
-        """function export
-
-        Input:
-            project - Steno3D project to be exported
-
-        Output:
-            file of the supported extension type
+            tuple of Steno3D project(s) parsed from file_name
         """
         raise NotImplementedError()
 
 
-class _AllParserMetaClass(type):
-    """Metaclass to ensure Director classes fit the requried format and
+class _AllParserMetaClass(_HasSteno3DTraits.__class__):
+    """metaclass AllParserMetaClass
+
+    Metaclass to ensure AllParser classes fit the requried format and
     get added to the steno3d.parsers namespace
     """
 
     def __new__(mcs, name, bases, attrs):
         if name != 'AllParsers':
-            assert name.startswith('AllParsers_'), \
-                "Parser classes that inherit 'AllParsers' such as {name} " \
-                "must have names that start with " \
-                "'AllParsers_'".format(name=name)
             assert 'extensions' in attrs, \
                 "{name} must contain a dictionary of extensions and " \
-                "parsers".format(name=name)
+                "parsers named `extensions`".format(name=name)
             assert isinstance(attrs['extensions'], dict), \
                 "{name} extensions must be a dictionary of extensions and " \
                 "supporting parser".format(name=name)
@@ -158,7 +164,7 @@ class _AllParserMetaClass(type):
                 assert isinstance(ext, _string_types), \
                     'Extensions in {name} must be strings'.format(name=name)
                 assert issubclass(type(attrs['extensions'][ext]),
-                                  _BaseParserMetaClass), \
+                                  _ParserMetaClass), \
                     'Extensions in {name} must direct to a ' \
                     'Parser class'.format(name=name)
         new_class = super(_AllParserMetaClass, mcs).__new__(
@@ -168,60 +174,67 @@ class _AllParserMetaClass(type):
         return new_class
 
 
-class _BaseAllParserMetaClass(_AllParserMetaClass,
-                              _HasSteno3DTraits.__class__):
-    """Augmented metaclass for parser Directors, inherits from
-    properties metaclass
-    """
-
-
-class AllParsers(_with_metaclass(_BaseAllParserMetaClass,
+class AllParsers(_with_metaclass(_AllParserMetaClass,
                                  _HasSteno3DTraits)):
-    """Base class for Steno3D parser objects that parse all
-    available file types
+    """class AllParsers
+
+    Steno3D parser class that selects the appropriate parser for a file
+    based on the file's extension. File type must have a corresponding
+    parser imported.
     """
 
-    def __new__(cls, filename, **kwargs):
+    def __new__(cls, file_name, **kwargs):
         if getattr(cls, 'extensions', None) is None:
             cls.extensions = dict()
             parser_keys = [
                 k for k in globals()
-                if (
-                    k != '_BaseParser' and
-                    issubclass(type(globals()[k]), _BaseParserMetaClass)
-                )
+                if (k != 'BaseParser' and
+                    issubclass(type(globals()[k]), _ParserMetaClass))
             ]
+            if len(parser_keys) == 0:
+                raise ParseError(
+                    '\nNo parsers imported! For more information on how to '
+                    'use parsers, please see\n'
+                    'https://python.steno3d.com/en/latest/content/parsers.html'
+                )
             for k in parser_keys:
                 for ext in globals()[k].extensions:
                     if ext not in cls.extensions:
                         cls.extensions[ext] = globals()[k]
                     elif issubclass(type(cls.extensions[ext]),
-                                    _BaseParserMetaClass):
+                                    _ParserMetaClass):
                         cls.extensions[ext] = (cls.extensions[ext].__name__ +
                                                ', ' + globals()[k].__name__)
                     else:
                         cls.extensions[ext] = (cls.extensions[ext] +
                                                ', ' + globals()[k].__name__)
-
+        fnsplit = file_name.split('.')
         for ext in cls.extensions:
-            if filename.split('.')[-1] == ext:
-                if not issubclass(type(cls.extensions[ext]),
-                                  _BaseParserMetaClass):
-                    raise ValueError(
-                        '{ext}: file type supported by more than one parser. '
-                        'Please specify one of ({parsers})'.format(
-                            ext=ext,
-                            parsers=cls.extensions[ext]
-                        )
-                    )
-                return cls.extensions[ext](filename, **kwargs)
+            if len(fnsplit) > 1 and fnsplit[-1] == ext:
+                if issubclass(type(cls.extensions[ext]), _ParserMetaClass):
+                    return cls.extensions[ext](file_name, **kwargs)
 
-        raise ValueError(
+                raise ParseError(
+                    '{ext}: file type supported by more than one parser. '
+                    'Please specify one of ({parsers})'.format(
+                        ext=ext,
+                        parsers=cls.extensions[ext]
+                    )
+                )
+
+        raise ParseError(
             '{bad}: unsupported file extensions. Must be in ({ok})'.format(
-                bad=filename.split('.')[-1],
+                bad=fnsplit[-1] if len(fnsplit) > 1 else file_name,
                 ok=', '.join(list(cls.extensions))
             )
         )
+
+
+class ParseError(IOError):
+    """class ParseError
+
+    Custom exception to raise for errors during file parsing
+    """
 
 try:
     del absolute_import, division, print_function, unicode_literals

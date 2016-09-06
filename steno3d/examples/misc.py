@@ -24,9 +24,9 @@ class Images(BaseExample):
     def example_name(self):
         return 'Images'
 
-    @exampleproperty
-    def sub_directory(self):
-        return 'basic'
+    # @exampleproperty
+    # def sub_directory(self):
+    #     return 'basic'
 
     @exampleproperty
     def filenames(self):
@@ -92,6 +92,27 @@ class Images(BaseExample):
         png_writer.write(png_file, img)
         png_file.seek(0)
         return png_file
+
+
+class Files(BaseExample):
+    """File example
+
+    Class containing miscelaneous files
+    """
+
+    @exampleproperty
+    def example_name(self):
+        return 'Files'
+
+    @exampleproperty
+    def filenames(self):
+        return ['square.obj']
+
+    @exampleproperty
+    def obj_file(self):
+        return Files.fetch_data(filename='square.obj',
+                                download_if_missing=False,
+                                verbose=False)
 
 
 LETTERS = {

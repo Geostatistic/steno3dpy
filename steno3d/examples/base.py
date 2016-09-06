@@ -108,7 +108,7 @@ class BaseExample(object):
             destination_file = sep.join([destination, fname])
             if exists(destination_file):
                 if verbose:
-                    print('        Local copy found')
+                    print('... Local copy found')
                 if filename is not None:
                     return destination_file
                 continue
@@ -135,7 +135,7 @@ class BaseExample(object):
                     zf = ZipFile(archive)
                     zf.extract(fname, destination)
                     if verbose:
-                        print('        File extracted successfully!')
+                        print('... File extracted successfully!')
                     if filename is not None:
                         return destination_file
                 except KeyError:

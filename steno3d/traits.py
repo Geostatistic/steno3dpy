@@ -6,9 +6,7 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
-from six import integer_types
-from six import string_types
-from six import with_metaclass
+from six import integer_types, string_types, with_metaclass
 from tempfile import NamedTemporaryFile
 from warnings import warn
 
@@ -39,6 +37,12 @@ class MetaDocTraits(tr.MetaHasTraits):
         def is_required(trait):
             return not trait.allow_none
 
+        def is_deprecated(trait):
+            return isinstance(trait, Renamed)
+
+        def is_optional(trait):
+            return not is_required(trait) and not is_deprecated(trait)
+
         trait_dict = {}
         for base in reversed(bases):
             if issubclass(base, tr.HasTraits):
@@ -51,7 +55,9 @@ class MetaDocTraits(tr.MetaHasTraits):
         req = {key: value for key, value in trait_dict.items()
                if is_required(value)}
         opt = {key: value for key, value in trait_dict.items()
-               if not is_required(value)}
+               if is_optional(value)}
+        dep = {key: value for key, value in trait_dict.items()
+               if is_deprecated(value)}
         if req:
             doc_str += '\n\nRequired:\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in req.items())
@@ -59,6 +65,10 @@ class MetaDocTraits(tr.MetaHasTraits):
         if opt:
             doc_str += '\n\nOptional:\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in opt.items())
+            )
+        if dep:
+            doc_str += '\n\nDeprecated:\n\n' + '\n'.join(
+                (value.sphinx(key) for key, value in dep.items())
             )
         classdict['__doc__'] = doc_str.strip()
 
@@ -567,7 +577,16 @@ class Renamed(Steno3DTrait, tr.TraitType):
 
     def __init__(self, new_name, **metadata):
         self.new_name = new_name
-        super(Renamed, self).__init__(**metadata)
+        super(Renamed, self).__init__(allow_none=True, **metadata)
+
+    @property
+    def sphinx_class(self):
+        return ''
+
+    @property
+    def sphinx_extra(self):
+        return ('This trait is deprecated and may be removed in the future. '
+                'Please use **{}** instead.'.format(self.new_name))
 
     def _warn(self):
         warn(

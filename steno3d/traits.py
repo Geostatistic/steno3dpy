@@ -59,15 +59,15 @@ class MetaDocTraits(tr.MetaHasTraits):
         dep = {key: value for key, value in trait_dict.items()
                if is_deprecated(value)}
         if req:
-            doc_str += '\n\nRequired:\n\n' + '\n'.join(
+            doc_str += '\n\n**Required**\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in req.items())
             )
         if opt:
-            doc_str += '\n\nOptional:\n\n' + '\n'.join(
+            doc_str += '\n\n**Optional**\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in opt.items())
             )
         if dep:
-            doc_str += '\n\nDeprecated:\n\n' + '\n'.join(
+            doc_str += '\n\n**Deprecated**\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in dep.items())
             )
         classdict['__doc__'] = doc_str.strip()
@@ -86,7 +86,7 @@ def validator(func):
         self._cross_validation_lock = False
         self._validating = True
         try:
-            trait_dict = self.traits()
+            trait_dict = self._non_deprecated_traits()
             for k in trait_dict:
                 if k in self._trait_values:
                     val = getattr(self, k)
@@ -162,7 +162,7 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         dirty_instances = set()
         self._inside_dirty = True
         try:
-            traits = self.traits()
+            traits = self._non_deprecated_traits()
             for trait in traits:
                 value = getattr(self, trait)
                 if (isinstance(value, HasSteno3DTraits) and
@@ -176,6 +176,11 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         finally:
             self._inside_dirty = False
         return self._dirty_traits.union(dirty_instances)
+
+    def _non_deprecated_traits(self):
+        return {k: v for k, v in self.traits().items()
+                if not isinstance(v, Renamed)}
+
 
 
 class Steno3DTrait(object):

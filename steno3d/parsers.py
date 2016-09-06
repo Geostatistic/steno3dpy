@@ -15,8 +15,10 @@ from os.path import realpath as _realpath
 from future.utils import with_metaclass as _with_metaclass
 from six import string_types as _string_types
 
+from .project import Project as _Project
 from .traits import HasSteno3DTraits as _HasSteno3DTraits
 from .traits import String as _String
+from .traits import KeywordInstance as _KWInst
 
 
 class _ParserMetaClass(_HasSteno3DTraits.__class__):
@@ -65,7 +67,16 @@ class BaseParser(_with_metaclass(_ParserMetaClass,
 
     extensions = (None,)
     file_name = _String(
-        help='The file to parse'
+        help='The {} file to parse'.format(
+            '/'.join([str(e) for e in extensions])
+        )
+    )
+    project = _KWInst(
+        help='The project to parse file_name into',
+        klass=_Project,
+        kw=dict(description='Project imported from {} ' 'file'.format(
+            '/'.join([str(e) for e in extensions])
+        ))
     )
 
     def __init__(self, file_name):

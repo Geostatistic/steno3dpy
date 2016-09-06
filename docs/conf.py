@@ -311,7 +311,7 @@ intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://docs.scipy.org/doc/scipy/reference/': None}
 
 linkcheck_ignore = ['http://mybinder.org/repo/3ptscience/steno3dpy-notebooks']
-linkcheck_retries = 5
+linkcheck_retries = 10
 
 
 import sphinx.environment

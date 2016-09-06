@@ -503,6 +503,17 @@ class Vector(Array):
             self.error(obj, value)
         return value
 
+    @staticmethod
+    def as_length(vector, new_length):
+        length = np.sqrt(np.sum(vector**2))
+        if length == 0:
+            raise ZeroDivisionError('Cannot resize vector of length 0')
+        return new_length*vector/length
+
+    @staticmethod
+    def normalize(vector):
+        return Vector.as_length(vector, 1)
+
 
 class KeywordInstance(Steno3DTrait, tr.Instance):
     """An instance trait that can be constructed with only a keyword dict"""

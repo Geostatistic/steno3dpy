@@ -10,6 +10,7 @@ from six import integer_types
 from six import string_types
 from six import with_metaclass
 from tempfile import NamedTemporaryFile
+from warnings import warn
 
 import numpy as np
 from png import Reader
@@ -559,6 +560,29 @@ class Repeated(Steno3DTrait, tr.List):
         if not isinstance(value, (list, tuple)):
             value = [value]
         return super(Repeated, self).validate(obj, value)
+
+
+class Renamed(Steno3DTrait, tr.TraitType):
+    """For renamed traits, warns and reassigns"""
+
+    def __init__(self, new_name, **metadata):
+        self.new_name = new_name
+        super(Renamed, self).__init__(**metadata)
+
+    def _warn(self):
+        warn(
+            '\n`{}` trait deprecated and may be removed in the future. '
+            'Please use `{}`.'.format(self.name, self.new_name),
+            FutureWarning, stacklevel=3
+        )
+
+    def get(self, obj, cls=None):
+        self._warn()
+        return getattr(obj, self.new_name)
+
+    def set(self, obj, value):
+        self._warn()
+        return setattr(obj, self.new_name, value)
 
 
 COLORS_20 = [

@@ -20,8 +20,8 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
-                     String, Union, Vector)
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Renamed,
+                     Repeated, String, Union, Vector)
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -141,7 +141,9 @@ class Mesh2DGrid(BaseMesh):
         shape=('*',),
         dtype=float
     )
-    x0 = Vector(
+    x0 = Renamed('O')
+
+    O = Vector(
         help='Origin vector',
         default_value=[0., 0., 0.]
     )

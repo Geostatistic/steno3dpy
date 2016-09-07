@@ -10,7 +10,7 @@ import steno3d as _steno3d
 _ARRAY_TYPES = (list, tuple, _np.ndarray)
 
 
-FUNC_DOC = """Steno3D plotting function {func}
+_FUNC_DOC = """Steno3D plotting function {func}
 
     Usage:
         {func}(fig, ...)
@@ -320,6 +320,7 @@ def _generate_plotfunc(k, doc):
         getattr(fig, k)(*args, **kwargs)
         return fig
 
+    plotfunc.__name__ = k
     plotfunc.__doc__ = doc
     return plotfunc
 
@@ -327,7 +328,7 @@ def _generate_plotfunc(k, doc):
 for k in Figure.__dict__:
     if k[0] == '_' or not callable(Figure.__dict__[k]):
         continue
-    globals()[k] = _generate_plotfunc(k, FUNC_DOC.format(func=k))
+    globals()[k] = _generate_plotfunc(k, _FUNC_DOC.format(func=k))
 
 
 class PlotError(ValueError):
@@ -336,7 +337,7 @@ class PlotError(ValueError):
 
 try:
     del absolute_import, division, print_function, unicode_literals
-    del PlotError
+    del k, PlotError
 except NameError:
     # Error cleaning namespace
     pass

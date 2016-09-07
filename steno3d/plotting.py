@@ -3,11 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import numpy as np
+import numpy as _np
 
-import steno3d
+import steno3d as _steno3d
 
-ARRAY_TYPES = (list, tuple, np.ndarray)
+_ARRAY_TYPES = (list, tuple, _np.ndarray)
+
 
 def scatter(*args, **kwargs):
     """scatter adds steno3d.Point to a Figure
@@ -56,7 +57,7 @@ def surf(*args, **kwargs):
 
 
 
-class Figure(steno3d.Project):
+class Figure(_steno3d.Project):
     """class Figure
 
     A Figure is Steno3D Project with additional plotting functions to
@@ -94,15 +95,15 @@ class Figure(steno3d.Project):
             raise PlotError('No input geometry provided. Please refer to '
                             'documentation for usage.')
 
-        if not (x is None or isinstance(x, ARRAY_TYPES) and
-                y is None or isinstance(y, ARRAY_TYPES) and
-                z is None or isinstance(z, ARRAY_TYPES)):
+        if not (x is None or isinstance(x, _ARRAY_TYPES) and
+                y is None or isinstance(y, _ARRAY_TYPES) and
+                z is None or isinstance(z, _ARRAY_TYPES)):
             raise PlotError('Scatter geometry must be lists')
 
         if x is None and (y is None or z is None):
             raise PlotError('Cannot create scatter plot from only y or z data')
 
-        [x, y, z] = [np.array(a).astype(float) if a is not None else None
+        [x, y, z] = [_np.array(a).astype(float) if a is not None else None
                      for a in [x, y, z]]
 
         if x is not None and y is None and z is None:
@@ -111,22 +112,22 @@ class Figure(steno3d.Project):
                                 'or n x 3 matrix, or x/y/z must be defined '
                                 'separately.')
             if x.shape[1] == 2:
-                x = np.c_[x, np.zeros(x.shape[0])]
+                x = _np.c_[x, _np.zeros(x.shape[0])]
             xyz = x
         else:
             if x is None:
-                x = np.zeros(y.shape[0])
+                x = _np.zeros(y.shape[0])
             if y is None:
-                y = np.zeros(x.shape[0])
+                y = _np.zeros(x.shape[0])
             if z is None:
-                z = np.zeros(x.shape[0])
+                z = _np.zeros(x.shape[0])
 
             if any([a.ndim != 1 or a.shape[0] != x.shape[0]
                     for a in [x, y, z]]):
                 raise PlotError('x, y, and z must be 1D arrays of equal '
                                 'length.')
 
-            xyz = np.c_[x, y, z]
+            xyz = _np.c_[x, y, z]
 
         if data is None:
             data = dict()
@@ -135,10 +136,10 @@ class Figure(steno3d.Project):
             data = {'': data}
 
         for key in data:
-            if not isinstance(data[key], ARRAY_TYPES):
+            if not isinstance(data[key], _ARRAY_TYPES):
                 raise PlotError('Data must be provided as an array or a '
                                 'dictionary of {title: array}')
-            data[key] = np.array(data[key])
+            data[key] = _np.array(data[key])
             if data[key].ndim != 1 or data[key].shape[0] != xyz.shape[0]:
                 raise PlotError('Data must be 1D arrays with length equal '
                                 'to corresponding geometry')
@@ -146,16 +147,16 @@ class Figure(steno3d.Project):
         self._scatter(xyz, data, **kwargs)
 
     def _scatter(self, xyz, data, **kwargs):
-        steno3d.Point(
+        _steno3d.Point(
             project=self,
             title=kwargs.pop('title', ''),
-            mesh=steno3d.Mesh0D(
+            mesh=_steno3d.Mesh0D(
                 vertices=xyz
             ),
             data=[
                 dict(
                     location='N',
-                    data=steno3d.DataArray(
+                    data=_steno3d.DataArray(
                         title=k,
                         array=data[k]
                     )
@@ -206,12 +207,12 @@ class Figure(steno3d.Project):
             raise PlotError('No input geometry provided. Please refer to '
                             'documentation for usage.')
 
-        if not (x is None or isinstance(x, ARRAY_TYPES) and
-                y is None or isinstance(y, ARRAY_TYPES) and
-                z is None or isinstance(z, ARRAY_TYPES)):
+        if not (x is None or isinstance(x, _ARRAY_TYPES) and
+                y is None or isinstance(y, _ARRAY_TYPES) and
+                z is None or isinstance(z, _ARRAY_TYPES)):
             raise PlotError('Surface geometry must be lists or matrices')
 
-        [x, y, z] = [np.array(a).astype(float) if a is not None else None
+        [x, y, z] = [_np.array(a).astype(float) if a is not None else None
                      for a in [x, y, z]]
 
         if z is None and x.ndim == 2 and 1 not in x.shape:
@@ -223,8 +224,8 @@ class Figure(steno3d.Project):
 
         if x is None and y is None:
             if z.ndim == 2 and 1 not in z.shape:
-                x = np.array(range(z.shape[0])).astype(float)
-                y = np.array(range(z.shape[1])).astype(float)
+                x = _np.array(range(z.shape[0])).astype(float)
+                y = _np.array(range(z.shape[1])).astype(float)
             else:
                 raise PlotError('When not providing, x or y values, z must '
                                 'be a 2D matrix')
@@ -258,10 +259,10 @@ class Figure(steno3d.Project):
             data = {'': data}
 
         for key in data:
-            if not isinstance(data[key], ARRAY_TYPES):
+            if not isinstance(data[key], _ARRAY_TYPES):
                 raise PlotError('Data must be provided as an array or a '
                                 'dictionary of {title: array}')
-            data[key] = np.array(data[key])
+            data[key] = _np.array(data[key])
             if (
                 data[key].ndim == 1 and
                 data[key].shape[0] in (
@@ -293,13 +294,13 @@ class Figure(steno3d.Project):
         self._surf(x, y, z, data, **kwargs)
 
     def _surf(self, x, y, z, data, **kwargs):
-        h1 = np.diff(x)
-        h2 = np.diff(y)
+        h1 = _np.diff(x)
+        h2 = _np.diff(y)
 
-        s = steno3d.Surface(
+        s = _steno3d.Surface(
             project=self,
             title=kwargs.pop('title', ''),
-            mesh=steno3d.Mesh2DGrid(
+            mesh=_steno3d.Mesh2DGrid(
                 h1=h1,
                 h2=h2,
                 x0=[x[0], y[0], 0],
@@ -316,7 +317,7 @@ class Figure(steno3d.Project):
         s.data = [
             dict(
                 location='N' if data[k].shape[0] == s.mesh.nN else 'CC',
-                data=steno3d.DataArray(
+                data=_steno3d.DataArray(
                     title=k,
                     array=data[k]
                 )
@@ -324,6 +325,9 @@ class Figure(steno3d.Project):
         ]
 
         self._kwwarn(**kwargs)
+
+    def plot(self):
+        pass
 
     @staticmethod
     def _kwwarn(**kwargs):
@@ -334,4 +338,12 @@ class Figure(steno3d.Project):
 
 
 class PlotError(ValueError):
+    pass
+
+
+try:
+    del absolute_import, division, print_function, unicode_literals
+    del PlotError
+except NameError:
+    # Error cleaning namespace
     pass

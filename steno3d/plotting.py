@@ -10,51 +10,19 @@ import steno3d as _steno3d
 _ARRAY_TYPES = (list, tuple, _np.ndarray)
 
 
-def scatter(*args, **kwargs):
-    """scatter adds steno3d.Point to a Figure
+FUNC_DOC = """Steno3D plotting function {func}
 
     Usage:
-        scatter(fig, ...)
-        scatter(..., figure=fig)
+        {func}(fig, ...)
+        {func}(..., figure=fig)
 
-        fig = scatter(...)
+        fig = {func}(...)
 
-    These methods call fig.scatter(...), creating a new figure
+    These methods call fig.{func}(...), creating a new figure
     if one is not provided.
 
-    For full scatter documentation see Figure.scatter.
+    For full {func} documentation see Figure.{func}.
     """
-    if len(args) > 0 and isinstance(args[0], Figure):
-        fig = args[0]
-        args = args[1:]
-    else:
-        fig = kwargs.pop('figure', Figure())
-    fig.scatter(*args, **kwargs)
-    return fig
-
-
-def surf(*args, **kwargs):
-    """scatter adds steno3d.Surface to a Figure
-
-    Usage:
-        surf(fig, ...)
-        surf(..., figure=fig)
-
-        fig = surf(...)
-
-    These methods call fig.surf(...), creating a new figure
-    if one is not provided.
-
-    For full surf documentation see Figure.surf.
-    """
-    if len(args) > 0 and isinstance(args[0], Figure):
-        fig = args[0]
-        args = args[1:]
-    else:
-        fig = kwargs.pop('figure', Figure())
-    fig.surf(*args, **kwargs)
-    return fig
-
 
 
 class Figure(_steno3d.Project):
@@ -335,6 +303,31 @@ class Figure(_steno3d.Project):
             print('Warning: Unused keyword argument \'{}\''.format(k))
 
 
+def _generate_plotfunc(k, doc):
+    """Function to generate generic global plotting functions
+
+    These functions are all nearly identical for every plotting function.
+    They simply extract the figure input or create a new figure, then call
+    the corresponding figure method
+    """
+
+    def plotfunc(*args, **kwargs):
+        if len(args) > 0 and isinstance(args[0], Figure):
+            fig = args[0]
+            args = args[1:]
+        else:
+            fig = kwargs.pop('figure', Figure())
+        getattr(fig, k)(*args, **kwargs)
+        return fig
+
+    plotfunc.__doc__ = doc
+    return plotfunc
+
+# Create a global plotting function for every Figure plotting method
+for k in Figure.__dict__:
+    if k[0] == '_' or not callable(Figure.__dict__[k]):
+        continue
+    globals()[k] = _generate_plotfunc(k, FUNC_DOC.format(func=k))
 
 
 class PlotError(ValueError):

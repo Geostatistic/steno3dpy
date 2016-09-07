@@ -23,7 +23,6 @@ class TestPlotting(unittest.TestCase):
         d1 = [15, 16, 17, 18, 19]
         d2 = [20., 21, 22, 23, 24]
 
-        # documented to work
         fig = plt.scatter(x, y, z)
         plt.scatter(fig, x, y, z)
 
@@ -42,7 +41,6 @@ class TestPlotting(unittest.TestCase):
         # Should display warning then ignore size
         fig.scatter(x, y, z, size=d1)
 
-        # test to make sure they worked
         assert isinstance(fig, steno3d.Project)
         assert len(fig.resources) == 13
         assert isinstance(fig.resources[0], steno3d.Point)
@@ -82,7 +80,6 @@ class TestPlotting(unittest.TestCase):
             fig.resources[0].mesh.vertices == fig.resources[12].mesh.vertices
         )
 
-        # should error
         self.assertRaises(plt.PlotError, lambda: fig.scatter())
         self.assertRaises(plt.PlotError, lambda: fig.scatter(x))
         self.assertRaises(plt.PlotError, lambda: fig.scatter(y=y))
@@ -96,10 +93,10 @@ class TestPlotting(unittest.TestCase):
     def test_surf(self):
         x = [0, 1, 2, 3, 4, 5]
         y = [0, 2, 4, 6, 8]
-        Z = [[0, 0, 0, 0, 0],
+        Z = [[1, 0, 0, 0, 0],
              [0, 1, 1, 1, 0],
              [0, 1, 2, 1, 0],
-             [0, 1, 2, 1, 0],
+             [0, 1, 2, 1, 1],
              [0, 1, 1, 1, 0],
              [0, 0, 0, 0, 0]]
         Zface = (np.array(Z)[:-1, :-1] + np.array(Z)[1:, 1:])/2
@@ -109,7 +106,7 @@ class TestPlotting(unittest.TestCase):
         plt.surf(fig, x, y, Z)
 
         fig.surf(Z)
-        fig.surf(x, y, Z)
+        fig.surf(x, y, Z=Z)
         fig.surf(x, y, np.array(Z).T)
         fig.surf(x, y, np.array(Z).flatten())
 
@@ -120,6 +117,34 @@ class TestPlotting(unittest.TestCase):
                                 'D4': Zface,
                                 'D5': Zface.T,
                                 'D6': Zface.flatten()})
+
+        # should display a warning about Z
+        fig.surf(x, y, Z, Z=Z)
+
+        assert isinstance(fig, steno3d.Project)
+        assert len(fig.resources) == 9
+        assert np.all(
+            fig.resources[0].mesh.h1 == fig.resources[3].mesh.h1
+        )
+        assert np.all(fig.resources[2].mesh.h1 == 1)
+        assert np.all(fig.resources[2].mesh.h2 == 1)
+        assert np.all(fig.resources[0].mesh.Z == fig.resources[3].mesh.Z)
+        assert np.all(fig.resources[2].mesh.Z == fig.resources[4].mesh.Z)
+        assert np.all(fig.resources[5].mesh.Z == fig.resources[6].mesh.Z)
+        assert len(fig.resources[6].data) == 1
+        assert np.all(
+            fig.resources[6].mesh.Z == fig.resources[6].data[0].data.array
+        )
+        assert len(fig.resources[7].data) == 6
+        assert np.all(fig.resources[7].data[0].data.array ==
+                      fig.resources[7].data[2].data.array)
+        assert np.all(fig.resources[7].data[4].data.array ==
+                      fig.resources[7].data[5].data.array)
+
+        self.assertRaises(plt.PlotError, lambda: fig.surf(x, y))
+        self.assertRaises(plt.PlotError, lambda: fig.surf(x, Z))
+        self.assertRaises(plt.PlotError, lambda: fig.surf(x, y, x))
+        self.assertRaises(plt.PlotError, lambda: fig.surf(Z, data=x))
 
 
 

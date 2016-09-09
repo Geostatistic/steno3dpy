@@ -133,7 +133,7 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
                 raise KeyError('{}: Keyword input is not trait'.format(key))
         super(HasSteno3DTraits, self).__init__(**metadata)
 
-    @tr.observe()
+    @tr.observe(tr.All)
     def _mark_dirty(self, change):
         self._dirty_traits.add(change['name'])
 

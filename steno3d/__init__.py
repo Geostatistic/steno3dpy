@@ -44,7 +44,7 @@ __copyright__ = 'Copyright 2016 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
-register(logout)
+# register(logout)
 
 try:
     del project, data, line, point, surface, texture, traits, volume

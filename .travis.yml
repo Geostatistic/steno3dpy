@@ -24,8 +24,8 @@ install:
   - pip install steno3d_obj
   - pip install steno3d_stl
 
-  - git clone ssh://git@github.com/3ptscience/steno3d-obj.git
-  - git clone ssh://git@github.com/3ptscience/steno3d-stl.git
+  - git clone http://github.com/3ptscience/steno3d-obj.git
+  - git clone http://github.com/3ptscience/steno3d-stl.git
 
 script:
   - nosetests

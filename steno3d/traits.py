@@ -196,9 +196,13 @@ class Steno3DTrait(object):
         if not isinstance(self, tr.TraitType):
             return ''
         return (
-            ':param {name}: {doc}\n:type {name}: {cls}'.format(
+            ':param {name}: {doc}{default}\n:type {name}: {cls}'.format(
                 name=name,
                 doc=self.help + self.sphinx_extra,
+                default=('' if (self.default_value is tr.Undefined or
+                                self.default_value is None or
+                                self.default_value in ([], {}, ''))
+                         else ', Default: ' + str(self.default_value)),
                 cls=self.sphinx_class
             )
         )
@@ -474,7 +478,12 @@ class Array(Steno3DTrait, tr.TraitType):
 
 
 class Vector(Array):
-    """A trait for 3D vectors"""
+    """A trait for 3D vectors
+
+    Must be a length-3 array. Int vectors are casted to Float vectors.
+    X, Y, and Z are also valid inputs. These correspond to [1., 0, 0],
+    [0, 1., 0], and [0, 0, 1.] respectively
+    """
 
     def __init__(self, **metadata):
         super(Vector, self).__init__(

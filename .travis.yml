@@ -13,15 +13,24 @@ addons:
       - python-numpy
 
 env:
-    - AUTOCLONE="y"
+  - TRAITLETS_PRE = ''
+  - TRAITLETS_PRE = '--pre'
 
 
 install:
   - pip install nose-cov python-coveralls sphinx
+  - pip install $TRAITLETS_PRE traitlets
   - pip install -r requirements.txt
+  - pip install steno3d_obj
+  - pip install steno3d_stl
+
+  - git clone http://github.com/3ptscience/steno3d-obj.git
+  - git clone http://github.com/3ptscience/steno3d-stl.git
 
 script:
   - nosetests
+  - nosetests steno3d-obj/
+  - nosetests steno3d-stl/
 
 after_success:
   - openssl aes-256-cbc -K $encrypted_939ecaffddf0_key -iv $encrypted_939ecaffddf0_iv -in .pypirc.enc -out ~/.pypirc -d

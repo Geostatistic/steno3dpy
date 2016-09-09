@@ -20,8 +20,8 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
-                     String, Union, Vector)
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Renamed,
+                     Repeated, String, Union, Vector)
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -132,18 +132,27 @@ class Mesh2D(BaseMesh):
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
     h1 = Array(
-        help='Grid cell widths, x-direction',
+        help='Grid cell widths, U-direction',
         shape=('*',),
         dtype=float
     )
     h2 = Array(
-        help='Grid cell widths, y-direction',
+        help='Grid cell widths, V-direction',
         shape=('*',),
         dtype=float
     )
-    x0 = Vector(
+    x0 = Renamed('O')
+    O = Vector(
         help='Origin vector',
         default_value=[0., 0., 0.]
+    )
+    U = Vector(
+        help='Orientation of h1 axis',
+        default_value='X'
+    )
+    V = Vector(
+        help='Orientation of h2 axis',
+        default_value='Y'
     )
     Z = Array(
         help='Node topography',
@@ -169,7 +178,7 @@ class Mesh2DGrid(BaseMesh):
         return len(self.h1) * len(self.h2)
 
     def _nbytes(self, arr=None):
-        filenames = ('h1', 'h2', 'x0', 'Z')
+        filenames = ('h1', 'h2', 'O', 'U', 'V', 'Z')
         if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
         if isinstance(arr, string_types) and arr in filenames:
@@ -213,11 +222,11 @@ class Mesh2DGrid(BaseMesh):
                 h1=self.h1.tolist(),
                 h2=self.h2.tolist(),
             ))
-        if ('h1' in dirty or 'h2' in dirty or 'x0' in dirty) or force:
+        if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
-                O=self.x0.tolist(),
-                U=[self.h1.sum().astype(float), 0, 0],
-                V=[0, self.h2.sum().astype(float), 0],
+                O=self.O.tolist(),
+                U=Vector.as_length(self.U, self.h1.sum()).tolist(),
+                V=Vector.as_length(self.V, self.h2.sum()).tolist()
             ))
         return datadict
 
@@ -235,7 +244,9 @@ class Mesh2DGrid(BaseMesh):
             description=kwargs['description'],
             h1=json['tensors']['h1'],
             h2=json['tensors']['h2'],
-            x0=json['OUV']['O'],
+            O=json['OUV']['O'],
+            U=json['OUV']['U'],
+            V=json['OUV']['V'],
             Z=Array.download(
                 url=json['Z'],
                 shape=json['ZShape']//4,

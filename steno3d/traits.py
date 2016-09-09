@@ -6,10 +6,9 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
-from six import integer_types
-from six import string_types
-from six import with_metaclass
+from six import integer_types, string_types, with_metaclass
 from tempfile import NamedTemporaryFile
+from warnings import warn
 
 import numpy as np
 from png import Reader
@@ -38,6 +37,12 @@ class MetaDocTraits(tr.MetaHasTraits):
         def is_required(trait):
             return not trait.allow_none
 
+        def is_deprecated(trait):
+            return isinstance(trait, Renamed)
+
+        def is_optional(trait):
+            return not is_required(trait) and not is_deprecated(trait)
+
         trait_dict = {}
         for base in reversed(bases):
             if issubclass(base, tr.HasTraits):
@@ -50,14 +55,20 @@ class MetaDocTraits(tr.MetaHasTraits):
         req = {key: value for key, value in trait_dict.items()
                if is_required(value)}
         opt = {key: value for key, value in trait_dict.items()
-               if not is_required(value)}
+               if is_optional(value)}
+        dep = {key: value for key, value in trait_dict.items()
+               if is_deprecated(value)}
         if req:
-            doc_str += '\n\nRequired:\n\n' + '\n'.join(
+            doc_str += '\n\n**Required**\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in req.items())
             )
         if opt:
-            doc_str += '\n\nOptional:\n\n' + '\n'.join(
+            doc_str += '\n\n**Optional**\n\n' + '\n'.join(
                 (value.sphinx(key) for key, value in opt.items())
+            )
+        if dep:
+            doc_str += '\n\n**Deprecated**\n\n' + '\n'.join(
+                (value.sphinx(key) for key, value in dep.items())
             )
         classdict['__doc__'] = doc_str.strip()
 
@@ -75,7 +86,7 @@ def validator(func):
         self._cross_validation_lock = False
         self._validating = True
         try:
-            trait_dict = self.traits()
+            trait_dict = self._non_deprecated_traits()
             for k in trait_dict:
                 if k in self._trait_values:
                     val = getattr(self, k)
@@ -122,7 +133,7 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
                 raise KeyError('{}: Keyword input is not trait'.format(key))
         super(HasSteno3DTraits, self).__init__(**metadata)
 
-    @tr.observe()
+    @tr.observe(tr.All)
     def _mark_dirty(self, change):
         self._dirty_traits.add(change['name'])
 
@@ -151,7 +162,7 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         dirty_instances = set()
         self._inside_dirty = True
         try:
-            traits = self.traits()
+            traits = self._non_deprecated_traits()
             for trait in traits:
                 value = getattr(self, trait)
                 if (isinstance(value, HasSteno3DTraits) and
@@ -165,6 +176,11 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
         finally:
             self._inside_dirty = False
         return self._dirty_traits.union(dirty_instances)
+
+    def _non_deprecated_traits(self):
+        return {k: v for k, v in self.traits().items()
+                if not isinstance(v, Renamed)}
+
 
 
 class Steno3DTrait(object):
@@ -180,9 +196,13 @@ class Steno3DTrait(object):
         if not isinstance(self, tr.TraitType):
             return ''
         return (
-            ':param {name}: {doc}\n:type {name}: {cls}'.format(
+            ':param {name}: {doc}{default}\n:type {name}: {cls}'.format(
                 name=name,
                 doc=self.help + self.sphinx_extra,
+                default=('' if (self.default_value is tr.Undefined or
+                                self.default_value is None or
+                                self.default_value in ([], {}, ''))
+                         else ', Default: ' + str(self.default_value)),
                 cls=self.sphinx_class
             )
         )
@@ -458,7 +478,12 @@ class Array(Steno3DTrait, tr.TraitType):
 
 
 class Vector(Array):
-    """A trait for 3D vectors"""
+    """A trait for 3D vectors
+
+    Must be a length-3 array. Int vectors are casted to Float vectors.
+    X, Y, and Z are also valid inputs. These correspond to [1., 0, 0],
+    [0, 1., 0], and [0, 0, 1.] respectively
+    """
 
     def __init__(self, **metadata):
         super(Vector, self).__init__(
@@ -486,6 +511,17 @@ class Vector(Array):
         if len(value) != 3:
             self.error(obj, value)
         return value
+
+    @staticmethod
+    def as_length(vector, new_length):
+        length = np.sqrt(np.sum(vector**2))
+        if length == 0:
+            raise ZeroDivisionError('Cannot resize vector of length 0')
+        return new_length*vector/length
+
+    @staticmethod
+    def normalize(vector):
+        return Vector.as_length(vector, 1)
 
 
 class KeywordInstance(Steno3DTrait, tr.Instance):
@@ -559,6 +595,38 @@ class Repeated(Steno3DTrait, tr.List):
         if not isinstance(value, (list, tuple)):
             value = [value]
         return super(Repeated, self).validate(obj, value)
+
+
+class Renamed(Steno3DTrait, tr.TraitType):
+    """For renamed traits, warns and reassigns"""
+
+    def __init__(self, new_name, **metadata):
+        self.new_name = new_name
+        super(Renamed, self).__init__(allow_none=True, **metadata)
+
+    @property
+    def sphinx_class(self):
+        return ''
+
+    @property
+    def sphinx_extra(self):
+        return ('This trait is deprecated and may be removed in the future. '
+                'Please use **{}** instead.'.format(self.new_name))
+
+    def _warn(self):
+        warn(
+            '\n`{}` trait deprecated and may be removed in the future. '
+            'Please use `{}`.'.format(self.name, self.new_name),
+            FutureWarning, stacklevel=3
+        )
+
+    def get(self, obj, cls=None):
+        self._warn()
+        return getattr(obj, self.new_name)
+
+    def set(self, obj, value):
+        self._warn()
+        return setattr(obj, self.new_name, value)
 
 
 COLORS_20 = [

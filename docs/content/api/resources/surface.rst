@@ -31,7 +31,7 @@ and data, a :ref:`DataArray <resources_data>`.
     >> ...
     >> my_surf = steno3d.Surface(...)
     >> ...
-    >> my_surf = steno3d.DataArray(
+    >> my_data = steno3d.DataArray(
            title='Six Numbers',
            array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
        )

@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .airports import Airports
-from .misc import Images
+from .misc import Images, Files
 from .teapot import Teapot
 from .topography import Topography
 from .wolfpass import Wolfpass

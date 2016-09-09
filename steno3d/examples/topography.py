@@ -5,14 +5,12 @@ from __future__ import unicode_literals
 
 from json import loads
 
-from numpy import array
-from numpy import mean
+from numpy import array, mean
 
 from .base import BaseExample, exampleproperty
 from ..data import DataArray
 from ..project import Project
-from ..surface import Mesh2D
-from ..surface import Surface
+from ..surface import Mesh2D, Surface
 from ..texture import Texture2DImage
 
 
@@ -21,10 +19,6 @@ class Topography(BaseExample):
 
     This module provides example data for a topography surface.
     """
-
-    @exampleproperty
-    def example_name(self):
-        return 'Topography'
 
     @exampleproperty
     def filenames(self):

@@ -8,8 +8,7 @@ from __future__ import unicode_literals
 import numpy as np
 
 from .base import BaseExample, exampleproperty
-from ..point import Mesh0D
-from ..point import Point
+from ..point import Mesh0D, Point
 from ..project import Project
 
 RADIUS = 6371
@@ -21,10 +20,6 @@ class Airports(BaseExample):
     viewed individually or copied into new resources or projects with
     get_resources() and get_project(), respectively.
     """
-
-    @exampleproperty
-    def example_name(self):
-        return 'Airports'
 
     @exampleproperty
     def filenames(self):

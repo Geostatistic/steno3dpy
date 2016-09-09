@@ -10,11 +10,9 @@ from json import loads
 from numpy import array
 
 from .base import BaseExample, exampleproperty
-from ..point import Mesh0D
-from ..point import Point
+from ..point import Mesh0D, Point
 from ..project import Project
-from ..surface import Mesh2D
-from ..surface import Surface
+from ..surface import Mesh2D, Surface
 
 
 class Teapot(BaseExample):
@@ -22,10 +20,6 @@ class Teapot(BaseExample):
 
     This module provides example data for a teapot.
     """
-
-    @exampleproperty
-    def example_name(self):
-        return 'Teapot'
 
     @exampleproperty
     def filenames(self):

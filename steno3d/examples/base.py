@@ -7,13 +7,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from os import makedirs
-from os import mkdir
-from os.path import exists
-from os.path import expanduser
-from os.path import isdir
-from os.path import realpath
-from os.path import sep
+from os import makedirs, mkdir
+from os.path import exists, expanduser, isdir, realpath, sep
 
 from requests import get
 from six import string_types
@@ -39,7 +34,7 @@ class BaseExample(object):
 
     @exampleproperty
     def example_name(self):
-        return 'BaseExample'
+        return self.__name__
 
     @exampleproperty
     def data_directory(self):

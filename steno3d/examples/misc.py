@@ -21,14 +21,6 @@ class Images(BaseExample):
     """
 
     @exampleproperty
-    def example_name(self):
-        return 'Images'
-
-    # @exampleproperty
-    # def sub_directory(self):
-    #     return 'basic'
-
-    @exampleproperty
     def filenames(self):
         return ['metal.png',
                 'woodplanks.png',

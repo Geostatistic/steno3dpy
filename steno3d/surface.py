@@ -132,12 +132,12 @@ class Mesh2D(BaseMesh):
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
     h1 = Array(
-        help='Grid cell widths, x-direction',
+        help='Grid cell widths, U-direction',
         shape=('*',),
         dtype=float
     )
     h2 = Array(
-        help='Grid cell widths, y-direction',
+        help='Grid cell widths, V-direction',
         shape=('*',),
         dtype=float
     )

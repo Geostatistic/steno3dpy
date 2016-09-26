@@ -7,7 +7,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 
 from traitlets import observe, Undefined, validate
 
@@ -138,7 +137,7 @@ class Project(UserContent):
             [r._upload(sync, verbose, tab_level) for r in self.resources]
 
     def _get_dirty_data(self, force=False, initialize=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(Project, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if 'public' in dirty or force:
             datadict['public'] = self.public

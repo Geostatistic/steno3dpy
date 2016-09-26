@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from collections import namedtuple
 from io import BytesIO
 from json import dumps
@@ -61,7 +60,7 @@ class Texture2DImage(BaseTexture2D):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(Texture2DImage, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'image' in dirty or force:
             self.image.seek(0)
@@ -73,7 +72,7 @@ class Texture2DImage(BaseTexture2D):
         return files
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(Texture2DImage, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(

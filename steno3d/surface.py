@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from json import dumps
 
 from numpy import max as npmax
@@ -215,7 +214,7 @@ class Mesh2DGrid(BaseMesh):
         return proposal['value']
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(Mesh2DGrid, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if ('h1' in dirty or 'h2' in dirty) or force:
             datadict['tensors'] = dumps(dict(
@@ -231,7 +230,7 @@ class Mesh2DGrid(BaseMesh):
         return datadict
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(Mesh2DGrid, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
             files['Z'] = self.traits()['Z'].serialize(self.Z)

@@ -310,7 +310,8 @@ intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://docs.scipy.org/doc/numpy/': None,
                        'http://docs.scipy.org/doc/scipy/reference/': None}
 
-linkcheck_ignore = ['http://mybinder.org/repo/3ptscience/steno3dpy-notebooks']
+linkcheck_ignore = ['http://mybinder.org/repo/3ptscience/steno3dpy-notebooks',
+                    'http://docs.scipy.org/doc/numpy/reference/']
 linkcheck_retries = 10
 
 

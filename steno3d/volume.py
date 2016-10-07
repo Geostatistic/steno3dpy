@@ -33,17 +33,17 @@ class Mesh3DGrid(BaseMesh):
     h1 = Array(
         help='Tensor cell widths, x-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h2 = Array(
         help='Tensor cell widths, y-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h3 = Array(
         help='Tensor cell widths, z-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     x0 = Vector(
         help='Origin vector',

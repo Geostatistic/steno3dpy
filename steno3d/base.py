@@ -139,7 +139,7 @@ class UserContent(HasSteno3DTraits):
             for rq in req:
                 if rq['status_code'] != 200:
                     try:
-                        resp = pformat(rq.json())
+                        resp = pformat(rq['json'])
                     except ValueError:
                         resp = rq
 
@@ -155,11 +155,11 @@ class UserContent(HasSteno3DTraits):
                             response=resp,
                         )
                     )
-            self._upload_data = [rq.json() for rq in req]
+            self._upload_data = [rq['json'] for rq in req]
         else:
             if req['status_code'] != 200:
                 try:
-                    resp = pformat(req.json())
+                    resp = pformat(req['json'])
                 except ValueError:
                     resp = req
                 raise Exception(
@@ -174,7 +174,7 @@ class UserContent(HasSteno3DTraits):
                         response=resp,
                     )
                 )
-            self._upload_data = req.json()
+            self._upload_data = req['json']
 
     @property
     def _json(self):
@@ -192,12 +192,12 @@ class UserContent(HasSteno3DTraits):
             api=cls._model_api_location,
             uid=uid
         ))
-        if resp.status_code != 200:
+        if resp['status_code'] != 200:
             raise ValueError('{uid}: {cls} query failed'.format(
                 uid=uid,
                 cls=cls._resource_class
             ))
-        return resp.json()
+        return resp['json']
 
     @classmethod
     def _build(cls, src, copy=True, tab_level='', **kwargs):

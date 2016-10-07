@@ -13,7 +13,7 @@ from six import string_types
 
 from traitlets import All, observe, Undefined, validate
 
-from .client import Comms, needs_login, pause, plot  # , post, put
+from .client import Comms, needs_login, pause, plot
 from .traits import (_REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated,
                      String)
 
@@ -73,8 +73,6 @@ class UserContent(HasSteno3DTraits):
             assert self.validate()
             self._upload_dirty(sync, verbose, tab_level + '    ')
             if getattr(self, '_upload_data', None) is None:
-
-                #ERRORS HERE
                 self._post(
                     self._get_dirty_data(force=True),
                     self._get_dirty_files(force=True)

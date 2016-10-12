@@ -133,12 +133,12 @@ class Mesh2DGrid(BaseMesh):
     h1 = Array(
         help='Grid cell widths, U-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h2 = Array(
         help='Grid cell widths, V-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     x0 = Renamed('O')
     O = Vector(
@@ -246,13 +246,15 @@ class Mesh2DGrid(BaseMesh):
             O=json['OUV']['O'],
             U=json['OUV']['U'],
             V=json['OUV']['V'],
-            Z=Array.download(
-                url=json['Z'],
-                shape=json['ZShape']//4,
-                dtype=json['ZType']
-            ),
             opts=json['meta']
         )
+        if json['ZExists']:
+            mesh.Z = Array.download(
+                url=json['Z'],
+                shape=json['ZSize']//4,
+                dtype=json['ZType']
+            )
+
         return mesh
 
 

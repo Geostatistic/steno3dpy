@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from json import dumps
 from numpy import ndarray
 from six import string_types
@@ -34,17 +33,17 @@ class Mesh3DGrid(BaseMesh):
     h1 = Array(
         help='Tensor cell widths, x-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h2 = Array(
         help='Tensor cell widths, y-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h3 = Array(
         help='Tensor cell widths, z-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     x0 = Vector(
         help='Origin vector',
@@ -80,7 +79,7 @@ class Mesh3DGrid(BaseMesh):
                          'bytes of {}'.format(arr))
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(Mesh3DGrid, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty):
             datadict['tensors'] = dumps(dict(

@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from six import string_types
 
 from numpy import ndarray
@@ -61,14 +60,14 @@ class DataArray(BaseData):
         return proposal['value']
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(DataArray, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if 'order' in dirty or force:
             datadict['order'] = self.order
         return datadict
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(DataArray, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'array' in dirty or force:
             files['array'] = self.traits()['array'].serialize(self.array)

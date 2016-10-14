@@ -21,7 +21,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.2.9'
+__version__ = '0.2.11'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75

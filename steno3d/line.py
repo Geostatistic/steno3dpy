@@ -5,8 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
-
 from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
@@ -102,7 +100,7 @@ class Mesh1D(BaseMesh):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(Mesh1D, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \

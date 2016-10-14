@@ -11,23 +11,18 @@ from six import string_types
 from numpy import ndarray
 from traitlets import observe, validate
 
-from .base import BaseMesh
 from .base import CompositeResource
-from .data import DataArray
 from .options import ColorOptions
-from .options import Options
-from .texture import Texture2DImage
 from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
 
 from .point import Mesh0D, _PointBinder
 
 
-class _VectorFieldOptions(ColorOptions):
+class _VectorOptions(ColorOptions):
     pass
 
 
-
-class VectorField(CompositeResource):
+class Vector(CompositeResource):
     """Contains all the information about a vector field"""
 
     _resource_class = 'vector'
@@ -48,7 +43,7 @@ class VectorField(CompositeResource):
     )
     opts = KeywordInstance(
         help='Options',
-        klass=_VectorFieldOptions,
+        klass=_VectorOptions,
         allow_none=True
     )
 
@@ -83,4 +78,4 @@ class VectorField(CompositeResource):
         return files
 
 
-__all__ = ['VectorField']
+__all__ = ['Vector']

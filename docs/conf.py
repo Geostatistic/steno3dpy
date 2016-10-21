@@ -320,6 +320,6 @@ from docutils.utils import get_source_line
 
 def _supress_nonlocal_image_warn(self, msg, node, **kwargs):
     if not msg.startswith('nonlocal image URI found:'):
-        self._warnfunc(msg, '%s:%s' % get_source_line(node), **kwargs)
+        self._warnfunc(msg, '{0!s}:{1!s}'.format(*get_source_line(node)), **kwargs)
 
 sphinx.environment.BuildEnvironment.warn_node = _supress_nonlocal_image_warn

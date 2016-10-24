@@ -126,10 +126,10 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(*args, **kwargs):
-        # if not Comms.user.logged_in:
-        #     print("Please login: 'steno3d.login()'")
-        # else:
-        return func(*args, **kwargs)
+        if not Comms.user.logged_in:
+            print("Please login: 'steno3d.login()'")
+        else:
+            return func(*args, **kwargs)
     return func_wrapper
 
 
@@ -378,19 +378,16 @@ class _Comms(object):
         self._base_url = PRODUCTION_BASE_URL
         self.user.logout()
 
-    # @needs_login
     @staticmethod
     def post(url, data=None, files=None):
         """Post data and files to the steno3d online endpoint"""
         return _Comms._communicate(requests.post, url, data, files)
 
-    # @needs_login
     @staticmethod
     def put(url, data=None, files=None):
         """Put data and files to the steno3d online endpoint"""
         return _Comms._communicate(requests.put, url, data, files)
 
-    # @needs_login
     @staticmethod
     def get(url):
         """Make a get request from a steno3d online endpoint"""

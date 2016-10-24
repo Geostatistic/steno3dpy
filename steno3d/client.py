@@ -422,7 +422,6 @@ class _Comms(object):
             files[key].file.close()
 
         return {"status_code": req.status_code, "json": req.json()}
-        return req
 
 
 Comms = _Comms()

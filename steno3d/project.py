@@ -232,12 +232,11 @@ class Project(UserContent):
             description=desc,
             resources=[]
         )
-        jres = json['resources']
-        for longuid in jres:
+        for longuid in json['resourceUids']:
             res_string = longuid.split('Resource')[-1].split(':')[0]
             res_class = _REGISTRY[res_string]
             proj.resources += [res_class._build(
-                src=jres[longuid],
+                src=longuid.split(':')[1],
                 copy=copy,
                 tab_level=tab_level + '    ',
                 project=proj

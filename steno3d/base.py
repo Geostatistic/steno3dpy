@@ -187,7 +187,7 @@ class UserContent(HasSteno3DTraits):
         if not isinstance(uid, string_types) or len(uid) != 20:
             raise ValueError('{}: invalid uid'.format(uid))
         resp = Comms.get('api/{mapi}/{uid}'.format(
-            api=cls._model_api_location,
+            mapi=cls._model_api_location,
             uid=uid
         ))
         if resp['status_code'] != 200:

@@ -74,6 +74,9 @@ Links to Parsers
 - stl parser for binary and ASCII stereolithography .stl files
   (`github <https://github.com/3ptscience/steno3d-stl>`__,
   `pip <https://pypi.python.org/pypi/steno3d_stl>`__)
+- Surfer grd file parser for Surfer 6 & 7 binary and ASCII .grd files
+  (`github <https://github.com/3ptscience/steno3d-surfer>`__,
+  `pip <https://pypi.python.org/pypi/steno3d_surfer>`__)
 
 
 .. _contributing:

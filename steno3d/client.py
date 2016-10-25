@@ -21,7 +21,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.2.11'
+__version__ = '0.2.12'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -121,6 +121,22 @@ username or API developer key.
 
 """
 
+
+def needs_login(func):
+    """Wrapper used around functions that need you to be logged in"""
+    @wraps(func)
+    def func_wrapper(*args, **kwargs):
+        if not Comms.user.logged_in:
+            print("Please login: 'steno3d.login()'")
+        else:
+            return func(*args, **kwargs)
+    return func_wrapper
+
+
+def pause():
+    """Brief pause on localhost to simulate network delay"""
+    if 'localhost' in Comms.base_url:
+        sleep(SLEEP_TIME)
 
 
 class _Comms(object):
@@ -357,74 +373,55 @@ class _Comms(object):
         """Logout current user"""
         if self.user.logged_in:
             print('Logging out of steno3d...')
-            get('signout')
+            _Comms.get('signout')
             print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL
         self.user.logout()
 
+    @staticmethod
+    def post(url, data=None, files=None):
+        """Post data and files to the steno3d online endpoint"""
+        return _Comms._communicate(requests.post, url, data, files)
+
+    @staticmethod
+    def put(url, data=None, files=None):
+        """Put data and files to the steno3d online endpoint"""
+        return _Comms._communicate(requests.put, url, data, files)
+
+    @staticmethod
+    def get(url):
+        """Make a get request from a steno3d online endpoint"""
+        return _Comms._communicate(requests.get, url, None, None)
+
+    @staticmethod
+    def _communicate(request_fcn, url, data, files):
+        """Post data and files to the steno3d online endpoint"""
+        data = {} if data is None else data
+        files = {} if files is None else files
+        filedict = {}
+        for filename in files:
+            if hasattr(files[filename], 'dtype'):
+                filedict[filename] = files[filename].file
+                filedict[filename + 'Type'] = files[filename].dtype
+            else:
+                filedict[filename] = files[filename]
+        req = request_fcn(
+            Comms.base_url + url,
+            data=data,
+            files=filedict,
+            headers={'sshKey': Comms.user.devel_key,
+                     'client': 'steno3dpy:{}'.format(__version__)},
+            cookies=Comms._cookies
+        )
+        if req.status_code < 210:
+            Comms._cookies.update(req.cookies)
+        for key in files:
+            files[key].file.close()
+
+        return {"status_code": req.status_code, "json": req.json()}
+
 
 Comms = _Comms()
-
-
-def needs_login(func):
-    """Wrapper used around functions that need you to be logged in"""
-    @wraps(func)
-    def func_wrapper(*args, **kwargs):
-        if not Comms.user.logged_in:
-            print("Please login: 'steno3d.login()'")
-        else:
-            return func(*args, **kwargs)
-    return func_wrapper
-
-
-def pause():
-    """Brief pause on localhost to simulate network delay"""
-    if 'localhost' in Comms.base_url:
-        sleep(SLEEP_TIME)
-
-
-@needs_login
-def post(url, data=None, files=None):
-    """Post data and files to the steno3d online endpoint"""
-    return _communicate(requests.post, url, data, files)
-
-
-@needs_login
-def put(url, data=None, files=None):
-    """Put data and files to the steno3d online endpoint"""
-    return _communicate(requests.put, url, data, files)
-
-
-@needs_login
-def get(url):
-    """Make a get request from a steno3d online endpoint"""
-    return _communicate(requests.get, url, None, None)
-
-
-def _communicate(request_fcn, url, data, files):
-    """Post data and files to the steno3d online endpoint"""
-    data = {} if data is None else data
-    files = {} if files is None else files
-    filedict = {}
-    for filename in files:
-        if hasattr(files[filename], 'dtype'):
-            filedict[filename] = files[filename].file
-            filedict[filename + 'Type'] = files[filename].dtype
-        else:
-            filedict[filename] = files[filename]
-    req = request_fcn(
-        Comms.base_url + url,
-        data=data,
-        files=filedict,
-        headers={'sshKey': Comms.user.devel_key,
-                 'client': 'steno3dpy:{}'.format(__version__)},
-        cookies=Comms._cookies
-    )
-    if req.status_code < 210:
-        Comms._cookies.update(req.cookies)
-    for key in files:
-        files[key].file.close()
-    return req
 
 
 def plot(url):

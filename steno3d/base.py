@@ -13,7 +13,7 @@ from six import string_types
 
 from traitlets import All, observe, Undefined, validate
 
-from .client import Comms, get, needs_login, pause, plot, post, put
+from .client import Comms, needs_login, pause, plot
 from .traits import (_REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated,
                      String)
 
@@ -56,7 +56,6 @@ class UserContent(HasSteno3DTraits):
                 className=cls._resource_class
             )
         return cls.__model_api_location
-
 
     def _upload(self, sync=False, verbose=True, tab_level=''):
         if getattr(self, '_uploading', False):
@@ -118,14 +117,14 @@ class UserContent(HasSteno3DTraits):
             self._upload(self._sync)
 
     def _post(self, datadict=None, files=None):
-        self._client_upload(post, 'api/' + self._model_api_location,
+        self._client_upload(Comms.post, 'api/' + self._model_api_location,
                             datadict, files)
 
     def _put(self, datadict=None, files=None):
         pause()
         api_uid = 'api/{mapi}/{uid}'.format(mapi=self._model_api_location,
                                             uid=self._upload_data['uid'])
-        self._client_upload(put, api_uid, datadict, files)
+        self._client_upload(Comms.put, api_uid, datadict, files)
 
     def _client_upload(self, request_fcn, url,
                        datadict=None, files=None):
@@ -136,9 +135,9 @@ class UserContent(HasSteno3DTraits):
         )
         if isinstance(req, list):
             for rq in req:
-                if rq.status_code != 200:
+                if rq['status_code'] != 200:
                     try:
-                        resp = pformat(rq.json())
+                        resp = pformat(rq['json'])
                     except ValueError:
                         resp = rq
 
@@ -154,11 +153,11 @@ class UserContent(HasSteno3DTraits):
                             response=resp,
                         )
                     )
-            self._upload_data = [rq.json() for rq in req]
+            self._upload_data = [rq['json'] for rq in req]
         else:
-            if req.status_code != 200:
+            if req['status_code'] != 200:
                 try:
-                    resp = pformat(req.json())
+                    resp = pformat(req['json'])
                 except ValueError:
                     resp = req
                 raise Exception(
@@ -173,7 +172,7 @@ class UserContent(HasSteno3DTraits):
                         response=resp,
                     )
                 )
-            self._upload_data = req.json()
+            self._upload_data = req['json']
 
     @property
     def _json(self):
@@ -187,16 +186,16 @@ class UserContent(HasSteno3DTraits):
     def _json_from_uid(cls, uid):
         if not isinstance(uid, string_types) or len(uid) != 20:
             raise ValueError('{}: invalid uid'.format(uid))
-        resp = get('api/{mapi}/{uid}'.format(
+        resp = Comms.get('api/{mapi}/{uid}'.format(
             mapi=cls._model_api_location,
             uid=uid
         ))
-        if resp.status_code != 200:
+        if resp['status_code'] != 200:
             raise ValueError('{uid}: {cls} query failed'.format(
                 uid=uid,
                 cls=cls._resource_class
             ))
-        return resp.json()
+        return resp['json']
 
     @classmethod
     def _build(cls, src, copy=True, tab_level='', **kwargs):
@@ -369,8 +368,6 @@ class CompositeResource(BaseResource):
                   'before plotting.')
             return
         return plot(self._url)
-
-
 
     @classmethod
     def _build_from_json(cls, json, copy=True, tab_level='', **kwargs):

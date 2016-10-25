@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
-from .client import Comms, get, needs_login, plot
+from .client import Comms, needs_login, plot
 from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
 
 
@@ -154,8 +154,8 @@ class Project(UserContent):
             privacy = 'private'
         if verbose:
             print('Verifying your quota for ' + privacy + ' projects...')
-        resp = get('api/check/quota?test=ProjectSteno3D')
-        resp = resp.json()[privacy]
+        resp = Comms.get('api/check/quota?test=ProjectSteno3D')
+        resp = resp['json'][privacy]
         if resp['quota'] == 'Unlimited':
             pass
         elif resp['count'] >= resp['quota']:

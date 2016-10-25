@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from six import integer_types
 
-from .client import get, needs_login
+from .client import Comms, needs_login
 from .project import Project
 
 
@@ -17,7 +17,7 @@ def _query(url, queue=10):
     more = True
     print('Fetching projects from the database ...')
     while more:
-        resp = get('{url}?brief=True&num={n}&cursor={c}'.format(
+        resp = Comms.get('{url}?brief=True&num={n}&cursor={c}'.format(
             url=url, n=queue, c=cursor
         ))
         rjson = resp.json()

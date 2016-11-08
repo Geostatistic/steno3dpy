@@ -418,7 +418,11 @@ class _Comms(object):
         for key in files:
             files[key].file.close()
 
-        return {"status_code": req.status_code, "json": req.json()}
+        try:
+            resp = req.json()
+        except ValueError:
+            resp = req
+        return {"status_code": req.status_code, "json": resp}
 
 
 Comms = _Comms()

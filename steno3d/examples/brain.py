@@ -9,6 +9,7 @@ import os
 from six import text_type
 
 from .base import BaseExample, exampleproperty
+from ..data import DataArray
 from ..project import Project
 from ..volume import Mesh3DGrid, Volume
 
@@ -59,6 +60,13 @@ class Brain(BaseExample):
                 h1=2*np.ones(data.shape[0]),
                 h2=np.ones(data.shape[2]),
                 h3=np.ones(data.shape[1]),
+            ),
+            data=dict(
+                location='CC',
+                data=DataArray(
+                    title='MRI brain data',
+                    array=data.flatten()
+                )
             ),
             title='Brain Volume'
         )

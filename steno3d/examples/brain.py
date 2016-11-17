@@ -57,9 +57,9 @@ class Brain(BaseExample):
         Volume(
             project=proj,
             mesh=Mesh3DGrid(
-                h1=2*np.ones(data.shape[0]),
-                h2=np.ones(data.shape[2]),
-                h3=np.ones(data.shape[1]),
+                h1=np.ones(data.shape[0]),
+                h2=np.ones(data.shape[1]),
+                h3=np.ones(data.shape[2]),
             ),
             data=dict(
                 location='CC',

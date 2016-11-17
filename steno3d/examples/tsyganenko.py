@@ -56,7 +56,7 @@ class Tsyganenko(BaseExample):
             project=proj,
             mesh=Mesh1D(
                 vertices=verts,
-                triangles=segs,
+                segments=segs,
             ),
             data=[
                 dict(

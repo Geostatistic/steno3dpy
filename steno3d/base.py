@@ -11,7 +11,7 @@ from json import dumps
 from pprint import pformat
 from six import string_types
 
-from traitlets import observe, Undefined, validate
+from traitlets import observe, Undefined, validate, All
 
 from .client import Comms, get, needs_login, pause, plot, post, put
 from .traits import (_REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated,
@@ -112,7 +112,7 @@ class UserContent(HasSteno3DTraits):
     def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
         pass
 
-    @observe()
+    @observe(All)
     def _on_property_change(self, change):
         if getattr(self, '_sync', False):
             self._upload(self._sync)

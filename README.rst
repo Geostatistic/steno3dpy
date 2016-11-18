@@ -12,7 +12,7 @@ Steno3D
     :target: https://pypi.python.org/pypi/steno3d
 
 .. image:: http://mybinder.org/badge.svg
-    :target: http://mybinder.org/repo/3ptscience/steno3dpy-notebooks
+    :target: http://mybinder.org/repo/3ptscience/steno3d-notebooks
 
 Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
 by `3point Science <https://www.3ptscience.com>`_.
@@ -41,9 +41,9 @@ At that point, you can
 
 then start building your 3D project. API documentation is available on
 `online <https://steno3d.com/docs>`_. Tutorials and
-Examples are available as `Jupyter notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_.
+Examples are available as `Jupyter notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
 Class documentation can also be accessed in the IPython environment
 with `?` and tab completion.
 
-The latest version of Steno3D is 0.2.12. Detailed release notes are available
+The latest version of Steno3D is 0.2.13. Detailed release notes are available
 on `github <https://github.com/3ptscience/steno3dpy/releases>`_.

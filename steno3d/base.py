@@ -156,10 +156,6 @@ class UserContent(HasSteno3DTraits):
             self._upload_data = [rq['json'] for rq in req]
         else:
             if req['status_code'] != 200:
-                try:
-                    resp = pformat(req['json'])
-                except ValueError:
-                    resp = req
                 raise Exception(
                     'Upload failed: {location}'.format(
                         location=url,
@@ -169,7 +165,7 @@ class UserContent(HasSteno3DTraits):
                         filedict=pformat(files),
                     ) +
                     '\nresponse: {response}'.format(
-                        response=resp,
+                        response=req['json'],
                     )
                 )
             self._upload_data = req['json']

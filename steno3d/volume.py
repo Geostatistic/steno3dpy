@@ -100,8 +100,8 @@ class Mesh3DGrid(BaseMesh):
                 h2=self.h2.tolist(),
                 h3=self.h3.tolist()
             ))
-        if force or ('O' in dirty or 'U' in dirty or 'V' in dirty or
-                     'W' in dirty):
+        if force or any([item in dirty for item in
+                         ['O', 'U', 'V', 'W', 'h1', 'h2', 'h3']]):
             datadict['OUVZ'] = dumps(dict(
                 O=self.O.tolist(),
                 U=Vector.as_length(self.U, self.h1.sum()).tolist(),

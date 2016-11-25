@@ -129,6 +129,18 @@ class Mesh1D(BaseMesh):
         )
         return mesh
 
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh1D(
+            title=omf_geom.name,
+            description=omf_geom.description,
+            vertices=(omf_geom.vertices.array +
+                      omf_geom.origin +
+                      omf_project.origin),
+            segments=omf_geom.segments.array
+        )
+        return mesh
+
 
 class _LineBinder(HasSteno3DTraits):
     """Contains the data on a 1D line set with location information"""

@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from six import string_types
 
 from numpy import ndarray
+from omf import MappedData, ScalarData
 from traitlets import observe, validate
 
 from .base import BaseData
@@ -87,5 +88,20 @@ class DataArray(BaseData):
         )
         return data
 
+    @classmethod
+    def _build_from_omf(cls, omf_data):
+        if not isinstance(omf_data, (ScalarData, MappedData)):
+            print('Data of class {} ignored'.format(
+                omf_data.__class__.__name__
+            ))
+        data = dict(
+            location='N' if omf_data.location == 'vertices' else 'CC',
+            data=DataArray(
+                title=omf_data.name,
+                description=omf_data.description,
+                array=omf_data.array.array
+            )
+        )
+        return data
 
 __all__ = ['DataArray']

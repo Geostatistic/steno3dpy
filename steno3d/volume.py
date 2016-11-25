@@ -110,6 +110,18 @@ class Mesh3DGrid(BaseMesh):
         )
         return mesh
 
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh3DGrid(
+            title=omf_geom.name,
+            description=omf_geom.description,
+            h1=omf_geom.tensor_u,
+            h2=omf_geom.tensor_v,
+            h3=omf_geom.tensor_w,
+            x0=omf_geom.origin + omf_project.origin
+        )
+        return mesh
+
 
 class _VolumeBinder(HasSteno3DTraits):
     """Contains the data on a 3D volume with location information"""

@@ -101,5 +101,17 @@ class Texture2DImage(BaseTexture2D):
         )
         return tex
 
+    @classmethod
+    def _build_from_omf(cls, omf_tex, omf_project):
+        tex = Texture2DImage(
+            title=omf_tex.name,
+            description=omf_tex.description,
+            origin=omf_tex.origin + omf_project.origin,
+            U=omf_tex.axis_u,
+            V=omf_tex.axis_v,
+            image=omf_tex.image
+        )
+        return tex
+
 
 __all__ = ['Texture2DImage']

@@ -87,5 +87,15 @@ class Vector(CompositeResource):
                 self.traits()['vectors'].serialize(self.vectors)
         return files
 
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        vec = super(Vector, cls)._build_from_json(json, **kwargs)
+        vec.vectors = Array.download(
+            url=json['vectors'],
+            shape=(json['vectorsSize']//12, 3),
+            dtype=json['vectorsType']
+        )
+        return vec
+
 
 __all__ = ['Vector']

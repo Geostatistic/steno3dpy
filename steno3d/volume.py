@@ -134,7 +134,10 @@ class Mesh3DGrid(BaseMesh):
             h1=omf_geom.tensor_u,
             h2=omf_geom.tensor_v,
             h3=omf_geom.tensor_w,
-            x0=omf_geom.origin + omf_project.origin
+            O=omf_geom.origin + omf_project.origin,
+            U=omf_geom.axis_u,
+            V=omf_geom.axis_v,
+            Z=omf_geom.axis_w
         )
         return mesh
 

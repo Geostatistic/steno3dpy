@@ -1,19 +1,15 @@
-"""point.py contains the Point composite resource for steno3d"""
-
+"""vector.py contains the Vector composite resource for Steno3D"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
-from six import string_types
 
-from numpy import ndarray
-from traitlets import observe, validate
+from traitlets import validate
 
 from .base import CompositeResource
 from .options import ColorOptions
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
+from .traits import Array, KeywordInstance, Repeated
 
 from .point import Mesh0D, _PointBinder
 
@@ -67,6 +63,20 @@ class Vector(CompositeResource):
                         meshlen=valid_length
                     )
                 )
+        return proposal['value']
+
+    @validate('vectors')
+    def _validate_vectors(self, proposal):
+        """Check if vectors is built correctly"""
+        valid_length = proposal['owner'].mesh.nN
+        if len(proposal['value']) != valid_length:
+            raise ValueError(
+                'vectors length {datalen} does not match '
+                'mesh vertex length {meshlen}'.format(
+                    datalen=len(proposal['value']),
+                    meshlen=valid_length
+                )
+            )
         return proposal['value']
 
     def _get_dirty_files(self, force=False):

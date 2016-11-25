@@ -254,7 +254,7 @@ class Project(UserContent):
         if isinstance(omf_input, six.string_types):
             from omf import OMFReader
             omf_input = OMFReader(omf_input)
-        if not omf_input.__class__.__namd__ == 'Project':
+        if not omf_input.__class__.__name__ == 'Project':
             raise ValueError('input must be omf file or Project')
         return cls._build_from_omf(omf_input)
 

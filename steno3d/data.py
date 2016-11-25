@@ -87,5 +87,17 @@ class DataArray(BaseData):
         )
         return data
 
+    @classmethod
+    def _build_from_omf(cls, omf_data):
+        assert omf_data.__class__.__name__ in ('ScalarData', 'MappedData')
+        data = dict(
+            location='N' if omf_data.location == 'vertices' else 'CC',
+            data=DataArray(
+                title=omf_data.name,
+                description=omf_data.description,
+                array=omf_data.array.array
+            )
+        )
+        return data
 
 __all__ = ['DataArray']

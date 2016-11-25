@@ -127,6 +127,16 @@ class Mesh2D(BaseMesh):
         )
         return mesh
 
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh2D(
+            vertices=(omf_geom.vertices.array +
+                      omf_geom.origin +
+                      omf_project.origin),
+            triangles=omf_geom.triangles.array
+        )
+        return mesh
+
 
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
@@ -255,6 +265,19 @@ class Mesh2DGrid(BaseMesh):
                 dtype=json['ZType']
             )
 
+        return mesh
+
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh2DGrid(
+            h1=omf_geom.tensor_u,
+            h2=omf_geom.tensor_v,
+            O=omf_geom.origin + omf_project.origin,
+            U=omf_geom.axis_u,
+            V=omf_geom.axis_v
+        )
+        if omf_geom.offset_w is not None:
+            mesh.Z = omf_geom.offset_w.array
         return mesh
 
 

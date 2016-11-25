@@ -439,6 +439,11 @@ class CompositeResource(BaseResource):
         if hasattr(omf_element, 'data'):
             res.data = []
             for dat in omf_element.data:
+                if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
+                    print('Data of class {} ignored'.format(
+                        dat.__class__.__name__
+                    ))
+                    continue
                 res.data += [
                     _REGISTRY['DataArray']._build_from_omf(dat)
                 ]

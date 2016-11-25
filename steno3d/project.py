@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 import six
 
-import omf
 from traitlets import observe, Undefined, validate
 
 from .base import CompositeResource, UserContent
@@ -252,9 +251,10 @@ class Project(UserContent):
 
     @classmethod
     def from_omf(cls, omf_input):
-        if isinstance(omf, six.string_types):
-            omf_input = omf.OMFReader(omf_input)
-        if not isinstance(omf_input, omf.Project):
+        if isinstance(omf_input, six.string_types):
+            from omf import OMFReader
+            omf_input = OMFReader(omf_input)
+        if not omf_input.__class__.__namd__ == 'Project':
             raise ValueError('input must be omf file or Project')
         return cls._build_from_omf(omf_input)
 
@@ -266,14 +266,16 @@ class Project(UserContent):
             resources=[]
         )
         resource_map = {
-            'PointSet': 'Point',
-            'LineSet': 'Line',
-            'Surface': 'Surface',
-            'Volume': 'Volume'
+            'PointSetElement': 'Point',
+            'LineSetElement': 'Line',
+            'SurfaceElement': 'Surface',
+            'VolumeElement': 'Volume'
         }
         for elem in omf_project.elements:
             res_class = _REGISTRY[resource_map[elem.__class__.__name__]]
-            proj.resources += res_class._build_from_omf(elem, omf_project)
+            proj.resources += [
+                res_class._build_from_omf(elem, omf_project, proj)
+            ]
         return proj
 
 

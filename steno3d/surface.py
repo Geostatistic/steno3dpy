@@ -130,12 +130,10 @@ class Mesh2D(BaseMesh):
     @classmethod
     def _build_from_omf(cls, omf_geom, omf_project):
         mesh = Mesh2D(
-            title=omf_geom.name,
-            description=omf_geom.description,
             vertices=(omf_geom.vertices.array +
                       omf_geom.origin +
                       omf_project.origin),
-            triangles=omf_geom.triangles
+            triangles=omf_geom.triangles.array
         )
         return mesh
 
@@ -272,8 +270,6 @@ class Mesh2DGrid(BaseMesh):
     @classmethod
     def _build_from_omf(cls, omf_geom, omf_project):
         mesh = Mesh2DGrid(
-            title=omf_geom.name,
-            description=omf_geom.description,
             h1=omf_geom.tensor_u,
             h2=omf_geom.tensor_v,
             O=omf_geom.origin + omf_project.origin,
@@ -281,7 +277,7 @@ class Mesh2DGrid(BaseMesh):
             V=omf_geom.axis_v
         )
         if omf_geom.offset_w is not None:
-            mesh.Z = omf_geom.offset_w
+            mesh.Z = omf_geom.offset_w.array
         return mesh
 
 

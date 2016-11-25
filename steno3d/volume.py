@@ -58,7 +58,7 @@ class Mesh3DGrid(BaseMesh):
         help='Orientation of h2 axis',
         default_value='Y'
     )
-    Z = Vector(
+    W = Vector(
         help='Orientation of h3 axis',
         default_value='Z'
     )
@@ -79,7 +79,7 @@ class Mesh3DGrid(BaseMesh):
         return len(self.h1) * len(self.h2) * len(self.h3)
 
     def _nbytes(self, arr=None):
-        filenames = ('h1', 'h2', 'h3', 'O', 'U', 'V', 'Z')
+        filenames = ('h1', 'h2', 'h3', 'O', 'U', 'V', 'W')
         if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
         if isinstance(arr, string_types) and arr in filenames:
@@ -101,12 +101,12 @@ class Mesh3DGrid(BaseMesh):
                 h3=self.h3.tolist()
             ))
         if force or ('O' in dirty or 'U' in dirty or 'V' in dirty or
-                     'Z' in dirty):
+                     'W' in dirty):
             datadict['OUVZ'] = dumps(dict(
                 O=self.O.tolist(),
                 U=Vector.as_length(self.U, self.h1.sum()).tolist(),
                 V=Vector.as_length(self.V, self.h2.sum()).tolist(),
-                Z=Vector.as_length(self.Z, self.h3.sum()).tolist()
+                Z=Vector.as_length(self.W, self.h3.sum()).tolist()
             ))
         return datadict
 
@@ -121,7 +121,7 @@ class Mesh3DGrid(BaseMesh):
             O=json['OUVZ']['O'],
             U=json['OUVZ']['U'],
             V=json['OUVZ']['V'],
-            Z=json['OUVZ']['Z'],
+            W=json['OUVZ']['Z'],
             opts=json['meta']
         )
         return mesh
@@ -129,15 +129,13 @@ class Mesh3DGrid(BaseMesh):
     @classmethod
     def _build_from_omf(cls, omf_geom, omf_project):
         mesh = Mesh3DGrid(
-            title=omf_geom.name,
-            description=omf_geom.description,
             h1=omf_geom.tensor_u,
             h2=omf_geom.tensor_v,
             h3=omf_geom.tensor_w,
             O=omf_geom.origin + omf_project.origin,
             U=omf_geom.axis_u,
             V=omf_geom.axis_v,
-            Z=omf_geom.axis_w
+            W=omf_geom.axis_w
         )
         return mesh
 

@@ -93,8 +93,6 @@ class Mesh0D(BaseMesh):
     @classmethod
     def _build_from_omf(cls, omf_geom, omf_project):
         mesh = Mesh0D(
-            title=omf_geom.name,
-            description=omf_geom.description,
             vertices=(omf_geom.vertices.array +
                       omf_geom.origin +
                       omf_project.origin)

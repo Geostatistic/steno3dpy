@@ -13,6 +13,7 @@ locations in 3D space and may have data and textures.
     line
     surface
     volume
+    vector
     data
     texture
     base

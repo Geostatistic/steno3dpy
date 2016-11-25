@@ -50,6 +50,12 @@ contain a mesh resource of the appropriate dimensionality to describe
 the geometry. They may also contain a number of data or texture
 resources that correspond to the mesh.
 
+Vectors
+-------
+
+:ref:`Vectors <resources_vector>` are also a composite resesource. They use
+the same mesh as points but also include vectors at each point.
+
 Meshes
 ------
 

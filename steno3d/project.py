@@ -7,6 +7,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import six
 
 from traitlets import observe, Undefined, validate
 
@@ -246,6 +247,35 @@ class Project(UserContent):
             proj._upload_data = json
             proj._mark_clean()
         print('... Complete!')
+        return proj
+
+    @classmethod
+    def from_omf(cls, omf_input):
+        if isinstance(omf_input, six.string_types):
+            from omf import OMFReader
+            omf_input = OMFReader(omf_input)
+        if not omf_input.__class__.__name__ == 'Project':
+            raise ValueError('input must be omf file or Project')
+        return cls._build_from_omf(omf_input)
+
+    @classmethod
+    def _build_from_omf(cls, omf_project):
+        proj = Project(
+            title=omf_project.name,
+            description=omf_project.description,
+            resources=[]
+        )
+        resource_map = {
+            'PointSetElement': 'Point',
+            'LineSetElement': 'Line',
+            'SurfaceElement': 'Surface',
+            'VolumeElement': 'Volume'
+        }
+        for elem in omf_project.elements:
+            res_class = _REGISTRY[resource_map[elem.__class__.__name__]]
+            proj.resources += [
+                res_class._build_from_omf(elem, omf_project, proj)
+            ]
         return proj
 
 

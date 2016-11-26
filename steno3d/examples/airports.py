@@ -8,12 +8,12 @@ from __future__ import unicode_literals
 import numpy as np
 
 from .base import BaseExample, exampleproperty
-from ..point import Mesh0D
-from ..point import Point
+from ..point import Mesh0D, Point
 from ..project import Project
 
-RADIUS = 6371
 DEG2RAD = np.pi/180
+FT2KM = 12*2.54/100/1000
+RADIUS = 6371
 
 
 class Airports(BaseExample):
@@ -23,13 +23,17 @@ class Airports(BaseExample):
     """
 
     @exampleproperty
-    def example_name(self):
-        return 'Airports'
+    def filenames(self):
+        """airport files"""
+        return ['airports.dat', 'latitude.npy', 'longitude.npy',
+                'altitude.npy', 'license.txt']
 
     @exampleproperty
-    def filenames(self):
-        """teapot json file"""
-        return ['latitude.npy', 'longitude.npy', 'altitude.npy', 'license.txt']
+    def datafile(self):
+        """full path to airport data file"""
+        return Airports.fetch_data(filename='airports.dat',
+                                   download_if_missing=False,
+                                   verbose=False)
 
     @exampleproperty
     def latitude(self):
@@ -93,3 +97,17 @@ class Airports(BaseExample):
         z = (RADIUS + alt)*np.sin(lat)
 
         return x, y, z
+
+    @staticmethod
+    def read_airports_data(filename):
+        """Extract latitude, longitude, and altitude from file"""
+        lat = []  # Latitude
+        lon = []  # Longitude
+        alt = []  # Altitude
+        with open(filename) as f:
+            for line in f:
+                data = line.rstrip().split(',')
+                lat.append(float(data[6])*DEG2RAD)
+                lon.append(float(data[7])*DEG2RAD)
+                alt.append(float(data[8])*FT2KM)
+        return np.array(lat), np.array(lon), np.array(alt)

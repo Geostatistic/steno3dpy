@@ -7,7 +7,7 @@ What is Steno3D
 
 Steno3D_ is designed for you to explore and share your 3D data. Below is a
 visual overview of this library. An interactive tutorial is also available
-online as a `Jupyter notebook <https://github.com/3ptscience/steno3dpy-notebooks>`_
+online as a `Jupyter notebook <https://github.com/3ptscience/steno3d-notebooks>`_
 
 .. TODO: structure image and some explanation
 
@@ -49,6 +49,12 @@ composites of pointers to other resources. Specifically, they must
 contain a mesh resource of the appropriate dimensionality to describe
 the geometry. They may also contain a number of data or texture
 resources that correspond to the mesh.
+
+Vectors
+-------
+
+:ref:`Vectors <resources_vector>` are also a composite resesource. They use
+the same mesh as points but also include vectors at each point.
 
 Meshes
 ------

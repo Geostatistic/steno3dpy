@@ -9,16 +9,12 @@ from numpy import load as npload
 
 from .base import BaseExample, exampleproperty
 from ..data import DataArray
-from ..line import Line
-from ..line import Mesh1D
-from ..point import Mesh0D
-from ..point import Point
+from ..line import Line, Mesh1D
+from ..point import Mesh0D, Point
 from ..project import Project
-from ..surface import Mesh2D
-from ..surface import Surface
+from ..surface import Mesh2D, Surface
 from ..texture import Texture2DImage
-from ..volume import Mesh3DGrid
-from ..volume import Volume
+from ..volume import Mesh3DGrid, Volume
 
 
 class Wolfpass(BaseExample):
@@ -26,10 +22,6 @@ class Wolfpass(BaseExample):
 
     This module provides example data for a geology exploration project.
     """
-
-    @exampleproperty
-    def example_name(self):
-        return 'Wolfpass'
 
     @exampleproperty
     def filenames(self):

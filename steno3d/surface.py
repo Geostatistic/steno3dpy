@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from json import dumps
 
 from numpy import max as npmax
@@ -128,18 +127,28 @@ class Mesh2D(BaseMesh):
         )
         return mesh
 
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh2D(
+            vertices=(omf_geom.vertices.array +
+                      omf_geom.origin +
+                      omf_project.origin),
+            triangles=omf_geom.triangles.array
+        )
+        return mesh
+
 
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
     h1 = Array(
-        help='Grid cell widths, x-direction',
+        help='Grid cell widths, U-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     h2 = Array(
-        help='Grid cell widths, y-direction',
+        help='Grid cell widths, V-direction',
         shape=('*',),
-        dtype=float
+        dtype=(float, int)
     )
     x0 = Renamed('O')
     O = Vector(
@@ -215,7 +224,7 @@ class Mesh2DGrid(BaseMesh):
         return proposal['value']
 
     def _get_dirty_data(self, force=False):
-        datadict = super()._get_dirty_data(force)
+        datadict = super(Mesh2DGrid, self)._get_dirty_data(force)
         dirty = self._dirty_traits
         if ('h1' in dirty or 'h2' in dirty) or force:
             datadict['tensors'] = dumps(dict(
@@ -231,7 +240,7 @@ class Mesh2DGrid(BaseMesh):
         return datadict
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(Mesh2DGrid, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
             files['Z'] = self.traits()['Z'].serialize(self.Z)
@@ -247,13 +256,28 @@ class Mesh2DGrid(BaseMesh):
             O=json['OUV']['O'],
             U=json['OUV']['U'],
             V=json['OUV']['V'],
-            Z=Array.download(
-                url=json['Z'],
-                shape=json['ZShape']//4,
-                dtype=json['ZType']
-            ),
             opts=json['meta']
         )
+        if json['ZExists']:
+            mesh.Z = Array.download(
+                url=json['Z'],
+                shape=json['ZSize']//4,
+                dtype=json['ZType']
+            )
+
+        return mesh
+
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh2DGrid(
+            h1=omf_geom.tensor_u,
+            h2=omf_geom.tensor_v,
+            O=omf_geom.origin + omf_project.origin,
+            U=omf_geom.axis_u,
+            V=omf_geom.axis_v
+        )
+        if omf_geom.offset_w is not None:
+            mesh.Z = omf_geom.offset_w.array
         return mesh
 
 

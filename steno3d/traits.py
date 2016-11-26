@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
-from six import integer_types, string_types, with_metaclass
 from tempfile import NamedTemporaryFile
 from warnings import warn
 
 import numpy as np
 from png import Reader
 from requests import get
+from six import integer_types, string_types, with_metaclass
 import traitlets as tr
 
 
@@ -133,7 +133,7 @@ class HasSteno3DTraits(with_metaclass(MetaDocTraits, DelayedValidator)):
                 raise KeyError('{}: Keyword input is not trait'.format(key))
         super(HasSteno3DTraits, self).__init__(**metadata)
 
-    @tr.observe()
+    @tr.observe(tr.All)
     def _mark_dirty(self, change):
         self._dirty_traits.add(change['name'])
 
@@ -196,9 +196,13 @@ class Steno3DTrait(object):
         if not isinstance(self, tr.TraitType):
             return ''
         return (
-            ':param {name}: {doc}\n:type {name}: {cls}'.format(
+            ':param {name}: {doc}{default}\n:type {name}: {cls}'.format(
                 name=name,
                 doc=self.help + self.sphinx_extra,
+                default=('' if (self.default_value is tr.Undefined or
+                                self.default_value is None or
+                                self.default_value in ([], {}, ''))
+                         else ', Default: ' + str(self.default_value)),
                 cls=self.sphinx_class
             )
         )
@@ -474,7 +478,12 @@ class Array(Steno3DTrait, tr.TraitType):
 
 
 class Vector(Array):
-    """A trait for 3D vectors"""
+    """A trait for 3D vectors
+
+    Must be a length-3 array. Int vectors are casted to Float vectors.
+    X, Y, and Z are also valid inputs. These correspond to [1., 0, 0],
+    [0, 1., 0], and [0, 0, 1.] respectively
+    """
 
     def __init__(self, **metadata):
         super(Vector, self).__init__(

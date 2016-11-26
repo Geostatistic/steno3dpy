@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import super
 from six import string_types
 
 from numpy import ndarray
@@ -70,7 +69,7 @@ class Mesh0D(BaseMesh):
         return proposal['value']
 
     def _get_dirty_files(self, force=False):
-        files = super()._get_dirty_files(force)
+        files = super(Mesh0D, self)._get_dirty_files(force)
         dirty = self._dirty_traits
         if 'vertices' in dirty or force:
             files['vertices'] = \
@@ -88,6 +87,15 @@ class Mesh0D(BaseMesh):
                 dtype=json['verticesType']
             ),
             opts=json['meta']
+        )
+        return mesh
+
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh0D(
+            vertices=(omf_geom.vertices.array +
+                      omf_geom.origin +
+                      omf_project.origin)
         )
         return mesh
 

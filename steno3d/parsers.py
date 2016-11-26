@@ -12,7 +12,7 @@ from os.path import expanduser as _expanduser
 from os.path import isfile as _isfile
 from os.path import realpath as _realpath
 
-from future.utils import with_metaclass as _with_metaclass
+from six import with_metaclass as _with_metaclass
 from six import string_types as _string_types
 
 from .project import Project as _Project
@@ -67,16 +67,12 @@ class BaseParser(_with_metaclass(_ParserMetaClass,
 
     extensions = (None,)
     file_name = _String(
-        help='The {} file to parse'.format(
-            '/'.join([str(e) for e in extensions])
-        )
+        help='The file to parse'
     )
     project = _KWInst(
         help='The project to parse file_name into',
         klass=_Project,
-        kw=dict(description='Project imported from {} ' 'file'.format(
-            '/'.join([str(e) for e in extensions])
-        ))
+        kw=dict(description='Project imported from parsed file')
     )
 
     def __init__(self, file_name):

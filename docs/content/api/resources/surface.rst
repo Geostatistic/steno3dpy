@@ -9,7 +9,7 @@ Surface
 
 Steno3D Surfaces are 2D resources. The steps to construct the surface resource
 pictured above can be found online in the
-`example notebooks <https://github.com/3ptscience/steno3dpy-notebooks>`_.
+`example notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
 
 .. autoclass:: steno3d.surface.Surface
 
@@ -31,7 +31,7 @@ and data, a :ref:`DataArray <resources_data>`.
     >> ...
     >> my_surf = steno3d.Surface(...)
     >> ...
-    >> my_surf = steno3d.DataArray(
+    >> my_data = steno3d.DataArray(
            title='Six Numbers',
            array=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
        )

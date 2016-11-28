@@ -14,7 +14,7 @@ docs:
 
 docker-docs:
 	docker build -t $(ORG)/$(APP) .
-	docker run -it -v $$(readlink ./docs):/usr/src/app/docs $(ORG)/$(APP) bash -c "cd docs && make html"
+	docker run -it -v $$(grealpath docs):/usr/src/app/docs $(ORG)/$(APP) bash -c "cd docs && make html"
 
 coverage:
 	nosetests --logging-level=INFO --with-coverage --cover-package=steno3d --cover-html

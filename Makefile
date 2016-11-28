@@ -1,3 +1,5 @@
+ORG=3ptscience
+APP=steno3dpy
 
 .PHONY: install publish docs coverage lint graphs tests
 
@@ -9,6 +11,10 @@ publish:
 
 docs:
 	cd docs && make html
+
+docker-docs:
+	docker build -t $(ORG)/$(APP) .
+	docker run -it -v $$(readlink ./docs):/usr/src/app/docs $(ORG)/$(APP) bash -c "cd docs && make html"
 
 coverage:
 	nosetests --logging-level=INFO --with-coverage --cover-package=steno3d --cover-html

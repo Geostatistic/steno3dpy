@@ -192,8 +192,6 @@ class TestResourceSurface(unittest.TestCase):
         myh1 = [5., 4., 3., 2., 1., 1., 1., 1., 2., 3., 4., 5.]
         myh2 = [1., 1., 1., 1., 2., 3., 4., 5.]
 
-        # This should error
-        # Well, it doesn't any more. Maybe that's ok?
         def f():
             P = steno3d.Project()
             S = steno3d.Surface(
@@ -206,8 +204,7 @@ class TestResourceSurface(unittest.TestCase):
                 opts={"opacity": 0.3, "color": "red"},
             )
 
-        # self.assertRaises(KeyError, f)
-        f()
+        self.assertRaises(KeyError, f)
 
         # This should be ok
         P = steno3d.Project()

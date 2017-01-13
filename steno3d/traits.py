@@ -544,7 +544,7 @@ class KeywordInstance(Steno3DTrait, tr.Instance):
         if isinstance(value, dict):
             try:
                 return self.klass(**value)
-            except:
+            except ValueError:
                 self.error(obj, value)
         try:
             return self.klass(value)

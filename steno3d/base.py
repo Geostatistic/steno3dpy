@@ -38,6 +38,10 @@ class UserContent(HasSteno3DTraits):
     )
     _sync = False
     _upload_data = None
+    _upload_size = 0
+    _upload_count = 0
+    _upload_total_size = 0
+    _upload_total_count = 0
 
     @classproperty
     @classmethod
@@ -57,21 +61,16 @@ class UserContent(HasSteno3DTraits):
             )
         return cls.__model_api_location
 
-    def _upload(self, sync=False, verbose=True, tab_level=''):
+    def _upload(self, **kwargs):
         if getattr(self, '_uploading', False):
             return
         try:
-            if verbose:
-                print(
-                    tab_level + ('Uploading '
-                                 if getattr(self, '_upload_data', None) is None
-                                 else 'Updating ') +
-                    self._resource_class + ': ' + self.title
-                )
+            verbose = kwargs.get('verbose', True)
+            sync = kwargs.get('sync', False)
             self._uploading = True
             pause()
             assert self.validate()
-            self._upload_dirty(sync, verbose, tab_level + '    ')
+            self._upload_dirty(**kwargs)
             if getattr(self, '_upload_data', None) is None:
                 self._post(
                     self._get_dirty_data(force=True),
@@ -84,8 +83,30 @@ class UserContent(HasSteno3DTraits):
                     self._put(dirty_data, dirty_files)
             self._mark_clean(recurse=False)
             self._sync = sync
-            if verbose:
-                print(tab_level + '... Complete!')
+            progress_callback = kwargs.get('progress_callback', None)
+            if verbose and progress_callback is None:
+                progress_callback = self._progress_report
+            if progress_callback is not None:
+                if (
+                        isinstance(self, BaseResource) and
+                        not isinstance(self, CompositeResource)
+                ):
+                    UserContent._upload_size += self._nbytes()
+                else:
+                    UserContent._upload_count += 1
+                progress = 0.9 * (
+                    UserContent._upload_size /
+                    UserContent._upload_total_size
+                ) + 0.1 * (
+                    UserContent._upload_count /
+                    UserContent._upload_total_count
+                )
+                message = 'Uploading: {cls} {title}'.format(
+                    cls=self._resource_class,
+                    title=self.title
+                )
+                progress_callback({'progress': progress, 'message': message})
+
         except Exception as err:
             if self._sync:
                 print('Upload failed, turning off syncing. To restart '
@@ -95,6 +116,12 @@ class UserContent(HasSteno3DTraits):
                 raise err
         finally:
             self._uploading = False
+
+    @staticmethod
+    def _progress_report(status):
+        print('\rTotal progress: {:>3}% - {}'.format(
+            int(round(status['progress']*100)), status['message']
+        ), end='')
 
     def _get_dirty_data(self, force=False):
         dirty = self._dirty_traits
@@ -108,13 +135,13 @@ class UserContent(HasSteno3DTraits):
     def _get_dirty_files(self, force=False):
         return {}
 
-    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
+    def _upload_dirty(self, **kwargs):
         pass
 
     @observe(All)
     def _on_property_change(self, change):
         if getattr(self, '_sync', False):
-            self._upload(self._sync)
+            self._upload(sync=self._sync)
 
     def _post(self, datadict=None, files=None):
         self._client_upload(Comms.post, 'api/' + self._model_api_location,
@@ -237,7 +264,7 @@ class BaseResource(UserContent):
         if Comms.user.logged_in:
             file_limit = Comms.user.file_size_limit
             if self._nbytes(arr) > file_limit:
-                raise ValueError(
+                raise ResourceSizeError(
                     '{name} file size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(name=name,
                                          file=self._nbytes(arr),
@@ -311,14 +338,14 @@ class CompositeResource(BaseResource):
             ])
         return datadict
 
-    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
+    def _upload_dirty(self, **kwargs):
         dirty = self._dirty
         if 'mesh' in dirty:
-            self.mesh._upload(sync, verbose, tab_level)
+            self.mesh._upload(**kwargs)
         if 'data' in dirty:
-            [d.data._upload(sync, verbose, tab_level) for d in self.data]
+            [d.data._upload(**kwargs) for d in self.data]
         if 'textures' in dirty:
-            [t._upload(sync, verbose, tab_level) for t in self.textures]
+            [t._upload(**kwargs) for t in self.textures]
 
     @observe('project')
     def _fix_proj_res(self, change):
@@ -484,3 +511,7 @@ class BaseTexture2D(BaseResource):
             cls.__model_api_location = 'resource/texture2d/{cls_name}'.format(
                 cls_name=cls._resource_class)
         return cls.__model_api_location
+
+
+class ResourceSizeError(Exception):
+    """Exception for exceeding size limits"""

@@ -106,7 +106,7 @@ class Texture2DImage(BaseTexture2D):
         tex = Texture2DImage(
             title=omf_tex.name,
             description=omf_tex.description,
-            origin=omf_tex.origin + omf_project.origin,
+            O=omf_tex.origin + omf_project.origin,
             U=omf_tex.axis_u,
             V=omf_tex.axis_v,
             image=omf_tex.image

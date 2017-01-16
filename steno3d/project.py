@@ -11,7 +11,7 @@ import six
 
 from traitlets import observe, Undefined, validate
 
-from .base import CompositeResource, UserContent
+from .base import CompositeResource, ResourceSizeError, UserContent
 from .client import Comms, needs_login, plot
 from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
 
@@ -55,8 +55,9 @@ class Project(UserContent):
         return url
 
     @needs_login
-    def upload(self, sync=False, verbose=True, print_url=True):
+    def upload(self, **kwargs):
         """Upload the project"""
+        verbose = kwargs.get('verbose', True)
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
 
@@ -69,9 +70,15 @@ class Project(UserContent):
                   'projects that are already uploaded. To make '
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
-        self._upload(sync, verbose)
+        UserContent._upload_size = 0
+        UserContent._upload_total_size = self._nbytes()
+        UserContent._upload_count = 0
+        UserContent._upload_total_count = len(self.resources) + 1
+        self._upload(**kwargs)
         self._trigger_ACL_fix()
-        if print_url:
+        if verbose:
+            print('\nComplete!')
+        if kwargs.get('print_url', True):
             print(self._url)
         return self._url
 
@@ -89,21 +96,24 @@ class Project(UserContent):
         self._validate_project_size()
         return True
 
+    def _nbytes(self):
+        return sum(r._nbytes() for r in self.resources)
+
     def _validate_project_size(self, res=None):
         if res is None:
             res = self.resources
         if Comms.user.logged_in:
             res_limit = Comms.user.project_resource_limit
             if len(res) > res_limit:
-                raise ValueError(
+                raise ResourceSizeError(
                     'Total number of resources in project ({res}) '
                     'exceeds limit: {lim}'.format(res=len(self.resources),
                                                   lim=res_limit)
                 )
             size_limit = Comms.user.project_size_limit
-            sz = sum(r._nbytes() for r in res)
+            sz = self._nbytes()
             if sz > size_limit:
-                raise ValueError(
+                raise ResourceSizeError(
                     'Total project size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(file=sz,
                                          lim=size_limit)
@@ -132,10 +142,10 @@ class Project(UserContent):
                     post_post += [r]
             self.resources = post_post
 
-    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
+    def _upload_dirty(self, **kwargs):
         dirty = self._dirty
         if 'resources' in dirty:
-            [r._upload(sync, verbose, tab_level) for r in self.resources]
+            [r._upload(**kwargs) for r in self.resources]
 
     def _get_dirty_data(self, force=False, initialize=False):
         datadict = super(Project, self)._get_dirty_data(force)
@@ -254,7 +264,7 @@ class Project(UserContent):
         if isinstance(omf_input, six.string_types):
             from omf import OMFReader
             omf_input = OMFReader(omf_input)
-        if not omf_input.__class__.__name__ == 'Project':
+        if omf_input.__class__.__name__ != 'Project':
             raise ValueError('input must be omf file or Project')
         return cls._build_from_omf(omf_input)
 

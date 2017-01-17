@@ -7,7 +7,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import input
 from builtins import str
 from functools import wraps
 from os import mkdir
@@ -16,6 +15,7 @@ from time import sleep
 
 import requests
 from six import string_types
+from six.moves import input
 from six.moves.urllib.parse import urlparse
 
 from .user import User
@@ -332,10 +332,7 @@ class _Comms(object):
         """Login with devel_key"""
         if devel_key is None:
             print(FIRST_LOGIN.format(base_url=self.base_url))
-            try:
-                devel_key = raw_input(DEVKEY_PROMPT)
-            except NameError:
-                devel_key = input(DEVKEY_PROMPT)
+            devel_key = input(DEVKEY_PROMPT)
         if not self.is_key(devel_key):
             print(BAD_API_KEY.format(base_url=self.base_url))
             return

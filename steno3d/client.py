@@ -7,7 +7,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import str
 from functools import wraps
 from os import mkdir
 from os import path
@@ -211,7 +210,7 @@ class _Comms(object):
 
         # Set endpoint
         if endpoint is not None:
-            self.base_url = str(endpoint)
+            self.base_url = endpoint
 
         # Check client version
         if not self._version_ok():

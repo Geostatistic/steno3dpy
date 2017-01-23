@@ -4,14 +4,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
-from traitlets import validate
+import properties
 
 from .base import CompositeResource
 from .options import ColorOptions
-from .traits import Array, KeywordInstance, Repeated
 
 from .point import Mesh0D, _PointBinder
+from .props import array_serializer, array_download
 
 
 class _VectorOptions(ColorOptions):
@@ -23,36 +22,41 @@ class Vector(CompositeResource):
 
     _resource_class = 'vector'
 
-    mesh = KeywordInstance(
-        help='Mesh',
-        klass=Mesh0D
+    mesh = properties.Instance(
+        doc='Mesh',
+        instance_class=Mesh0D,
+        auto_create=True,
     )
-    vectors = Array(
-        help='Vector',
+    vectors = properties.Array(
+        doc='Vector',
         shape=('*', 3),
-        dtype=float
+        dtype=float,
+        serializer=array_serializer,
+        deserializer=array_download,
     )
-    data = Repeated(
-        help='Data',
-        trait=KeywordInstance(klass=_PointBinder),
-        allow_none=True
+    data = properties.List(
+        doc='Data',
+        prop=_PointBinder,
+        coerce=True,
+        required=False,
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_VectorOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_VectorOptions,
+        auto_create=True,
+        required=False,
     )
 
     def _nbytes(self):
         return (self.mesh._nbytes() + self.vectors.astype('f4').nbytes +
                 sum(d.data._nbytes() for d in self.data))
 
-    @validate('data')
-    def _validate_data(self, proposal):
+    @properties.validator
+    def _validate_data(self):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(proposal['value']):
+        for ii, dat in enumerate(self.data):
             assert dat.location == 'N'
-            valid_length = proposal['owner'].mesh.nN
+            valid_length = self.mesh.nN
             if len(dat.data.array) != valid_length:
                 raise ValueError(
                     'point.data[{index}] length {datalen} does not match '
@@ -63,13 +67,13 @@ class Vector(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        return proposal['value']
+        return True
 
-    @validate('vectors')
-    def _validate_vectors(self, proposal):
+    @properties.validator
+    def _validate_vectors(self):
         """Check if vectors is built correctly"""
-        valid_length = proposal['owner'].mesh.nN
-        if len(proposal['value']) != valid_length:
+        valid_length = self.mesh.nN
+        if len(self.vectors) != valid_length:
             raise ValueError(
                 'vectors length {datalen} does not match '
                 'mesh vertex length {meshlen}'.format(
@@ -77,23 +81,23 @@ class Vector(CompositeResource):
                     meshlen=valid_length
                 )
             )
-        return proposal['value']
+        return True
 
     def _get_dirty_files(self, force=False):
         files = {}
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'vectors' in dirty or force:
             files['vectors'] = \
-                self.traits()['vectors'].serialize(self.vectors)
+                self._props['vectors'].serialize(self.vectors)
         return files
 
     @classmethod
     def _build_from_json(cls, json, **kwargs):
         vec = super(Vector, cls)._build_from_json(json, **kwargs)
-        vec.vectors = Array.download(
+        vec.vectors = cls._props['vectors'].deserialize(
             url=json['vectors'],
-            shape=(json['vectorsSize']//12, 3),
-            dtype=json['vectorsType']
+            # shape=(json['vectorsSize']//12, 3),
+            # dtype=json['vectorsType']
         )
         return vec
 

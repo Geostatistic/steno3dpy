@@ -9,27 +9,26 @@ from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
 from six import string_types
-from traitlets import observe, validate
+import properties
 
 from .base import BaseMesh
 from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import Options
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
+from .props import array_serializer, array_download, HasSteno3DProps
 
 
 class _Mesh1DOptions(Options):
-    view_type = String(
-        help='Display 1D lines or tubes/boreholes/extruded lines',
+    view_type = properties.StringChoice(
+        doc='Display 1D lines or tubes/boreholes/extruded lines',
         choices={
             'line': ('lines', 'thin', '1d'),
             'tube': ('tubes', 'extruded line', 'extruded lines',
                      'borehole', 'boreholes')
         },
-        default_value='line',
-        lowercase=True,
-        allow_none=True
+        default='line',
+        required=False
     )
 
 
@@ -39,20 +38,25 @@ class _LineOptions(ColorOptions):
 
 class Mesh1D(BaseMesh):
     """Contains spatial information of a 1D line set"""
-    vertices = Array(
-        help='Mesh vertices',
+    vertices = properties.Array(
+        doc='Mesh vertices',
         shape=('*', 3),
-        dtype=float
+        dtype=float,
+        serializer=array_serializer,
+        deserializer=array_download,
     )
-    segments = Array(
-        help='Segment endpoint indices',
+    segments = properties.Array(
+        doc='Segment endpoint indices',
         shape=('*', 2),
-        dtype=int
+        dtype=int,
+        serializer=array_serializer,
+        deserializer=array_download,
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_Mesh1DOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_Mesh1DOptions,
+        auto_create=True,
+        required=False,
     )
 
     @property
@@ -75,39 +79,29 @@ class Mesh1D(BaseMesh):
         raise ValueError('Mesh1D cannot calculate the number of '
                          'bytes of {}'.format(arr))
 
-    @observe('segments', 'vertices')
+    @properties.observer(('segments', 'vertices'))
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['name'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('segments')
-    def _validate_seg(self, proposal):
-        if npmin(proposal['value']) < 0:
+    @properties.validator
+    def _validate_seg(self):
+        if npmin(self.segments) < 0:
             raise ValueError('Segments may only have positive integers')
-        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
+        if npmax(self.segments) >= len(self.vertices):
             raise ValueError('Segments expects more vertices than provided')
-        proposal['owner']._validate_file_size('segments', proposal['value'])
-        return proposal['value']
-
-    @validate('vertices')
-    def _validate_vert(self, proposal):
-        if npmax(proposal['owner'].segments) >= len(proposal['value']):
-            raise ValueError('Segments expects more vertices than provided')
-        proposal['owner']._validate_file_size('vertices', proposal['value'])
-        return proposal['value']
+        self._validate_file_size('segments', self.segments)
+        self._validate_file_size('vertices', self.vertices)
+        return True
 
     def _get_dirty_files(self, force=False):
         files = super(Mesh1D, self)._get_dirty_files(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self.traits()['vertices'].serialize(self.vertices)
+                self._props['vertices'].serialize(self.vertices)
         if 'segments' in dirty or force:
             files['segments'] = \
-                self.traits()['segments'].serialize(self.segments)
+                self._props['segments'].serialize(self.segments)
         return files
 
     @classmethod
@@ -115,15 +109,15 @@ class Mesh1D(BaseMesh):
         mesh = Mesh1D(
             title=kwargs['title'],
             description=kwargs['description'],
-            vertices=Array.download(
+            vertices=cls._props['vertices'].deserialize(
                 url=json['vertices'],
-                shape=(json['verticesSize']//12, 3),
-                dtype=json['verticesType']
+                # shape=(json['verticesSize']//12, 3),
+                # dtype=json['verticesType']
             ),
-            segments=Array.download(
+            segments=cls._props['segments'].deserialize(
                 url=json['segments'],
-                shape=(json['segmentsSize']//8, 2),
-                dtype=json['segmentsType']
+                # shape=(json['segmentsSize']//8, 2),
+                # dtype=json['segmentsType']
             ),
             opts=json['meta']
         )
@@ -140,49 +134,53 @@ class Mesh1D(BaseMesh):
         return mesh
 
 
-class _LineBinder(HasSteno3DTraits):
+class _LineBinder(HasSteno3DProps):
     """Contains the data on a 1D line set with location information"""
-    location = String(
-        help='Location of the data on mesh',
+    location = properties.StringChoice(
+        doc='Location of the data on mesh',
         choices={
             'CC': ('LINE', 'FACE', 'CELLCENTER', 'EDGE', 'SEGMENT'),
             'N': ('VERTEX', 'NODE', 'ENDPOINT')
         }
     )
-    data = KeywordInstance(
-        help='Data',
-        klass=DataArray
+    data = properties.Instance(
+        doc='Data',
+        instance_class=DataArray,
+        auto_create=True,
     )
 
 
 class Line(CompositeResource):
     """Contains all the information about a 1D line set"""
-    mesh = KeywordInstance(
-        help='Mesh',
-        klass='Mesh1D'
+    mesh = properties.Instance(
+        doc='Mesh',
+        instance_class=Mesh1D,
+        auto_create=True,
     )
-    data = Repeated(
-        help='Data',
-        trait=KeywordInstance(klass=_LineBinder),
-        allow_none=True
+    data = properties.List(
+        doc='Data',
+        prop=_LineBinder,
+        coerce=True,
+        required=False,
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_LineOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_LineOptions,
+        auto_create=True,
+        required=False,
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @validate('data')
+    @properties.validator
     def _validate_data(self, proposal):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(proposal['value']):
+        for ii, dat in enumerate(self.data):
             assert dat.location in ('N', 'CC')
             valid_length = (
-                proposal['owner'].mesh.nC if dat.location == 'CC'
-                else proposal['owner'].mesh.nN
+                self.mesh.nC if dat.location == 'CC'
+                else self.mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -194,7 +192,7 @@ class Line(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        return proposal['value']
+        return True
 
 
 __all__ = ['Line', 'Mesh1D']

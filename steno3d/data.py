@@ -8,29 +8,30 @@ from __future__ import unicode_literals
 from six import string_types
 
 from numpy import ndarray
-from traitlets import observe, validate
+import properties
 
 from .base import BaseData
-from .traits import Array, String
+from .props import array_serializer, array_download
 
 
 class DataArray(BaseData):
     """Data array with unique values at every point in the mesh"""
     _resource_class = 'array'
-    array = Array(
-        help='Data, unique values at every point in the mesh',
+    array = properties.Array(
+        doc='Data, unique values at every point in the mesh',
         shape=('*',),
-        dtype=(float, int)
+        dtype=(float, int),
+        serializer=array_serializer,
+        deserializer=array_download,
     )
 
-    order = String(
-        help='Data array order, for data on grid meshes',
+    order = properties.StringChoice(
+        doc='Data array order, for data on grid meshes',
         choices={
             'c': ('C-STYLE', 'NUMPY', 'ROW-MAJOR', 'ROW'),
             'f': ('FORTRAN', 'MATLAB', 'COLUMN-MAJOR', 'COLUMN', 'COL')
         },
-        default_value='c',
-        lowercase=True
+        default='c',
     )
 
     def __init__(self, array=None, **kwargs):
@@ -46,31 +47,27 @@ class DataArray(BaseData):
         raise ValueError('DataArray cannot calculate the number of '
                          'bytes of {}'.format(arr))
 
-    @observe('array')
+    @properties.observer('array')
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['new'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('array')
-    def _validate_array(self, proposal):
-        proposal['owner']._validate_file_size('array', proposal['value'])
-        return proposal['value']
+    @properties.validator
+    def _validate_array(self):
+        self._validate_file_size('array', self.array)
+        return True
 
     def _get_dirty_data(self, force=False):
         datadict = super(DataArray, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'order' in dirty or force:
             datadict['order'] = self.order
         return datadict
 
     def _get_dirty_files(self, force=False):
         files = super(DataArray, self)._get_dirty_files(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'array' in dirty or force:
-            files['array'] = self.traits()['array'].serialize(self.array)
+            files['array'] = self._props['array'].serialize(self.array)
         return files
 
     @classmethod
@@ -79,10 +76,10 @@ class DataArray(BaseData):
             title=kwargs['title'],
             description=kwargs['description'],
             order=json['order'],
-            array=Array.download(
+            array=cls._props['array'].deserialize(
                 url=json['array'],
-                shape=json['arraySize']//4,
-                dtype=json['arrayType']
+                # shape=json['arraySize']//4,
+                # dtype=json['arrayType']
             )
         )
         return data

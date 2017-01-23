@@ -5,92 +5,68 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from .traits import HasSteno3DTraits, Int, String
+import properties
 
 
-class User(HasSteno3DTraits):
+class User(properties.HasProperties):
     """Class representing a user instance"""
     _model_api_location = "user"
 
-    email = String(
-        help='Email',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    email = properties.GettableProperty(
+        doc='Email',
     )
-    name = String(
-        help='Name',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    name = properties.GettableProperty(
+        doc='Name',
     )
-    url = String(
-        help='URL',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    url = properties.GettableProperty(
+        doc='URL',
     )
-    affiliation = String(
-        help='Affiliation',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    affiliation = properties.GettableProperty(
+        doc='Affiliation',
     )
-    location = String(
-        help='Location',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    location = properties.GettableProperty(
+        doc='Location',
     )
-    username = String(
-        help='Username',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    username = properties.GettableProperty(
+        doc='Username',
     )
 
-    devel_key = String(
-        help='Developer API Key',
-        default_value=None,
-        allow_none=True,
-        read_only=True
+    devel_key = properties.GettableProperty(
+        doc='Developer API Key',
     )
 
-    file_size_limit = Int(
-        help='Inidividual file limit',
-        default_value=5000000,
-        read_only=True
+    file_size_limit = properties.GettableProperty(
+        doc='Inidividual file limit',
+        default=5000000,
     )
-    project_size_limit = Int(
-        help='Project size limit',
-        default_value=25000000,
-        read_only=True
+    project_size_limit = properties.GettableProperty(
+        doc='Project size limit',
+        default=25000000,
     )
-    project_resource_limit = Int(
-        help='Maximum resources in a project',
-        default_value=25,
-        read_only=True
+    project_resource_limit = properties.GettableProperty(
+        doc='Maximum resources in a project',
+        default=25,
     )
 
     def login_with_json(self, login_json):
-        self.set_trait('username', login_json['uid'])
-        self.set_trait('email', login_json['email'])
-        self.set_trait('name', login_json['name'])
-        self.set_trait('url', login_json['url'])
-        self.set_trait('affiliation', login_json['affiliation'])
-        self.set_trait('location', login_json['location'])
+        self._backend['username'] = login_json['uid']
+        self._backend['email'] = login_json['email']
+        self._backend['name'] = login_json['name']
+        self._backend['url'] = login_json['url']
+        self._backend['affiliation'] = login_json['affiliation']
+        self._backend['location'] = login_json['location']
 
     def set_key(self, devel_key):
-        self.set_trait('devel_key', devel_key)
+        self._backend['devel_key'] = devel_key
 
     def logout(self):
-        self.set_trait('username', None)
-        self.set_trait('email', None)
-        self.set_trait('name', None)
-        self.set_trait('url', None)
-        self.set_trait('affiliation', None)
-        self.set_trait('location', None)
-        self.set_trait('devel_key', None)
+        self._backend.pop('username')
+        self._backend.pop('email')
+        self._backend.pop('name')
+        self._backend.pop('url')
+        self._backend.pop('affiliation')
+        self._backend.pop('location')
+        self._backend.pop('devel_key')
 
     @property
     def logged_in(self):

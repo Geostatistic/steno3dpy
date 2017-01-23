@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 from six import string_types
 
 from numpy import ndarray
-from traitlets import observe, validate
+import properties
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -16,7 +16,7 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import Options
 from .texture import Texture2DImage
-from .traits import Array, HasSteno3DTraits, KeywordInstance, Repeated, String
+from .props import array_serializer, array_download, HasSteno3DProps
 
 
 class _Mesh0DOptions(Options):
@@ -29,15 +29,18 @@ class _PointOptions(ColorOptions):
 
 class Mesh0D(BaseMesh):
     """Contains spatial information of a 0D point cloud."""
-    vertices = Array(
-        help='Point locations',
+    vertices = properties.Array(
+        doc='Point locations',
         shape=('*', 3),
-        dtype=float
+        dtype=float,
+        serializer=array_serializer,
+        deserializer=array_download,
     )
-    opts = KeywordInstance(
-        help='Mesh0D Options',
-        klass=_Mesh0DOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Mesh0D Options',
+        instance_class=_Mesh0DOptions,
+        auto_create=True,
+        required=False,
     )
 
     @property
@@ -54,26 +57,22 @@ class Mesh0D(BaseMesh):
         raise ValueError('Mesh0D cannot calculate the number of '
                          'bytes of {}'.format(arr))
 
-    @observe('vertices')
+    @properties.validator('vertices')
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['new'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('vertices')
-    def _validate_verts(self, proposal):
+    @properties.validator
+    def _validate_verts(self):
         """Check if mesh content is built correctly"""
-        proposal['owner']._validate_file_size('vertices', proposal['value'])
-        return proposal['value']
+        self._validate_file_size('vertices', self.vertices)
+        return True
 
     def _get_dirty_files(self, force=False):
         files = super(Mesh0D, self)._get_dirty_files(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self.traits()['vertices'].serialize(self.vertices)
+                self._props['vertices'].serialize(self.vertices)
         return files
 
     @classmethod
@@ -81,10 +80,10 @@ class Mesh0D(BaseMesh):
         mesh = Mesh0D(
             title=kwargs['title'],
             description=kwargs['description'],
-            vertices=Array.download(
+            vertices=cls._props['vertices'].deserialize(
                 url=json['vertices'],
-                shape=(json['verticesSize']//12, 3),
-                dtype=json['verticesType']
+                # shape=(json['verticesSize']//12, 3),
+                # dtype=json['verticesType']
             ),
             opts=json['meta']
         )
@@ -100,41 +99,46 @@ class Mesh0D(BaseMesh):
         return mesh
 
 
-class _PointBinder(HasSteno3DTraits):
+class _PointBinder(HasSteno3DProps):
     """Contains the data on a 0D point cloud"""
-    location = String(
-        help='Location of the data on mesh',
-        default_value='N',
+    location = properties.StringChoice(
+        doc='Location of the data on mesh',
+        default='N',
         choices={
             'N': ('NODE', 'CELLCENTER', 'CC', 'VERTEX')
         }
     )
-    data = KeywordInstance(
-        help='Data',
-        klass=DataArray
+    data = properties.Instance(
+        doc='Data',
+        instance_class=DataArray,
+        auto_create=True,
     )
 
 
 class Point(CompositeResource):
     """Contains all the information about a 0D point cloud"""
-    mesh = KeywordInstance(
-        help='Mesh',
-        klass=Mesh0D
+    mesh = properties.Instance(
+        doc='Mesh',
+        instance_class=Mesh0D,
+        auto_create=True,
     )
-    data = Repeated(
-        help='Data',
-        trait=KeywordInstance(klass=_PointBinder),
-        allow_none=True
+    data = properties.List(
+        doc='Data',
+        prop=_PointBinder,
+        coerce=True,
+        required=False,
     )
-    textures = Repeated(
-        help='Textures',
-        trait=KeywordInstance(klass=Texture2DImage),
-        allow_none=True
+    textures = properties.List(
+        doc='Textures',
+        prop=Texture2DImage,
+        coerce=True,
+        required=False,
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_PointOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_PointOptions,
+        auto_create=True,
+        required=False,
     )
 
     def _nbytes(self):
@@ -142,12 +146,12 @@ class Point(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @validate('data')
-    def _validate_data(self, proposal):
+    @properties.validator
+    def _validate_data(self):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(proposal['value']):
+        for ii, dat in enumerate(self.data):
             assert dat.location == 'N'
-            valid_length = proposal['owner'].mesh.nN
+            valid_length = self.mesh.nN
             if len(dat.data.array) != valid_length:
                 raise ValueError(
                     'point.data[{index}] length {datalen} does not match '
@@ -158,7 +162,7 @@ class Point(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        return proposal['value']
+        return True
 
 
 __all__ = ['Point', 'Mesh0D']

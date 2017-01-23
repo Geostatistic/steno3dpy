@@ -41,14 +41,14 @@ from .volume import *
 __version__ = '0.2.14b0'
 __author__ = '3point Science'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2016 3point Science'
+__copyright__ = 'Copyright 2017 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
 # register(logout)
 
 try:
-    del project, data, line, point, surface, texture, traits, volume
+    del project, data, line, point, surface, texture, props, volume
     del base, client, options, user
     del absolute_import, division, print_function, unicode_literals
     del register

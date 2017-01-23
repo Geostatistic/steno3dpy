@@ -8,12 +8,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import six
-
-from traitlets import observe, Undefined, validate
+import properties
 
 from .base import CompositeResource, ResourceSizeError, UserContent
 from .client import Comms, needs_login, plot
-from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
 
 
 QUOTA_REACHED = """
@@ -33,14 +31,15 @@ class Project(UserContent):
     """Steno3D top-level project"""
     _model_api_location = 'project/steno3d'
 
-    resources = Repeated(
-        help='Project Resources',
-        trait=KeywordInstance(klass=CompositeResource)
+    resources = properties.List(
+        doc='Project Resources',
+        prop=CompositeResource,
+        coerce=True,
     )
 
-    public = Bool(
-        help='Public visibility of project',
-        default_value=False
+    public = properties.Bool(
+        doc='Public visibility of project',
+        default=False
     )
 
     _public_online = None
@@ -85,10 +84,10 @@ class Project(UserContent):
     def _trigger_ACL_fix(self):
         self._put({})
 
-    @validate('resources')
-    def _validate_resources(self, proposal):
+    @properties.validator
+    def _validate_resources(self):
         """Check if project resource pointers are correct"""
-        for res in proposal['value']:
+        for res in self.resources:
             if self not in res.project:
                 raise ValueError('Project/resource pointers misaligned: '
                                  'Ensure that resources point to containing '
@@ -120,13 +119,13 @@ class Project(UserContent):
                 )
         return True
 
-    @observe('resources')
+    @properties.observer('resources')
     def _fix_proj_res(self, change):
-        before = change['old']
-        after = change['new']
-        if before in (None, Undefined):
+        before = change['previous']
+        after = change['value']
+        if before in (None, properties.undefined):
             before = []
-        if after in (None, Undefined):
+        if after in (None, properties.undefined):
             after = []
         for res in after:
             if res not in before and self not in res.project:
@@ -149,7 +148,7 @@ class Project(UserContent):
 
     def _get_dirty_data(self, force=False, initialize=False):
         datadict = super(Project, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'public' in dirty or force:
             datadict['public'] = self.public
         if ('resources' in dirty or force) and not initialize:
@@ -245,7 +244,7 @@ class Project(UserContent):
         )
         for longuid in json['resourceUids']:
             res_string = longuid.split('Resource')[-1].split(':')[0]
-            res_class = _REGISTRY[res_string]
+            res_class = UserContent._REGISTRY[res_string]
             proj.resources += [res_class._build(
                 src=longuid.split(':')[1],
                 copy=copy,
@@ -282,11 +281,15 @@ class Project(UserContent):
             'VolumeElement': 'Volume'
         }
         for elem in omf_project.elements:
-            res_class = _REGISTRY[resource_map[elem.__class__.__name__]]
+            res_class = UserContent._REGISTRY[
+                resource_map[elem.__class__.__name__]
+            ]
             proj.resources += [
                 res_class._build_from_omf(elem, omf_project, proj)
             ]
         return proj
+
+CompositeResource._props['project'].prop.instance_class = Project
 
 
 __all__ = ['Project']

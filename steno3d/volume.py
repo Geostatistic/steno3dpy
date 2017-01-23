@@ -8,15 +8,14 @@ from __future__ import unicode_literals
 from json import dumps
 from numpy import ndarray
 from six import string_types
-from traitlets import validate
+import properties
 
 from .base import BaseMesh
 from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
-from .traits import (Array, HasSteno3DTraits, KeywordInstance, Renamed,
-                     Repeated, String, Vector)
+from .props import HasSteno3DProps
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -30,42 +29,42 @@ class _VolumeOptions(ColorOptions):
 class Mesh3DGrid(BaseMesh):
     """Contains spatial information of a 3D grid volume."""
 
-    h1 = Array(
-        help='Tensor cell widths, x-direction',
+    h1 = properties.Array(
+        doc='Tensor cell widths, x-direction',
         shape=('*',),
         dtype=(float, int)
     )
-    h2 = Array(
-        help='Tensor cell widths, y-direction',
+    h2 = properties.Array(
+        doc='Tensor cell widths, y-direction',
         shape=('*',),
         dtype=(float, int)
     )
-    h3 = Array(
-        help='Tensor cell widths, z-direction',
+    h3 = properties.Array(
+        doc='Tensor cell widths, z-direction',
         shape=('*',),
         dtype=(float, int)
     )
-    x0 = Renamed('O')
-    O = Vector(
-        help='Origin vector',
-        default_value=[0., 0., 0.]
+    # x0 = Renamed('O')
+    O = properties.Vector3(
+        doc='Origin vector',
+        default=[0., 0., 0.]
     )
-    U = Vector(
-        help='Orientation of h1 axis',
-        default_value='X'
+    U = properties.Vector3(
+        doc='Orientation of h1 axis',
+        default='X'
     )
-    V = Vector(
-        help='Orientation of h2 axis',
-        default_value='Y'
+    V = properties.Vector3(
+        doc='Orientation of h2 axis',
+        default='Y'
     )
-    W = Vector(
-        help='Orientation of h3 axis',
-        default_value='Z'
+    W = properties.Vector3(
+        doc='Orientation of h3 axis',
+        default='Z'
     )
-    opts = KeywordInstance(
-        help='Mesh3D Options',
-        klass=_Mesh3DOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Mesh3D Options',
+        instance_class=_Mesh3DOptions,
+        required=False
     )
 
     @property
@@ -93,7 +92,7 @@ class Mesh3DGrid(BaseMesh):
 
     def _get_dirty_data(self, force=False):
         datadict = super(Mesh3DGrid, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty):
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -140,48 +139,54 @@ class Mesh3DGrid(BaseMesh):
         return mesh
 
 
-class _VolumeBinder(HasSteno3DTraits):
+class _VolumeBinder(HasSteno3DProps):
     """Contains the data on a 3D volume with location information"""
-    location = String(
-        help='Location of the data on mesh',
+    location = properties.StringChoice(
+        doc='Location of the data on mesh',
         choices={
             'CC': ('CELLCENTER'),
             # 'N': ('NODE', 'VERTEX', 'CORNER')
-        }
+        },
+        default='CC'
     )
-    data = KeywordInstance(
-        help='Data',
-        klass=DataArray
+    data = properties.Instance(
+        doc='Data',
+        instance_class=DataArray,
+        auto_create=True,
     )
 
 
 class Volume(CompositeResource):
     """Contains all the information about a 3D volume"""
-    mesh = KeywordInstance(
-        help='Mesh',
-        klass=Mesh3DGrid,
+    mesh = properties.Instance(
+        doc='Mesh',
+        instance_class=Mesh3DGrid,
+        auto_create=True,
     )
-    data = Repeated(
-        help='Data',
-        trait=KeywordInstance(klass=_VolumeBinder)
+    data = properties.List(
+        doc='Data',
+        prop=_VolumeBinder,
+        coerce=True,
+        required=False
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_VolumeOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_VolumeOptions,
+        auto_create=True,
+        required=False,
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
-    @validate('data')
-    def _validate_data(self, proposal):
+    @properties.validator
+    def _validate_data(self):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(proposal['value']):
+        for ii, dat in enumerate(self.data):
             assert dat.location == 'CC'  # in ('N', 'CC')
             valid_length = (
-                proposal['owner'].mesh.nC if dat.location == 'CC'
-                else proposal['owner'].mesh.nN
+                self.mesh.nC if dat.location == 'CC'
+                else self.mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -193,7 +198,7 @@ class Volume(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        return proposal['value']
+        return True
 
 
 __all__ = ['Volume', 'Mesh3DGrid']

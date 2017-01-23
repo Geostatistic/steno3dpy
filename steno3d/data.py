@@ -22,7 +22,7 @@ class DataArray(BaseData):
         shape=('*',),
         dtype=(float, int),
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*',), (float, int)),
     )
 
     order = properties.StringChoice(

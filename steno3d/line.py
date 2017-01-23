@@ -43,14 +43,14 @@ class Mesh1D(BaseMesh):
         shape=('*', 3),
         dtype=float,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*', 3), (float,)),
     )
     segments = properties.Array(
         doc='Segment endpoint indices',
         shape=('*', 2),
         dtype=int,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*', 2), (int,)),
     )
     opts = properties.Instance(
         doc='Options',

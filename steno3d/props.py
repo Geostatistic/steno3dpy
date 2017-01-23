@@ -76,7 +76,7 @@ class HasSteno3DProps(properties.HasProperties):
         return self._props
 
 
-def image_download(prop, url):
+def image_download(url, **kwargs):
     im_resp = get(url)
     if im_resp.status_code != 200:
         raise IOError('Failed to download image.')
@@ -93,7 +93,7 @@ FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
 
 
-def array_serializer(prop, data):
+def array_serializer(data, **kwargs):
     """Convert the array data to a serialized binary format"""
     if isinstance(data.flatten()[0], np.floating):
         use_dtype = '<f4'
@@ -113,14 +113,20 @@ def array_serializer(prop, data):
     data_file.seek(0)
     return FileProp(data_file, use_dtype)
 
-def array_download(prop, url):
-    arr_resp = get(url)
-    if arr_resp.status_code != 200:
-        raise IOError('Failed to download array.')
-    data_file = NamedTemporaryFile()
-    for chunk in arr_resp:
-        data_file.write(chunk)
-    data_file.seek(0)
-    arr = np.fromfile(data_file.file, prop.dtype).reshape(prop.shape)
-    data_file.close()
-    return arr
+class array_download(object):
+
+    def __init__(self, shape, dtype):
+        self.shape = shape
+        self.dtype = dtype
+
+    def __call__(self, url, **kwargs):
+        arr_resp = get(url)
+        if arr_resp.status_code != 200:
+            raise IOError('Failed to download array.')
+        data_file = NamedTemporaryFile()
+        for chunk in arr_resp:
+            data_file.write(chunk)
+        data_file.seek(0)
+        arr = np.fromfile(data_file.file, self.dtype).reshape(self.shape)
+        data_file.close()
+        return arr

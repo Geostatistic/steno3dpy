@@ -34,7 +34,7 @@ class Mesh0D(BaseMesh):
         shape=('*', 3),
         dtype=float,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*', 3), (float,)),
     )
     opts = properties.Instance(
         doc='Mesh0D Options',

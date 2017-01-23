@@ -41,14 +41,14 @@ class Mesh2D(BaseMesh):
         shape=('*', 3),
         dtype=float,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*', 3), (float,)),
     )
     triangles = properties.Array(
         doc='Mesh triangle vertex indices',
         shape=('*', 3),
         dtype=int,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*', 3), (int,)),
     )
     opts = properties.Instance(
         doc='Mesh2D Options',
@@ -164,7 +164,7 @@ class Mesh2DGrid(BaseMesh):
         default=[],
         required=False,
         serializer=array_serializer,
-        deserializer=array_download,
+        deserializer=array_download(('*',), (float,)),
     )
     opts = properties.Instance(
         doc='Mesh2D Options',

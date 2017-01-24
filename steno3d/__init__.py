@@ -45,11 +45,12 @@ __copyright__ = 'Copyright 2017 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
+user = client.Comms.user
 # register(logout)
 
 try:
     del project, data, line, point, surface, texture, props, volume
-    del base, client, options, user
+    del base, client, options
     del absolute_import, division, print_function, unicode_literals
     del register
 except NameError:

@@ -44,7 +44,6 @@ class Vector(CompositeResource):
         doc='Options',
         instance_class=_VectorOptions,
         auto_create=True,
-        required=False,
     )
 
     def _nbytes(self):

@@ -54,7 +54,6 @@ class Mesh2D(BaseMesh):
         doc='Mesh2D Options',
         instance_class=_Mesh2DOptions,
         auto_create=True,
-        required=False,
     )
 
     @property
@@ -170,7 +169,6 @@ class Mesh2DGrid(BaseMesh):
         doc='Mesh2D Options',
         instance_class=_Mesh2DOptions,
         auto_create=True,
-        required=False,
     )
 
     @property
@@ -227,8 +225,8 @@ class Mesh2DGrid(BaseMesh):
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
                 O=self.O.tolist(),
-                U=Vector.as_length(self.U, self.h1.sum()).tolist(),
-                V=Vector.as_length(self.V, self.h2.sum()).tolist()
+                U=self.U.as_length(self.h1.sum()).tolist(),
+                V=self.V.as_length(self.h2.sum()).tolist(),
             ))
         return datadict
 
@@ -315,7 +313,6 @@ class Surface(CompositeResource):
         doc='Options',
         instance_class=_SurfaceOptions,
         auto_create=True,
-        required=False,
     )
 
     def _nbytes(self):

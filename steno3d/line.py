@@ -56,7 +56,6 @@ class Mesh1D(BaseMesh):
         doc='Options',
         instance_class=_Mesh1DOptions,
         auto_create=True,
-        required=False,
     )
 
     @property
@@ -167,14 +166,13 @@ class Line(CompositeResource):
         doc='Options',
         instance_class=_LineOptions,
         auto_create=True,
-        required=False,
     )
 
     def _nbytes(self):
         return self.mesh._nbytes() + sum(d.data._nbytes() for d in self.data)
 
     @properties.validator
-    def _validate_data(self, proposal):
+    def _validate_data(self):
         """Check if resource is built correctly"""
         for ii, dat in enumerate(self.data):
             assert dat.location in ('N', 'CC')

@@ -44,7 +44,7 @@ class Mesh3DGrid(BaseMesh):
         shape=('*',),
         dtype=(float, int)
     )
-    # x0 = Renamed('O')
+    x0 = properties.Renamed('O')
     O = properties.Vector3(
         doc='Origin vector',
         default=[0., 0., 0.]
@@ -64,7 +64,7 @@ class Mesh3DGrid(BaseMesh):
     opts = properties.Instance(
         doc='Mesh3D Options',
         instance_class=_Mesh3DOptions,
-        required=False
+        auto_create=True,
     )
 
     @property
@@ -103,9 +103,9 @@ class Mesh3DGrid(BaseMesh):
                          ['O', 'U', 'V', 'W', 'h1', 'h2', 'h3']]):
             datadict['OUVZ'] = dumps(dict(
                 O=self.O.tolist(),
-                U=Vector.as_length(self.U, self.h1.sum()).tolist(),
-                V=Vector.as_length(self.V, self.h2.sum()).tolist(),
-                Z=Vector.as_length(self.W, self.h3.sum()).tolist()
+                U=self.U.as_length(self.h1.sum()).tolist(),
+                V=self.V.as_length(self.h2.sum()).tolist(),
+                Z=self.W.as_length(self.h3.sum()).tolist()
             ))
         return datadict
 
@@ -173,7 +173,6 @@ class Volume(CompositeResource):
         doc='Options',
         instance_class=_VolumeOptions,
         auto_create=True,
-        required=False,
     )
 
     def _nbytes(self):

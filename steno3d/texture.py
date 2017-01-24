@@ -52,7 +52,7 @@ class Texture2DImage(BaseTexture2D):
         self._validate_file_size(change['name'], change['value'])
 
     @properties.validator
-    def _validate_image(self, proposal):
+    def _validate_image(self):
         self._validate_file_size('image', self.image)
         return True
 

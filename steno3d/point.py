@@ -40,7 +40,6 @@ class Mesh0D(BaseMesh):
         doc='Mesh0D Options',
         instance_class=_Mesh0DOptions,
         auto_create=True,
-        required=False,
     )
 
     @property
@@ -138,7 +137,6 @@ class Point(CompositeResource):
         doc='Options',
         instance_class=_PointOptions,
         auto_create=True,
-        required=False,
     )
 
     def _nbytes(self):

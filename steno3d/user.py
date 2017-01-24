@@ -60,13 +60,13 @@ class User(properties.HasProperties):
         self._backend['devel_key'] = devel_key
 
     def logout(self):
-        self._backend.pop('username')
-        self._backend.pop('email')
-        self._backend.pop('name')
-        self._backend.pop('url')
-        self._backend.pop('affiliation')
-        self._backend.pop('location')
-        self._backend.pop('devel_key')
+        self._backend.pop('username', None)
+        self._backend.pop('email', None)
+        self._backend.pop('name', None)
+        self._backend.pop('url', None)
+        self._backend.pop('affiliation', None)
+        self._backend.pop('location', None)
+        self._backend.pop('devel_key', None)
 
     @property
     def logged_in(self):

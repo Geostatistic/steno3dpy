@@ -31,6 +31,7 @@ setup(
                         'requests',
                         'six',
                         'properties',
+                        'vectormath',
                        ],
     author = '3point Science',
     author_email = 'info@3ptscience.com',

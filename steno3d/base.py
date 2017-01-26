@@ -107,7 +107,7 @@ class UserContent(HasSteno3DProps):
                 progress_callback({'progress': progress, 'message': message})
 
         except Exception as err:
-            if self._sync:
+            if self._sync and verbose:
                 print('Upload failed, turning off syncing. To restart '
                       'syncing, upload() again.')
                 self._sync = False
@@ -221,24 +221,28 @@ class UserContent(HasSteno3DProps):
 
     @classmethod
     def _build(cls, src, copy=True, tab_level='', **kwargs):
+        verbose = kwargs.get('verbose', True)
         if isinstance(src, properties.HasProperties):
             raise NotImplementedError('Copying instances not supported')
-        print('{tl}Downloading {cls}'.format(
-            tl=tab_level,
-            cls=cls._resource_class
-        ), end=': ')
+        if verbose:
+            print('{tl}Downloading {cls}'.format(
+                tl=tab_level,
+                cls=cls._resource_class
+            ), end=': ')
         if isinstance(src, string_types):
             json = cls._json_from_uid(src)
         else:
             json = src
         title = '' if json['title'] is None else json['title']
         desc = '' if json['description'] is None else json['description']
-        print(title)
+        if verbose:
+            print(title)
         res = cls._build_from_json(json, copy=copy, tab_level=tab_level,
                                    title=title, description=desc, **kwargs)
         if not copy:
             res._upload_data = json
-        print('{}...Complete!'.format(tab_level))
+        if verbose:
+            print('{}...Complete!'.format(tab_level))
         return res
 
     @classmethod
@@ -310,7 +314,7 @@ class CompositeResource(BaseResource):
         """Upload the resource through its containing project(s)"""
         for proj in self.project:
             proj.upload(sync, verbose, False)
-        if print_url:
+        if verbose and print_url:
             print(self._url)
         return self._url
 
@@ -438,7 +442,7 @@ class CompositeResource(BaseResource):
         return res
 
     @classmethod
-    def _build_from_omf(cls, omf_element, omf_project, project):
+    def _build_from_omf(cls, omf_element, omf_project, project, verbose=False):
         mesh_map = {
             'PointSetGeometry': 'Mesh0D',
             'LineSetGeometry': 'Mesh1D',
@@ -468,9 +472,10 @@ class CompositeResource(BaseResource):
             res.data = []
             for dat in omf_element.data:
                 if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
-                    print('Data of class {} ignored'.format(
-                        dat.__class__.__name__
-                    ))
+                    if verbose:
+                        print('Data of class {} ignored'.format(
+                            dat.__class__.__name__
+                        ))
                     continue
                 res.data += [
                     UserContent._REGISTRY['DataArray']._build_from_omf(dat)

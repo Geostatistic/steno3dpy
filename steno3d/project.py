@@ -77,7 +77,7 @@ class Project(UserContent):
         self._trigger_ACL_fix()
         if verbose:
             print('\nComplete!')
-        if kwargs.get('print_url', True):
+        if verbose and kwargs.get('print_url', True):
             print(self._url)
         return self._url
 
@@ -205,12 +205,14 @@ class Project(UserContent):
         return plot(self._url)
 
     @classmethod
-    def _build(cls, uid, copy=True, tab_level=''):
-        print('Downloading project', end=': ')
+    def _build(cls, uid, copy=True, tab_level='', verbose=True):
+        if verbose:
+            print('Downloading project', end=': ')
         json = cls._json_from_uid(uid)
         title = '' if json['title'] is None else json['title']
         desc = '' if json['description'] is None else json['description']
-        print(title)
+        if verbose:
+            print(title)
         pub = False
         for a in json['access']:
             if a['user'] == 'Special:PUBLIC':
@@ -221,11 +223,11 @@ class Project(UserContent):
             copy = not is_owner
         elif not copy and not is_owner:
             copy = True
-        if copy:
+        if copy and verbose:
             print('This is a copy of the {pub} project'.format(
                 pub='PUBLIC' if pub else 'private'
             ))
-        else:
+        elif verbose:
             print('This is the original version of the {pub} project'.format(
                 pub='PUBLIC' if pub else 'private'
             ))
@@ -255,7 +257,8 @@ class Project(UserContent):
             proj._public_online = pub
             proj._upload_data = json
             proj._mark_clean()
-        print('... Complete!')
+        if verbose:
+            print('... Complete!')
         return proj
 
     @classmethod

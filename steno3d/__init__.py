@@ -29,6 +29,7 @@ from atexit import register
 from . import parsers
 from . import query
 from . import client
+from .base import ResourceSizeError
 from .project import *
 from .data import *
 from .line import *

@@ -37,11 +37,11 @@ class User(properties.HasProperties):
 
     file_size_limit = properties.GettableProperty(
         doc='Inidividual file limit',
-        default=5000000,
+        default=25000000,
     )
     project_size_limit = properties.GettableProperty(
         doc='Project size limit',
-        default=25000000,
+        default=100000000,
     )
     project_resource_limit = properties.GettableProperty(
         doc='Maximum resources in a project',

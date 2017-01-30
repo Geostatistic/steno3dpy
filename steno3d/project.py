@@ -69,6 +69,8 @@ class Project(UserContent):
                   'projects that are already uploaded. To make '
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
+        if verbose:
+            print('\rStarting upload: {}'.format(self.title), end='')
         UserContent._upload_size = 0
         UserContent._upload_total_size = self._nbytes()
         UserContent._upload_count = 0

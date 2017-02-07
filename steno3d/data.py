@@ -78,8 +78,6 @@ class DataArray(BaseData):
             order=json['order'],
             array=cls._props['array'].deserialize(
                 json['array'],
-                # shape=json['arraySize']//4,
-                # dtype=json['arrayType']
             )
         )
         return data

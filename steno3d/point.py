@@ -81,8 +81,6 @@ class Mesh0D(BaseMesh):
             description=kwargs['description'],
             vertices=cls._props['vertices'].deserialize(
                 json['vertices'],
-                # shape=(json['verticesSize']//12, 3),
-                # dtype=json['verticesType']
             ),
             opts=json['meta']
         )

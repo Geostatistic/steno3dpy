@@ -95,8 +95,6 @@ class Vector(CompositeResource):
         vec = super(Vector, cls)._build_from_json(json, **kwargs)
         vec.vectors = cls._props['vectors'].deserialize(
             json['vectors'],
-            # shape=(json['vectorsSize']//12, 3),
-            # dtype=json['vectorsType']
         )
         return vec
 

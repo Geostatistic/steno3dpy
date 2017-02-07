@@ -108,13 +108,9 @@ class Mesh2D(BaseMesh):
             description=kwargs['description'],
             vertices=cls._props['vertices'].deserialize(
                 json['vertices'],
-                # shape=(json['verticesSize']//12, 3),
-                # dtype=json['verticesType']
             ),
             triangles=cls._props['triangles'].deserialize(
                 json['triangles'],
-                # shape=(json['trianglesSize']//12, 3),
-                # dtype=json['trianglesType']
             ),
             opts=json['meta']
         )
@@ -252,8 +248,6 @@ class Mesh2DGrid(BaseMesh):
         if json['ZExists']:
             mesh.Z = cls._props['Z'].deserialize(
                 json['Z'],
-                # shape=json['ZSize']//4,
-                # dtype=json['ZType']
             )
 
         return mesh

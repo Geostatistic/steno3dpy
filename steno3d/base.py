@@ -264,15 +264,14 @@ class BaseResource(UserContent):
 
 
     def _validate_file_size(self, name, arr):
-        if Comms.user.logged_in:
-            file_limit = Comms.user.file_size_limit
-            if self._nbytes(arr) > file_limit:
-                raise ResourceSizeError(
-                    '{name} file size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(name=name,
-                                         file=self._nbytes(arr),
-                                         lim=file_limit)
-                )
+        file_limit = Comms.user.file_size_limit
+        if self._nbytes(arr) > file_limit:
+            raise ResourceSizeError(
+                '{name} file size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(name=name,
+                                     file=self._nbytes(arr),
+                                     lim=file_limit)
+            )
         return True
 
 
@@ -308,6 +307,7 @@ class CompositeResource(BaseResource):
                                  'Ensure that projects contain all the '
                                  'resources that point to them.')
         return True
+
 
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
@@ -489,6 +489,17 @@ class BaseMesh(BaseResource):
     each composite resources and define its structure
     """
 
+    @properties.validator
+    def _validate_mesh(self):
+        file_limit = Comms.user.file_size_limit
+        if self._nbytes() > file_limit:
+            raise ResourceSizeError(
+                '{name} size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(name=self.__class__.__name__,
+                                     file=self._nbytes(),
+                                     lim=file_limit)
+            )
+        return True
 
 class BaseData(BaseResource):
     """Base class for all data resources. These can be contained within

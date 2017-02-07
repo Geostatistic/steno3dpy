@@ -103,22 +103,21 @@ class Project(UserContent):
     def _validate_project_size(self, res=None):
         if res is None:
             res = self.resources
-        if Comms.user.logged_in:
-            res_limit = Comms.user.project_resource_limit
-            if len(res) > res_limit:
-                raise ResourceSizeError(
-                    'Total number of resources in project ({res}) '
-                    'exceeds limit: {lim}'.format(res=len(self.resources),
-                                                  lim=res_limit)
-                )
-            size_limit = Comms.user.project_size_limit
-            sz = self._nbytes()
-            if sz > size_limit:
-                raise ResourceSizeError(
-                    'Total project size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(file=sz,
-                                         lim=size_limit)
-                )
+        res_limit = Comms.user.project_resource_limit
+        if len(res) > res_limit:
+            raise ResourceSizeError(
+                'Total number of resources in project ({res}) '
+                'exceeds limit: {lim}'.format(res=len(self.resources),
+                                              lim=res_limit)
+            )
+        size_limit = Comms.user.project_size_limit
+        sz = self._nbytes()
+        if sz > size_limit:
+            raise ResourceSizeError(
+                'Total project size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(file=sz,
+                                     lim=size_limit)
+            )
         return True
 
     @properties.observer('resources')

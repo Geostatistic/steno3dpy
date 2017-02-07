@@ -71,9 +71,8 @@ class HasSteno3DProps(properties.HasProperties):
         return self._dirty_props.union(dirty_instances)
 
     def _non_deprecated_props(self):
-        # return {k: v for k, v in self._props.items()
-        #         if not isinstance(v, Renamed)}
-        return self._props
+        return {k: v for k, v in self._props.items()
+                if not isinstance(v, properties.Renamed)}
 
 
 def image_download(url, **kwargs):
@@ -127,6 +126,27 @@ class array_download(object):
         for chunk in arr_resp:
             data_file.write(chunk)
         data_file.seek(0)
-        arr = np.fromfile(data_file.file, self.dtype).reshape(self.shape)
+        if self.dtype[0] is int:
+            dtype = '<i4'
+        elif self.dtype[0] is float:
+            dtype = '<f4'
+        else:
+            raise ValueError('Invalid dtype {}'.format(self.dtype))
+        arr = np.fromfile(data_file.file, dtype)
+        unknown_dim = len(arr)
+        for dim in self.shape:
+            if dim == '*':
+                continue
+            unknown_dim /= dim
+        if '*' in self.shape:
+            assert abs(unknown_dim - int(unknown_dim)) < 1e-9, 'bad shape'
+            shape = tuple(
+                (int(unknown_dim) if dim == '*' else dim for dim in self.shape)
+            )
+        else:
+            assert abs(unknown_dim) < 1e-9, 'bad shape'
+            shape = self.shape
+        arr = arr.reshape(shape)
         data_file.close()
         return arr
+

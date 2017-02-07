@@ -77,7 +77,7 @@ class DataArray(BaseData):
             description=kwargs['description'],
             order=json['order'],
             array=cls._props['array'].deserialize(
-                url=json['array'],
+                json['array'],
                 # shape=json['arraySize']//4,
                 # dtype=json['arrayType']
             )

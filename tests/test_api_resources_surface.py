@@ -224,6 +224,10 @@ class TestResourceSurface(unittest.TestCase):
         self.assertRaises(ValueError,
                           setattr(S, 'x0', [[0., 0., 0.], [1., 1., 1.]]))
 
+        assert len(S._dirty) == 3
+        S._mark_clean()
+        assert len(S._dirty) == 0
+
     def test_teapot(self):
         teapot = Teapot.fetch_data(filename='teapot.json',
                                    verbose=False, directory='.')

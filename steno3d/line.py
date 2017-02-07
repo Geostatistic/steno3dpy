@@ -109,12 +109,12 @@ class Mesh1D(BaseMesh):
             title=kwargs['title'],
             description=kwargs['description'],
             vertices=cls._props['vertices'].deserialize(
-                url=json['vertices'],
+                json['vertices'],
                 # shape=(json['verticesSize']//12, 3),
                 # dtype=json['verticesType']
             ),
             segments=cls._props['segments'].deserialize(
-                url=json['segments'],
+                json['segments'],
                 # shape=(json['segmentsSize']//8, 2),
                 # dtype=json['segmentsType']
             ),

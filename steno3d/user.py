@@ -45,7 +45,7 @@ class User(properties.HasProperties):
     )
     project_resource_limit = properties.GettableProperty(
         doc='Maximum resources in a project',
-        default=25,
+        default=100,
     )
 
     def login_with_json(self, login_json):

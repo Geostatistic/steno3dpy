@@ -21,7 +21,7 @@ def _query(url, queue=10, verbose=True):
         resp = Comms.get('{url}?brief=True&num={n}&cursor={c}'.format(
             url=url, n=queue, c=cursor
         ))
-        rjson = resp.json()
+        rjson = resp['json']
         cursor = rjson['cursor']
         more = rjson['more']
         for proj in rjson['data']:

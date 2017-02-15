@@ -30,7 +30,7 @@ setup(
                         'pypng',
                         'requests',
                         'six',
-                        'properties',
+                        'properties>=0.3.1',
                         'vectormath',
                        ],
     author = '3point Science',

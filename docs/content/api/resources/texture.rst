@@ -19,19 +19,19 @@ list of textures.
     >> ...
     >> my_surface = steno3d.Surface(...)
     >> ...
-    >> my_tex_1 = steno3d.Texture2dImage(
+    >> my_tex_1 = steno3d.Texture2DImage(
            O=[0.0, 0.0, 0.0],
            U=[1.0, 0.0, 0.0],
            V=[0.0, 1.0, 0.0],
            image='image1.png'
        )
-    >> my_tex_2 = steno3d.Texture2dImage(
+    >> my_tex_2 = steno3d.Texture2DImage(
            O=[0.0, 0.0, 0.0],
            U=[1.0, 0.0, 0.0],
            V=[0.0, 0.0, 1.0],
            image='image2.png'
        )
-    >> my_surface.texutures = [
+    >> my_surface.textures = [
            my_tex_1,
            my_tex_2
        ]

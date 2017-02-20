@@ -39,7 +39,7 @@ from .texture import *
 from .vector import *
 from .volume import *
 
-__version__ = '0.2.14b0'
+__version__ = '0.2.14'
 __author__ = '3point Science'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017 3point Science'

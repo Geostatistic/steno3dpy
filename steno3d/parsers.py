@@ -12,7 +12,7 @@ from os.path import expanduser as _expanduser
 from os.path import isfile as _isfile
 from os.path import realpath as _realpath
 
-from future.utils import with_metaclass as _with_metaclass
+from six import with_metaclass as _with_metaclass
 from six import string_types as _string_types
 
 from .project import Project as _Project

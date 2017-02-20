@@ -35,9 +35,10 @@ from .line import *
 from .point import *
 from .surface import *
 from .texture import *
+from .vector import *
 from .volume import *
 
-__version__ = '0.2.13'
+__version__ = '0.2.14'
 __author__ = '3point Science'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2016 3point Science'

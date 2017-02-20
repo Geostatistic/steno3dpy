@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from functools import wraps
 from io import BytesIO
-from six import integer_types, string_types, with_metaclass
 from tempfile import NamedTemporaryFile
 from warnings import warn
 
 import numpy as np
 from png import Reader
 from requests import get
+from six import integer_types, string_types, with_metaclass
 import traitlets as tr
 
 

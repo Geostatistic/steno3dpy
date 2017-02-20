@@ -410,6 +410,46 @@ class CompositeResource(BaseResource):
 
         return res
 
+    @classmethod
+    def _build_from_omf(cls, omf_element, omf_project, project):
+        mesh_map = {
+            'PointSetGeometry': 'Mesh0D',
+            'LineSetGeometry': 'Mesh1D',
+            'SurfaceGeometry': 'Mesh2D',
+            'SurfaceGridGeometry': 'Mesh2DGrid',
+            'VolumeGridGeometry': 'Mesh3DGrid'
+        }
+        mesh_class = _REGISTRY[mesh_map[
+            omf_element.geometry.__class__.__name__
+        ]]
+        res = cls(
+            project=project,
+            title=omf_element.name,
+            description=omf_element.description,
+            mesh=mesh_class._build_from_omf(omf_element.geometry, omf_project),
+            opts={'color': omf_element.color}
+        )
+        if hasattr(omf_element, 'textures'):
+            res.textures = []
+            for tex in omf_element.textures:
+                res.textures += [
+                    _REGISTRY['Texture2DImage']._build_from_omf(tex,
+                                                                omf_project)
+                ]
+        if hasattr(omf_element, 'data'):
+            res.data = []
+            for dat in omf_element.data:
+                if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
+                    print('Data of class {} ignored'.format(
+                        dat.__class__.__name__
+                    ))
+                    continue
+                res.data += [
+                    _REGISTRY['DataArray']._build_from_omf(dat)
+                ]
+        return res
+
+
 
 class BaseMesh(BaseResource):
     """Base class for all mesh resources. These are contained within

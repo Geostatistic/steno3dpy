@@ -15,8 +15,8 @@ from .base import CompositeResource
 from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
-from .traits import (Array, HasSteno3DTraits, KeywordInstance, Repeated,
-                     String, Vector)
+from .traits import (Array, HasSteno3DTraits, KeywordInstance, Renamed,
+                     Repeated, String, Vector)
 
 
 class _Mesh3DOptions(MeshOptions):
@@ -45,9 +45,22 @@ class Mesh3DGrid(BaseMesh):
         shape=('*',),
         dtype=(float, int)
     )
-    x0 = Vector(
+    x0 = Renamed('O')
+    O = Vector(
         help='Origin vector',
         default_value=[0., 0., 0.]
+    )
+    U = Vector(
+        help='Orientation of h1 axis',
+        default_value='X'
+    )
+    V = Vector(
+        help='Orientation of h2 axis',
+        default_value='Y'
+    )
+    W = Vector(
+        help='Orientation of h3 axis',
+        default_value='Z'
     )
     opts = KeywordInstance(
         help='Mesh3D Options',
@@ -66,7 +79,7 @@ class Mesh3DGrid(BaseMesh):
         return len(self.h1) * len(self.h2) * len(self.h3)
 
     def _nbytes(self, arr=None):
-        filenames = ('h1', 'h2', 'h3', 'x0')
+        filenames = ('h1', 'h2', 'h3', 'O', 'U', 'V', 'W')
         if arr is None:
             return sum(self._nbytes(fn) for fn in filenames)
         if isinstance(arr, string_types) and arr in filenames:
@@ -87,13 +100,13 @@ class Mesh3DGrid(BaseMesh):
                 h2=self.h2.tolist(),
                 h3=self.h3.tolist()
             ))
-        if force or ('h1' in dirty or 'h2' in dirty or 'h3' in dirty or
-                     'x0' in dirty):
+        if force or any([item in dirty for item in
+                         ['O', 'U', 'V', 'W', 'h1', 'h2', 'h3']]):
             datadict['OUVZ'] = dumps(dict(
-                O=self.x0.tolist(),
-                U=[self.h1.sum().astype(float), 0, 0],
-                V=[0, self.h2.sum().astype(float), 0],
-                Z=[0, 0, self.h3.sum().astype(float)]
+                O=self.O.tolist(),
+                U=Vector.as_length(self.U, self.h1.sum()).tolist(),
+                V=Vector.as_length(self.V, self.h2.sum()).tolist(),
+                Z=Vector.as_length(self.W, self.h3.sum()).tolist()
             ))
         return datadict
 
@@ -105,8 +118,24 @@ class Mesh3DGrid(BaseMesh):
             h1=json['tensors']['h1'],
             h2=json['tensors']['h2'],
             h3=json['tensors']['h3'],
-            x0=json['OUVZ']['O'],
+            O=json['OUVZ']['O'],
+            U=json['OUVZ']['U'],
+            V=json['OUVZ']['V'],
+            W=json['OUVZ']['Z'],
             opts=json['meta']
+        )
+        return mesh
+
+    @classmethod
+    def _build_from_omf(cls, omf_geom, omf_project):
+        mesh = Mesh3DGrid(
+            h1=omf_geom.tensor_u,
+            h2=omf_geom.tensor_v,
+            h3=omf_geom.tensor_w,
+            O=omf_geom.origin + omf_project.origin,
+            U=omf_geom.axis_u,
+            V=omf_geom.axis_v,
+            W=omf_geom.axis_w
         )
         return mesh
 

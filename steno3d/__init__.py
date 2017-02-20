@@ -29,6 +29,7 @@ from atexit import register
 from . import parsers
 from . import query
 from . import client
+from .base import ResourceSizeError
 from .project import *
 from .data import *
 from .line import *
@@ -41,15 +42,16 @@ from .volume import *
 __version__ = '0.2.14b0'
 __author__ = '3point Science'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2016 3point Science'
+__copyright__ = 'Copyright 2017 3point Science'
 
 login = client.Comms.login
 logout = client.Comms.logout
+user = client.Comms.user
 # register(logout)
 
 try:
-    del project, data, line, point, surface, texture, traits, volume
-    del base, client, options, user
+    del project, data, line, point, surface, texture, props, volume
+    del base, client, options
     del absolute_import, division, print_function, unicode_literals
     del register
 except NameError:

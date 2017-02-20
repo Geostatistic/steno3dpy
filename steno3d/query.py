@@ -12,20 +12,22 @@ from .project import Project
 MINE = 'api/project/steno3ds/mine'
 
 
-def _query(url, queue=10):
+def _query(url, queue=10, verbose=True):
     cursor = ''
     more = True
-    print('Fetching projects from the database ...')
+    if verbose:
+        print('Fetching projects from the database ...')
     while more:
         resp = Comms.get('{url}?brief=True&num={n}&cursor={c}'.format(
             url=url, n=queue, c=cursor
         ))
-        rjson = resp.json()
+        rjson = resp['json']
         cursor = rjson['cursor']
         more = rjson['more']
         for proj in rjson['data']:
             yield proj
-        print('Fetching more projects from the database ...')
+        if verbose:
+            print('Fetching more projects from the database ...')
 
 
 def _short_json(proj_json):
@@ -36,24 +38,28 @@ def _short_json(proj_json):
 
 
 @needs_login
-def my_projects(n=None, queue=100):
+def my_projects(n=None, queue=100, verbose=True):
     if n is None:
-        print('Querying all your projects ...')
+        if verbose:
+            print('Querying all your projects ...')
         return [_short_json(p) for p in _query(MINE, queue)]
     if not isinstance(n, integer_types):
         raise ValueError('{}: n must be int'.format(n))
-    print('Querying your most recent {} project(s) ...'.format(n))
+    if verbose:
+        print('Querying your most recent {} project(s) ...'.format(n))
     projs = []
     projit = _query(MINE, min(n, queue))
     for _ in range(n):
         try:
             projs += [_short_json(next(projit))]
         except StopIteration:
-            print('{n}: n > total number of projects, {p} returned'.format(
-                n=n, p=len(projs)
-            ))
+            if verbose:
+                print('{n}: n > total number of projects, {p} returned'.format(
+                    n=n, p=len(projs)
+                ))
             break
-    print('...Complete!')
+    if verbose:
+        print('...Complete!')
     return projs
 
 
@@ -63,8 +69,9 @@ def project_by_uid(uid, copy=None):
 
 
 @needs_login
-def last_project(copy=None):
+def last_project(copy=None, verbose=True):
     try:
         return project_by_uid(next(_query(MINE, 1))['uid'], copy)
     except StopIteration:
-        print('No projects available!')
+        if verbose:
+            print('No projects available!')

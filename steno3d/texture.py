@@ -9,10 +9,10 @@ from collections import namedtuple
 from io import BytesIO
 from json import dumps
 from six import string_types
-from traitlets import observe, validate
+import properties
 
 from .base import BaseTexture2D
-from .traits import Image, Vector
+from .props import image_download
 
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
@@ -23,17 +23,18 @@ class Texture2DImage(BaseTexture2D):
 
     _resource_class = 'image'
 
-    O = Vector(
-        help='Origin of the texture'
+    O = properties.Vector3(
+        doc='Origin of the texture'
     )
-    U = Vector(
-        help='U axis of the texture'
+    U = properties.Vector3(
+        doc='U axis of the texture'
     )
-    V = Vector(
-        help='V axis of the texture'
+    V = properties.Vector3(
+        doc='V axis of the texture'
     )
-    image = Image(
-        help='Image file'
+    image = properties.ImagePNG(
+        doc='Image file',
+        deserializer=image_download,
     )
 
     def _nbytes(self, img=None):
@@ -46,22 +47,18 @@ class Texture2DImage(BaseTexture2D):
             raise ValueError('Texture2DImage cannot calculate the number of '
                              'bytes of {}'.format(img))
 
-    @observe('image')
+    @properties.validator('image')
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['new'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('image')
-    def _validate_Z(self, proposal):
-        proposal['owner']._validate_file_size('image', proposal['value'])
-        return proposal['value']
+    @properties.validator
+    def _validate_image(self):
+        self._validate_file_size('image', self.image)
+        return True
 
     def _get_dirty_files(self, force=False):
         files = super(Texture2DImage, self)._get_dirty_files(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'image' in dirty or force:
             self.image.seek(0)
             copy = BytesIO()
@@ -73,7 +70,7 @@ class Texture2DImage(BaseTexture2D):
 
     def _get_dirty_data(self, force=False):
         datadict = super(Texture2DImage, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
                 O=self.O.tolist(),
@@ -97,7 +94,7 @@ class Texture2DImage(BaseTexture2D):
             O=json['OUV']['O'],
             U=json['OUV']['U'],
             V=json['OUV']['V'],
-            image=Image.download(json['image'])
+            image=cls._props['image'].deserialize(json['image'])
         )
         return tex
 

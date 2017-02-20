@@ -12,13 +12,7 @@ addons:
     packages:
       - python-numpy
 
-env:
-  - TRAITLETS_PRE = ''
-  - TRAITLETS_PRE = '--pre'
-
-
 install:
-  - pip install $TRAITLETS_PRE traitlets
   - pip install -r requirements_dev.txt
   - pip install steno3d_obj
   - pip install steno3d_stl

@@ -9,7 +9,6 @@ import unittest
 import numpy as np
 import steno3d
 from steno3d.examples import Teapot
-from traitlets import TraitError
 
 
 class TestResourceSurface(unittest.TestCase):
@@ -65,9 +64,9 @@ class TestResourceSurface(unittest.TestCase):
         assert S.opts.opacity == 1
 
         assert S.mesh.opts.wireframe
-        self.assertRaises(TraitError,
+        self.assertRaises(ValueError,
                           lambda: setattr(S.mesh.opts, 'wireframe', 'Wires'))
-        self.assertRaises(TraitError,
+        self.assertRaises(ValueError,
                           lambda: setattr(S.mesh.opts, 'wireframe', 1))
         S.mesh.opts = {"wireframe": False}
         assert not S.mesh.opts.wireframe
@@ -78,22 +77,22 @@ class TestResourceSurface(unittest.TestCase):
         S.triangles = [[0, 0, 0], [1, 1, 1]]
         assert isinstance(S.mesh.triangles, np.ndarray)
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', -1))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', [[0, 0]]))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', [[0, 0, .5], [1, 1, 1]]))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', [[0], [0], [0]]))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', 'Three isosceles, please!'))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'triangles', [[0, 0, 1, 1], [0, 0, 0, 0]]))
 
         S.mesh.triangles = [[0, 0, -100], [1, 1, 1]]
@@ -122,27 +121,27 @@ class TestResourceSurface(unittest.TestCase):
         ])
         S.mesh.vertices = myNewVerts
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'vertices', -1))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'vertices', [[0, 0]]))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'vertices', [[0], [0], [0]]))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'vertices', 'Just a few random points.'))
         self.assertRaises(
-            TraitError,
+            ValueError,
             lambda: setattr(S.mesh, 'vertices', [[0, 0, 1, 1], [0, 0, 0, 0]]))
 
         # Other Constructor tests
         S = steno3d.Surface(P)
-        self.assertRaises(TraitError,
+        self.assertRaises(ValueError,
                           lambda: S.validate())
         S.mesh = S.mesh
-        self.assertRaises(TraitError,
+        self.assertRaises(ValueError,
                           lambda: S.validate())
         S.mesh.vertices = myVerts
         S.mesh.triangles = myTriangles
@@ -169,6 +168,7 @@ class TestResourceSurface(unittest.TestCase):
         S.mesh.triangles = myTriangles
         S.mesh.vertices = myVerts
         S.data = {'data': [0], 'location': 'face'}
+        assert type(S.data) is list
         S.data = [{'data': [0], 'location': 'face'}]
         assert type(S.data) is list
         d0 = S.data[0]
@@ -192,19 +192,19 @@ class TestResourceSurface(unittest.TestCase):
         myh1 = [5., 4., 3., 2., 1., 1., 1., 1., 2., 3., 4., 5.]
         myh2 = [1., 1., 1., 1., 2., 3., 4., 5.]
 
-        def f():
-            P = steno3d.Project()
-            S = steno3d.Surface(
-                P,
-                mesh=dict(
-                    h1=myh1,
-                    h2=myh2,
-                    opts={"wireframe": True}
-                ),
-                opts={"opacity": 0.3, "color": "red"},
-            )
+        # def f():
+        P = steno3d.Project()
+        S = steno3d.Surface(
+            P,
+            mesh=dict(
+                h1=myh1,
+                h2=myh2,
+                opts={"wireframe": True}
+            ),
+            opts={"opacity": 0.3, "color": "red"},
+        )
 
-        self.assertRaises(KeyError, f)
+        # self.assertRaises(KeyError, f)
 
         # This should be ok
         P = steno3d.Project()
@@ -221,8 +221,12 @@ class TestResourceSurface(unittest.TestCase):
         S.mesh.Z = myZ
         S.validate()
 
-        self.assertRaises(TraitError,
+        self.assertRaises(ValueError,
                           setattr(S, 'x0', [[0., 0., 0.], [1., 1., 1.]]))
+
+        assert len(S._dirty) == 3
+        S._mark_clean()
+        assert len(S._dirty) == 0
 
     def test_teapot(self):
         teapot = Teapot.fetch_data(filename='teapot.json',
@@ -262,7 +266,7 @@ class TestResourceSurface(unittest.TestCase):
         assert len(s0.project) == 1
         assert len(p0.resources) == 1
         s0.project = [p0, p0, p2, p1, p2]
-        assert len(s0.project) == 3
+        assert len(s0.project) == 3, '{}'.format(s0.project)
         assert s0.project[0] is p0
         assert s0.project[1] is p2
         assert s0.project[2] is p1

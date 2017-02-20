@@ -11,11 +11,10 @@ from json import dumps
 from pprint import pformat
 from six import string_types
 
-from traitlets import All, observe, Undefined, validate
+import properties
 
 from .client import Comms, needs_login, pause, plot
-from .traits import (_REGISTRY, HasSteno3DTraits, KeywordInstance, Repeated,
-                     String)
+from .props import HasSteno3DProps
 
 
 class classproperty(property):
@@ -24,17 +23,17 @@ class classproperty(property):
         return self.fget.__get__(None, owner)()
 
 
-class UserContent(HasSteno3DTraits):
+class UserContent(HasSteno3DProps):
     """Base class for everything user creates and uploads in steno3d"""
-    title = String(
-        help='Title of the model.',
-        default_value='',
-        allow_none=True
+    title = properties.String(
+        doc='Title of the model.',
+        default='',
+        required=False
     )
-    description = String(
-        help='Description of the model.',
-        default_value='',
-        allow_none=True
+    description = properties.String(
+        doc='Description of the model.',
+        default='',
+        required=False
     )
     _sync = False
     _upload_data = None
@@ -108,7 +107,7 @@ class UserContent(HasSteno3DTraits):
                 progress_callback({'progress': progress, 'message': message})
 
         except Exception as err:
-            if self._sync:
+            if self._sync and verbose:
                 print('Upload failed, turning off syncing. To restart '
                       'syncing, upload() again.')
                 self._sync = False
@@ -124,7 +123,7 @@ class UserContent(HasSteno3DTraits):
         ), end='')
 
     def _get_dirty_data(self, force=False):
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         datadict = dict()
         if 'title' in dirty or force:
             datadict['title'] = self.title
@@ -138,7 +137,7 @@ class UserContent(HasSteno3DTraits):
     def _upload_dirty(self, **kwargs):
         pass
 
-    @observe(All)
+    @properties.observer(properties.everything)
     def _on_property_change(self, change):
         if getattr(self, '_sync', False):
             self._upload(sync=self._sync)
@@ -222,24 +221,28 @@ class UserContent(HasSteno3DTraits):
 
     @classmethod
     def _build(cls, src, copy=True, tab_level='', **kwargs):
-        if isinstance(src, HasSteno3DTraits):
+        verbose = kwargs.get('verbose', True)
+        if isinstance(src, properties.HasProperties):
             raise NotImplementedError('Copying instances not supported')
-        print('{tl}Downloading {cls}'.format(
-            tl=tab_level,
-            cls=cls._resource_class
-        ), end=': ')
+        if verbose:
+            print('{tl}Downloading {cls}'.format(
+                tl=tab_level,
+                cls=cls._resource_class
+            ), end=': ')
         if isinstance(src, string_types):
             json = cls._json_from_uid(src)
         else:
             json = src
         title = '' if json['title'] is None else json['title']
         desc = '' if json['description'] is None else json['description']
-        print(title)
+        if verbose:
+            print(title)
         res = cls._build_from_json(json, copy=copy, tab_level=tab_level,
                                    title=title, description=desc, **kwargs)
         if not copy:
             res._upload_data = json
-        print('{}...Complete!'.format(tab_level))
+        if verbose:
+            print('{}...Complete!'.format(tab_level))
         return res
 
     @classmethod
@@ -261,23 +264,23 @@ class BaseResource(UserContent):
 
 
     def _validate_file_size(self, name, arr):
-        if Comms.user.logged_in:
-            file_limit = Comms.user.file_size_limit
-            if self._nbytes(arr) > file_limit:
-                raise ResourceSizeError(
-                    '{name} file size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(name=name,
-                                         file=self._nbytes(arr),
-                                         lim=file_limit)
-                )
+        file_limit = Comms.user.file_size_limit
+        if self._nbytes(arr) > file_limit:
+            raise ResourceSizeError(
+                '{name} file size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(name=name,
+                                     file=self._nbytes(arr),
+                                     lim=file_limit)
+            )
         return True
 
 
 class CompositeResource(BaseResource):
     """A composite resource that stores references to lower-level objects."""
-    project = Repeated(
-        help='Project',
-        trait=KeywordInstance(klass='Project')
+    project = properties.List(
+        doc='Project containing the resource',
+        prop=UserContent,
+        coerce=True,
     )
 
     def __init__(self, project=None, **kwargs):
@@ -296,21 +299,22 @@ class CompositeResource(BaseResource):
             uid=uid)
         return url
 
-    @validate('project')
-    def _validate_proj(self, proposal):
-        for proj in proposal['value']:
+    @properties.validator
+    def _validate_proj(self):
+        for proj in self.project:
             if self not in proj.resources:
                 raise ValueError('Project/resource pointers misaligned: '
                                  'Ensure that projects contain all the '
                                  'resources that point to them.')
         return True
 
+
     @needs_login
     def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the resource through its containing project(s)"""
         for proj in self.project:
             proj.upload(sync, verbose, False)
-        if print_url:
+        if verbose and print_url:
             print(self._url)
         return self._url
 
@@ -318,7 +322,7 @@ class CompositeResource(BaseResource):
 
     def _get_dirty_data(self, force=False):
         datadict = super(CompositeResource, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'mesh' in dirty or force:
             datadict['mesh'] = dumps({
                 'uid': self.mesh._json['longUid']
@@ -347,13 +351,13 @@ class CompositeResource(BaseResource):
         if 'textures' in dirty:
             [t._upload(**kwargs) for t in self.textures]
 
-    @observe('project')
+    @properties.observer('project')
     def _fix_proj_res(self, change):
-        before = change['old']
-        after = change['new']
-        if before in (None, Undefined):
+        before = change['previous']
+        after = change['value']
+        if before in (None, properties.undefined):
             before = []
-        if after in (None, Undefined):
+        if after in (None, properties.undefined):
             after = []
         for proj in after:
             if proj not in before and self not in proj.resources:
@@ -406,7 +410,7 @@ class CompositeResource(BaseResource):
         (mesh_string, mesh_uid) = (
             json['mesh']['uid'].split('Resource')[-1].split(':')
         )
-        mesh_class = _REGISTRY[mesh_string]
+        mesh_class = UserContent._REGISTRY[mesh_string]
 
         res.mesh = mesh_class._build(mesh_uid, copy, tab_level + '    ')
 
@@ -416,7 +420,7 @@ class CompositeResource(BaseResource):
                 (tex_string, tex_uid) = (
                     t['uid'].split('Resource')[-1].split(':')
                 )
-                tex_class = _REGISTRY[tex_string]
+                tex_class = UserContent._REGISTRY[tex_string]
                 res.textures += [tex_class._build(
                     tex_uid, copy, tab_level + '    '
                 )]
@@ -427,7 +431,7 @@ class CompositeResource(BaseResource):
                 (data_string, data_uid) = (
                     d['uid'].split('Resource')[-1].split(':')
                 )
-                data_class = _REGISTRY[data_string]
+                data_class = UserContent._REGISTRY[data_string]
                 res.data += [dict(
                     location=d['location'],
                     data=data_class._build(
@@ -438,7 +442,7 @@ class CompositeResource(BaseResource):
         return res
 
     @classmethod
-    def _build_from_omf(cls, omf_element, omf_project, project):
+    def _build_from_omf(cls, omf_element, omf_project, project, verbose=False):
         mesh_map = {
             'PointSetGeometry': 'Mesh0D',
             'LineSetGeometry': 'Mesh1D',
@@ -446,7 +450,7 @@ class CompositeResource(BaseResource):
             'SurfaceGridGeometry': 'Mesh2DGrid',
             'VolumeGridGeometry': 'Mesh3DGrid'
         }
-        mesh_class = _REGISTRY[mesh_map[
+        mesh_class = UserContent._REGISTRY[mesh_map[
             omf_element.geometry.__class__.__name__
         ]]
         res = cls(
@@ -460,19 +464,21 @@ class CompositeResource(BaseResource):
             res.textures = []
             for tex in omf_element.textures:
                 res.textures += [
-                    _REGISTRY['Texture2DImage']._build_from_omf(tex,
-                                                                omf_project)
+                    UserContent._REGISTRY['Texture2DImage']._build_from_omf(
+                        tex, omf_project
+                    )
                 ]
         if hasattr(omf_element, 'data'):
             res.data = []
             for dat in omf_element.data:
                 if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
-                    print('Data of class {} ignored'.format(
-                        dat.__class__.__name__
-                    ))
+                    if verbose:
+                        print('Data of class {} ignored'.format(
+                            dat.__class__.__name__
+                        ))
                     continue
                 res.data += [
-                    _REGISTRY['DataArray']._build_from_omf(dat)
+                    UserContent._REGISTRY['DataArray']._build_from_omf(dat)
                 ]
         return res
 
@@ -483,6 +489,17 @@ class BaseMesh(BaseResource):
     each composite resources and define its structure
     """
 
+    @properties.validator
+    def _validate_mesh(self):
+        file_limit = Comms.user.file_size_limit
+        if self._nbytes() > file_limit:
+            raise ResourceSizeError(
+                '{name} size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(name=self.__class__.__name__,
+                                     file=self._nbytes(),
+                                     lim=file_limit)
+            )
+        return True
 
 class BaseData(BaseResource):
     """Base class for all data resources. These can be contained within

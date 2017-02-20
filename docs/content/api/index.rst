@@ -13,7 +13,6 @@ Steno3D.
 
     projects
     resources/index
-    traitlets
 
 .. image:: ../../images/Steno3DAPI.png
 

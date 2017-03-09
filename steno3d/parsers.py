@@ -12,16 +12,15 @@ from os.path import expanduser as _expanduser
 from os.path import isfile as _isfile
 from os.path import realpath as _realpath
 
+import properties
 from six import with_metaclass as _with_metaclass
 from six import string_types as _string_types
 
 from .project import Project as _Project
-from .traits import HasSteno3DTraits as _HasSteno3DTraits
-from .traits import String as _String
-from .traits import KeywordInstance as _KWInst
+from .props import HasSteno3DProps
 
 
-class _ParserMetaClass(_HasSteno3DTraits.__class__):
+class _ParserMetaClass(HasSteno3DProps.__class__):
     """metaclass ParserMetaclass
 
     Metaclass to ensure Parser classes fit the required format and
@@ -56,7 +55,7 @@ class _ParserMetaClass(_HasSteno3DTraits.__class__):
 
 
 class BaseParser(_with_metaclass(_ParserMetaClass,
-                                 _HasSteno3DTraits)):
+                                 HasSteno3DProps)):
     """Base class for Steno3D parser objects
 
     BaseParser itself cannot be instantiated. Please use the specific
@@ -66,13 +65,12 @@ class BaseParser(_with_metaclass(_ParserMetaClass,
     """
 
     extensions = (None,)
-    file_name = _String(
-        help='The file to parse'
+    file_name = properties.String(
+        doc='The file to parse'
     )
-    project = _KWInst(
-        help='The project to parse file_name into',
-        klass=_Project,
-        kw=dict(description='Project imported from parsed file')
+    project = properties.Instance(
+        doc='The project to parse file_name into',
+        instance_class=_Project,
     )
 
     def __init__(self, file_name):
@@ -141,7 +139,7 @@ class BaseParser(_with_metaclass(_ParserMetaClass,
         raise NotImplementedError()
 
 
-class _AllParserMetaClass(_HasSteno3DTraits.__class__):
+class _AllParserMetaClass(HasSteno3DProps.__class__):
     """metaclass AllParserMetaClass
 
     Metaclass to ensure AllParser classes fit the requried format and
@@ -171,7 +169,7 @@ class _AllParserMetaClass(_HasSteno3DTraits.__class__):
 
 
 class AllParsers(_with_metaclass(_AllParserMetaClass,
-                                 _HasSteno3DTraits)):
+                                 HasSteno3DProps)):
     """class AllParsers
 
     Steno3D parser class that selects the appropriate parser for a file

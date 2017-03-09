@@ -15,7 +15,6 @@ online as a `Jupyter notebook <https://github.com/3ptscience/steno3d-notebooks>`
 **Contents**
     - :ref:`projects`
     - :ref:`resources`
-    - :ref:`traitlets_ref`
 
 .. image:: ../images/Steno3DAPI.png
 
@@ -92,15 +91,3 @@ spatial location.
 .. interaction. For example, perspectives include color, opacity,
 .. viewpoint, cross-section slices, etc. Every resource has options that
 .. define the initial perspective state.
-
-.. _traitlets_ref:
-
-Traitlets
-=========
-
-The `Traitlets <https://github.com/ipython/traitlets>`_ library provides the
-building blocks for Steno3D. Traitlets allow for a declarative interface
-when constructing classes, and enforce type checking and validation when
-using Steno3D. The Traitlets `documentation <http://traitlets.readthedocs.io/en/stable/>`_
-provides a general description of the library, and the custom TraitTypes
-used by Steno3D are documented :ref:`here <custom_traitlets>`.

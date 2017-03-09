@@ -8,12 +8,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import six
+import properties
 
-from traitlets import observe, Undefined, validate
-
-from .base import CompositeResource, UserContent
+from .base import CompositeResource, ResourceSizeError, UserContent
 from .client import Comms, needs_login, plot
-from .traits import _REGISTRY, Bool, KeywordInstance, Repeated
 
 
 QUOTA_REACHED = """
@@ -33,14 +31,15 @@ class Project(UserContent):
     """Steno3D top-level project"""
     _model_api_location = 'project/steno3d'
 
-    resources = Repeated(
-        help='Project Resources',
-        trait=KeywordInstance(klass=CompositeResource)
+    resources = properties.List(
+        doc='Project Resources',
+        prop=CompositeResource,
+        coerce=True,
     )
 
-    public = Bool(
-        help='Public visibility of project',
-        default_value=False
+    public = properties.Bool(
+        doc='Public visibility of project',
+        default=False
     )
 
     _public_online = None
@@ -55,8 +54,9 @@ class Project(UserContent):
         return url
 
     @needs_login
-    def upload(self, sync=False, verbose=True, print_url=True):
+    def upload(self, **kwargs):
         """Upload the project"""
+        verbose = kwargs.get('verbose', True)
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
 
@@ -69,19 +69,27 @@ class Project(UserContent):
                   'projects that are already uploaded. To make '
                   'these changes, please use the dashboard on '
                   'steno3d.com.')
-        self._upload(sync, verbose)
+        if verbose:
+            print('\rStarting upload: {}'.format(self.title), end='')
+        UserContent._upload_size = 0
+        UserContent._upload_total_size = self._nbytes()
+        UserContent._upload_count = 0
+        UserContent._upload_total_count = len(self.resources) + 1
+        self._upload(**kwargs)
         self._trigger_ACL_fix()
-        if print_url:
+        if verbose:
+            print('\nComplete!')
+        if verbose and kwargs.get('print_url', True):
             print(self._url)
         return self._url
 
     def _trigger_ACL_fix(self):
         self._put({})
 
-    @validate('resources')
-    def _validate_resources(self, proposal):
+    @properties.validator
+    def _validate_resources(self):
         """Check if project resource pointers are correct"""
-        for res in proposal['value']:
+        for res in self.resources:
             if self not in res.project:
                 raise ValueError('Project/resource pointers misaligned: '
                                  'Ensure that resources point to containing '
@@ -89,34 +97,36 @@ class Project(UserContent):
         self._validate_project_size()
         return True
 
+    def _nbytes(self):
+        return sum(r._nbytes() for r in self.resources)
+
     def _validate_project_size(self, res=None):
         if res is None:
             res = self.resources
-        if Comms.user.logged_in:
-            res_limit = Comms.user.project_resource_limit
-            if len(res) > res_limit:
-                raise ValueError(
-                    'Total number of resources in project ({res}) '
-                    'exceeds limit: {lim}'.format(res=len(self.resources),
-                                                  lim=res_limit)
-                )
-            size_limit = Comms.user.project_size_limit
-            sz = sum(r._nbytes() for r in res)
-            if sz > size_limit:
-                raise ValueError(
-                    'Total project size ({file} bytes) exceeds limit: '
-                    '{lim} bytes'.format(file=sz,
-                                         lim=size_limit)
-                )
+        res_limit = Comms.user.project_resource_limit
+        if len(res) > res_limit:
+            raise ResourceSizeError(
+                'Total number of resources in project ({res}) '
+                'exceeds limit: {lim}'.format(res=len(self.resources),
+                                              lim=res_limit)
+            )
+        size_limit = Comms.user.project_size_limit
+        sz = self._nbytes()
+        if sz > size_limit:
+            raise ResourceSizeError(
+                'Total project size ({file} bytes) exceeds limit: '
+                '{lim} bytes'.format(file=sz,
+                                     lim=size_limit)
+            )
         return True
 
-    @observe('resources')
+    @properties.observer('resources')
     def _fix_proj_res(self, change):
-        before = change['old']
-        after = change['new']
-        if before in (None, Undefined):
+        before = change['previous']
+        after = change['value']
+        if before in (None, properties.undefined):
             before = []
-        if after in (None, Undefined):
+        if after in (None, properties.undefined):
             after = []
         for res in after:
             if res not in before and self not in res.project:
@@ -132,14 +142,14 @@ class Project(UserContent):
                     post_post += [r]
             self.resources = post_post
 
-    def _upload_dirty(self, sync=False, verbose=True, tab_level=''):
+    def _upload_dirty(self, **kwargs):
         dirty = self._dirty
         if 'resources' in dirty:
-            [r._upload(sync, verbose, tab_level) for r in self.resources]
+            [r._upload(**kwargs) for r in self.resources]
 
     def _get_dirty_data(self, force=False, initialize=False):
         datadict = super(Project, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'public' in dirty or force:
             datadict['public'] = self.public
         if ('resources' in dirty or force) and not initialize:
@@ -196,12 +206,14 @@ class Project(UserContent):
         return plot(self._url)
 
     @classmethod
-    def _build(cls, uid, copy=True, tab_level=''):
-        print('Downloading project', end=': ')
+    def _build(cls, uid, copy=True, tab_level='', verbose=True):
+        if verbose:
+            print('Downloading project', end=': ')
         json = cls._json_from_uid(uid)
         title = '' if json['title'] is None else json['title']
         desc = '' if json['description'] is None else json['description']
-        print(title)
+        if verbose:
+            print(title)
         pub = False
         for a in json['access']:
             if a['user'] == 'Special:PUBLIC':
@@ -212,11 +224,11 @@ class Project(UserContent):
             copy = not is_owner
         elif not copy and not is_owner:
             copy = True
-        if copy:
+        if copy and verbose:
             print('This is a copy of the {pub} project'.format(
                 pub='PUBLIC' if pub else 'private'
             ))
-        else:
+        elif verbose:
             print('This is the original version of the {pub} project'.format(
                 pub='PUBLIC' if pub else 'private'
             ))
@@ -235,7 +247,7 @@ class Project(UserContent):
         )
         for longuid in json['resourceUids']:
             res_string = longuid.split('Resource')[-1].split(':')[0]
-            res_class = _REGISTRY[res_string]
+            res_class = UserContent._REGISTRY[res_string]
             proj.resources += [res_class._build(
                 src=longuid.split(':')[1],
                 copy=copy,
@@ -246,7 +258,8 @@ class Project(UserContent):
             proj._public_online = pub
             proj._upload_data = json
             proj._mark_clean()
-        print('... Complete!')
+        if verbose:
+            print('... Complete!')
         return proj
 
     @classmethod
@@ -254,7 +267,7 @@ class Project(UserContent):
         if isinstance(omf_input, six.string_types):
             from omf import OMFReader
             omf_input = OMFReader(omf_input)
-        if not omf_input.__class__.__name__ == 'Project':
+        if omf_input.__class__.__name__ != 'Project':
             raise ValueError('input must be omf file or Project')
         return cls._build_from_omf(omf_input)
 
@@ -272,11 +285,15 @@ class Project(UserContent):
             'VolumeElement': 'Volume'
         }
         for elem in omf_project.elements:
-            res_class = _REGISTRY[resource_map[elem.__class__.__name__]]
+            res_class = UserContent._REGISTRY[
+                resource_map[elem.__class__.__name__]
+            ]
             proj.resources += [
                 res_class._build_from_omf(elem, omf_project, proj)
             ]
         return proj
+
+CompositeResource._props['project'].prop.instance_class = Project
 
 
 __all__ = ['Project']

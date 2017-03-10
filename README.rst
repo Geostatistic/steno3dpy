@@ -4,6 +4,9 @@
     :target: https://steno3d.com/
     :alt: Steno3D
 
+|
+|
+
 .. image:: https://travis-ci.org/3ptscience/steno3dpy.svg?branch=master
     :target: https://travis-ci.org/3ptscience/steno3dpy
 

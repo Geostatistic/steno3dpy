@@ -1,7 +1,7 @@
 .. _quickstart:
 
-Quickstart
-==========
+Getting Started
+===============
 
 Get up and running with Steno3D_! This page contains resources for installing
 Steno3D, trying out a sample project yourself, and exploring

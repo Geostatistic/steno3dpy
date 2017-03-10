@@ -26,5 +26,3 @@ Index
 
 .. * :ref:`modindex`
 .. * :ref:`search`
-
-.. _Steno3D: https://steno3d.com/

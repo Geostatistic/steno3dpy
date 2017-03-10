@@ -20,11 +20,17 @@
 Welcome to the Python client library for `Steno3D <https://steno3d.com>`_
 by `ARANZ Geo Limited <https://aranzgeo.com>`_. Explore and collaborate on your 3D data!
 
+Demo Video
+----------
+
 .. image:: https://img.youtube.com/vi/M6C6SRwn7bg/0.jpg
     :target: https://www.youtube.com/watch?v=M6C6SRwn7bg
     :alt: steno3dpy demo
 
-If you have not yet installed `Steno3D <https://www.steno3d.com>`_, simply
+Quickstart
+----------
+
+If you have not yet installed `Steno3D <https://steno3d.com>`_, simply
 
 .. code:: bash
 

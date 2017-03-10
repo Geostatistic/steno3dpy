@@ -245,10 +245,13 @@ class Mesh2DGrid(BaseMesh):
             V=json['OUV']['V'],
             opts=json['meta']
         )
-        if json['ZExists']:
+        try:
             mesh.Z = cls._props['Z'].deserialize(
                 json['Z'],
             )
+        except:
+            mesh.Z = []
+
 
         return mesh
 

@@ -313,7 +313,7 @@ class CompositeResource(BaseResource):
     def upload(self, sync=False, verbose=True, print_url=True):
         """Upload the resource through its containing project(s)"""
         for proj in self.project:
-            proj.upload(sync, verbose, False)
+            proj.upload(sync=sync, verbose=verbose, print_url=False)
         if verbose and print_url:
             print(self._url)
         return self._url

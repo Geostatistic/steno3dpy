@@ -60,7 +60,7 @@ If the problem persists:
 
 1) Restart your Python kernel and try again
 2) Update steno3d with `pip install --upgrade steno3d`
-3) Ask for <help@steno3d.com>
+3) Ask for <support@steno3d.com>
 4) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """

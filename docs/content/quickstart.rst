@@ -1,7 +1,7 @@
 .. _quickstart:
 
-Quickstart
-==========
+Getting Started
+===============
 
 Get up and running with Steno3D_! This page contains resources for installing
 Steno3D, trying out a sample project yourself, and exploring
@@ -136,7 +136,7 @@ Next, we define our x and y coordinates to make the mesh
     >> my_mesh = steno3d.Mesh2DGrid(
            h1=np.diff(x),
            h2=np.diff(y),
-           x0=np.r_[-100.,-100.,0.]
+           O=np.r_[-100.,-100.,0.]
        )
 
 and define the Z vertex topography of the mesh.

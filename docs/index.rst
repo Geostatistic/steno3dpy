@@ -1,6 +1,6 @@
 .. _index:
 
-.. image:: https://steno3d.com/s/images/logo/steno3d.png
+.. image:: https://steno3d.com/s/images/logo/steno3d--logo_dark_horizontal_med.png
     :width: 240
     :align: center
     :target: https://steno3d.com/

@@ -1,5 +1,8 @@
-Steno3D
-*******
+.. image:: https://raw.githubusercontent.com/3ptscience/steno3dpy/master/docs/images/steno3d_logo.png
+    :width: 240
+    :align: center
+    :target: https://steno3d.com/
+    :alt: Steno3D
 
 .. image:: https://travis-ci.org/3ptscience/steno3dpy.svg?branch=master
     :target: https://travis-ci.org/3ptscience/steno3dpy
@@ -14,16 +17,20 @@ Steno3D
 .. image:: http://mybinder.org/badge.svg
     :target: http://mybinder.org/repo/3ptscience/steno3d-notebooks
 
-Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
-by `3point Science <https://www.3ptscience.com>`_.
+Welcome to the Python client library for `Steno3D <https://steno3d.com>`_
+by `ARANZ Geo Limited <https://aranzgeo.com>`_. Explore and collaborate on your 3D data!
 
-.. image:: https://raw.githubusercontent.com/3ptscience/steno3dpy/master/docs/images/steno3dpy_screenshot.png
-    :width: 100%
-    :align: center
-    :alt: Steno3D in action
-    :target: https://steno3d.com/
+Demo Video
+----------
 
-If you have not yet installed `Steno3D <https://www.steno3d.com>`_, simply
+.. image:: https://img.youtube.com/vi/M6C6SRwn7bg/0.jpg
+    :target: https://www.youtube.com/watch?v=M6C6SRwn7bg
+    :alt: steno3dpy demo
+
+Quickstart
+----------
+
+If you have not yet installed `Steno3D <https://steno3d.com>`_, simply
 
 .. code:: bash
 
@@ -45,5 +52,11 @@ Examples are available as `Jupyter notebooks <https://github.com/3ptscience/sten
 Class documentation can also be accessed in the IPython environment
 with `?` and tab completion.
 
-The latest version of Steno3D is 0.2.14. Detailed release notes are available
+.. image:: https://raw.githubusercontent.com/3ptscience/steno3dpy/master/docs/images/steno3dpy_screenshot.png
+    :width: 100%
+    :align: center
+    :alt: Steno3D in action
+    :target: https://steno3d.com/
+
+The latest version of Steno3D is 0.3.0. Detailed release notes are available
 on `github <https://github.com/3ptscience/steno3dpy/releases>`_.

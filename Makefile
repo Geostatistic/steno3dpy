@@ -1,5 +1,5 @@
 
-.PHONY: install publish docs coverage lint graphs tests
+.PHONY: install publish docs coverage lint graphs test-docs tests
 
 install:
 	python setup.py install
@@ -19,6 +19,9 @@ lint:
 
 graphs:
 	pyreverse -my -A -o pdf -p steno3dpy steno3d/**.py steno3d/**/**.py
+
+test-docs:
+	nosetests --logging-level=INFO docs
 
 tests:
 	nosetests --logging-level=INFO

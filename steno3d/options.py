@@ -6,50 +6,48 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from json import dumps
-from traitlets import All, observe
+import properties
 
-from .traits import Bool, Color, Float, HasSteno3DTraits
+from .props import HasSteno3DProps
 
 
-class Options(HasSteno3DTraits):
+class Options(HasSteno3DProps):
     """Generic options for all steno3d resources"""
 
     @property
     def _json(self):
         """returns json representation of options"""
         opts_json = {}
-        for key in self.trait_names():
+        for key in self._props:
             opts_json[key] = getattr(self, key)
         return dumps(opts_json)
 
-    @observe(All)
+    @properties.validator(properties.everything)
     def _opt_defaulter(self, change):
-        if change['new'] is None:
-            owner = change['owner']
-            name = change['name']
-            setattr(owner, name, owner.traits()[name].default_value)
+        if change['value'] is None:
+            change['value'] = self._props[change['name']].default
 
 
 class ColorOptions(Options):
     """Options related to resource display color"""
-    color = Color(
-        help='Solid color',
-        default_value='random',
-        allow_none=True
+    color = properties.Color(
+        doc='Solid color',
+        default='random',
+        required=False
     )
-    opacity = Float(
-        help='Opacity',
-        default_value=1.,
+    opacity = properties.Float(
+        doc='Opacity',
+        default=1.,
         min=0.,
         max=1.,
-        allow_none=True
+        required=False
     )
 
 
 class MeshOptions(Options):
     """Options related to mesh display"""
-    wireframe = Bool(
-        help='Wireframe',
-        default_value=False,
-        allow_none=True
+    wireframe = properties.Bool(
+        doc='Wireframe',
+        default=False,
+        required=False
     )

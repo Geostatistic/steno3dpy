@@ -11,7 +11,7 @@ from numpy import max as npmax
 from numpy import min as npmin
 from numpy import ndarray
 from six import string_types
-from traitlets import observe, validate
+import properties
 
 from .base import BaseMesh
 from .base import CompositeResource
@@ -19,8 +19,7 @@ from .data import DataArray
 from .options import ColorOptions
 from .options import MeshOptions
 from .texture import Texture2DImage
-from .traits import (Array, HasSteno3DTraits, KeywordInstance, Renamed,
-                     Repeated, String, Union, Vector)
+from .props import array_serializer, array_download, HasSteno3DProps
 
 
 class _Mesh2DOptions(MeshOptions):
@@ -37,20 +36,24 @@ class Mesh2D(BaseMesh):
     Contains spatial information about a 2D surface defined by
     triangular faces.
     """
-    vertices = Array(
-        help='Mesh vertices',
+    vertices = properties.Array(
+        doc='Mesh vertices',
         shape=('*', 3),
-        dtype=float
+        dtype=float,
+        serializer=array_serializer,
+        deserializer=array_download(('*', 3), (float,)),
     )
-    triangles = Array(
-        help='Mesh triangle vertex indices',
+    triangles = properties.Array(
+        doc='Mesh triangle vertex indices',
         shape=('*', 3),
-        dtype=int
+        dtype=int,
+        serializer=array_serializer,
+        deserializer=array_download(('*', 3), (int,)),
     )
-    opts = KeywordInstance(
-        help='Mesh2D Options',
-        klass=_Mesh2DOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Mesh2D Options',
+        instance_class=_Mesh2DOptions,
+        auto_create=True,
     )
 
     @property
@@ -73,39 +76,29 @@ class Mesh2D(BaseMesh):
         raise ValueError('Mesh2D cannot calculate the number of '
                          'bytes of {}'.format(arr))
 
-    @observe('triangles', 'vertices')
+    @properties.validator(('triangles', 'vertices'))
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['new'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('triangles')
-    def _validate_tri(self, proposal):
-        if npmin(proposal['value']) < 0:
+    @properties.validator
+    def _validate_tri(self):
+        if npmin(self.triangles) < 0:
             raise ValueError('Triangles may only have positive integers')
-        if npmax(proposal['value']) >= len(proposal['owner'].vertices):
+        if npmax(self.triangles) >= len(self.vertices):
             raise ValueError('Triangles expects more vertices than provided')
-        proposal['owner']._validate_file_size('triangles', proposal['value'])
-        return proposal['value']
-
-    @validate('vertices')
-    def _validate_vert(self, proposal):
-        if npmax(proposal['owner'].triangles) >= len(proposal['value']):
-            raise ValueError('Triangles expects more vertices than provided')
-        proposal['owner']._validate_file_size('vertices', proposal['value'])
-        return proposal['value']
+        self._validate_file_size('triangles', self.triangles)
+        self._validate_file_size('vertices', self.vertices)
+        return True
 
     def _get_dirty_files(self, force=False):
         files = {}
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'vertices' in dirty or force:
             files['vertices'] = \
-                self.traits()['vertices'].serialize(self.vertices)
+                self._props['vertices'].serialize(self.vertices)
         if 'triangles' in dirty or force:
             files['triangles'] = \
-                self.traits()['triangles'].serialize(self.triangles)
+                self._props['triangles'].serialize(self.triangles)
         return files
 
     @classmethod
@@ -113,15 +106,11 @@ class Mesh2D(BaseMesh):
         mesh = Mesh2D(
             title=kwargs['title'],
             description=kwargs['description'],
-            vertices=Array.download(
-                url=json['vertices'],
-                shape=(json['verticesSize']//12, 3),
-                dtype=json['verticesType']
+            vertices=cls._props['vertices'].deserialize(
+                json['vertices'],
             ),
-            triangles=Array.download(
-                url=json['triangles'],
-                shape=(json['trianglesSize']//12, 3),
-                dtype=json['trianglesType']
+            triangles=cls._props['triangles'].deserialize(
+                json['triangles'],
             ),
             opts=json['meta']
         )
@@ -140,40 +129,42 @@ class Mesh2D(BaseMesh):
 
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
-    h1 = Array(
-        help='Grid cell widths, U-direction',
+    h1 = properties.Array(
+        doc='Grid cell widths, U-direction',
         shape=('*',),
         dtype=(float, int)
     )
-    h2 = Array(
-        help='Grid cell widths, V-direction',
+    h2 = properties.Array(
+        doc='Grid cell widths, V-direction',
         shape=('*',),
         dtype=(float, int)
     )
-    x0 = Renamed('O')
-    O = Vector(
-        help='Origin vector',
-        default_value=[0., 0., 0.]
+    x0 = properties.Renamed('O')
+    O = properties.Vector3(
+        doc='Origin vector',
+        default=[0., 0., 0.]
     )
-    U = Vector(
-        help='Orientation of h1 axis',
-        default_value='X'
+    U = properties.Vector3(
+        doc='Orientation of h1 axis',
+        default='X'
     )
-    V = Vector(
-        help='Orientation of h2 axis',
-        default_value='Y'
+    V = properties.Vector3(
+        doc='Orientation of h2 axis',
+        default='Y'
     )
-    Z = Array(
-        help='Node topography',
+    Z = properties.Array(
+        doc='Node topography',
         shape=('*',),
         dtype=float,
-        default_value=[],
-        allow_none=True
+        default=[],
+        required=False,
+        serializer=array_serializer,
+        deserializer=array_download(('*',), (float,)),
     )
-    opts = KeywordInstance(
-        help='Mesh2D Options',
-        klass=_Mesh2DOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Mesh2D Options',
+        instance_class=_Mesh2DOptions,
+        auto_create=True,
     )
 
     @property
@@ -199,33 +190,29 @@ class Mesh2DGrid(BaseMesh):
         raise ValueError('Mesh2DGrid cannot calculate the number of '
                          'bytes of {}'.format(arr))
 
-    @observe('Z')
+    @properties.observer('Z')
     def _reject_large_files(self, change):
-        try:
-            self._validate_file_size(change['name'], change['new'])
-        except ValueError as err:
-            setattr(change['owner'], change['name'], change['old'])
-            raise err
+        self._validate_file_size(change['name'], change['value'])
 
-    @validate('Z')
-    def _validate_Z(self, proposal):
+    @properties.validator
+    def _validate_Z(self):
         """Check if mesh content is built correctly"""
-        if len(proposal['value']) == 0:
-            return proposal['value']
-        if len(proposal['value']) != proposal['owner'].nN:
+        if self.Z is None or len(self.Z) == 0:
+            return True
+        if len(self.Z) != self.nN:
             raise ValueError(
                 'Length of Z, {zlen}, must equal number of nodes, '
                 '{nnode}'.format(
-                    zlen=len(proposal['value']),
-                    nnode=proposal['owner'].nN
+                    zlen=len(self.Z),
+                    nnode=self.nN
                 )
             )
-        proposal['owner']._validate_file_size('Z', proposal['value'])
-        return proposal['value']
+        self._validate_file_size('Z', self.Z)
+        return True
 
     def _get_dirty_data(self, force=False):
         datadict = super(Mesh2DGrid, self)._get_dirty_data(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if ('h1' in dirty or 'h2' in dirty) or force:
             datadict['tensors'] = dumps(dict(
                 h1=self.h1.tolist(),
@@ -234,16 +221,16 @@ class Mesh2DGrid(BaseMesh):
         if ('O' in dirty or 'U' in dirty or 'V' in dirty) or force:
             datadict['OUV'] = dumps(dict(
                 O=self.O.tolist(),
-                U=Vector.as_length(self.U, self.h1.sum()).tolist(),
-                V=Vector.as_length(self.V, self.h2.sum()).tolist()
+                U=self.U.as_length(self.h1.sum()).tolist(),
+                V=self.V.as_length(self.h2.sum()).tolist(),
             ))
         return datadict
 
     def _get_dirty_files(self, force=False):
         files = super(Mesh2DGrid, self)._get_dirty_files(force)
-        dirty = self._dirty_traits
+        dirty = self._dirty_props
         if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
-            files['Z'] = self.traits()['Z'].serialize(self.Z)
+            files['Z'] = self._props['Z'].serialize(self.Z)
         return files
 
     @classmethod
@@ -258,12 +245,13 @@ class Mesh2DGrid(BaseMesh):
             V=json['OUV']['V'],
             opts=json['meta']
         )
-        if json['ZExists']:
-            mesh.Z = Array.download(
-                url=json['Z'],
-                shape=json['ZSize']//4,
-                dtype=json['ZType']
+        try:
+            mesh.Z = cls._props['Z'].deserialize(
+                json['Z'],
             )
+        except:
+            mesh.Z = []
+
 
         return mesh
 
@@ -281,44 +269,47 @@ class Mesh2DGrid(BaseMesh):
         return mesh
 
 
-class _SurfaceBinder(HasSteno3DTraits):
+class _SurfaceBinder(HasSteno3DProps):
     """Contains the data on a 2D surface with location information"""
-    location = String(
-        help='Location of the data on mesh',
+    location = properties.StringChoice(
+        doc='Location of the data on mesh',
         choices={
             'CC': ('FACE', 'CELLCENTER'),
             'N': ('NODE', 'VERTEX', 'CORNER')
         }
     )
-    data = KeywordInstance(
-        help='Data',
-        klass=DataArray
+    data = properties.Instance(
+        doc='Data',
+        instance_class=DataArray,
+        auto_create=True,
     )
 
 
 class Surface(CompositeResource):
     """Contains all the information about a 2D surface"""
-    mesh = Union(
-        help='Mesh',
-        trait_types=[
-            KeywordInstance(klass=Mesh2D),
-            KeywordInstance(klass=Mesh2DGrid)
-        ]
+    mesh = properties.Union(
+        doc='Mesh',
+        props=(
+            properties.Instance('', Mesh2D, auto_create=True),
+            properties.Instance('', Mesh2DGrid)
+        )
     )
-    data = Repeated(
-        help='Data',
-        trait=KeywordInstance(klass=_SurfaceBinder),
-        allow_none=True
+    data = properties.List(
+        doc='Data',
+        prop=_SurfaceBinder,
+        coerce=True,
+        required=False,
     )
-    textures = Repeated(
-        help='Textures',
-        trait=KeywordInstance(klass=Texture2DImage),
-        allow_none=True
+    textures = properties.List(
+        doc='Textures',
+        prop=Texture2DImage,
+        coerce=True,
+        required=False,
     )
-    opts = KeywordInstance(
-        help='Options',
-        klass=_SurfaceOptions,
-        allow_none=True
+    opts = properties.Instance(
+        doc='Options',
+        instance_class=_SurfaceOptions,
+        auto_create=True,
     )
 
     def _nbytes(self):
@@ -326,14 +317,14 @@ class Surface(CompositeResource):
                 sum(d.data._nbytes() for d in self.data) +
                 sum(t._nbytes() for t in self.textures))
 
-    @validate('data')
-    def _validate_data(self, proposal):
+    @properties.validator
+    def _validate_data(self):
         """Check if resource is built correctly"""
-        for ii, dat in enumerate(proposal['value']):
+        for ii, dat in enumerate(self.data):
             assert dat.location in ('N', 'CC')
             valid_length = (
-                proposal['owner'].mesh.nC if dat.location == 'CC'
-                else proposal['owner'].mesh.nN
+                self.mesh.nC if dat.location == 'CC'
+                else self.mesh.nN
             )
             if len(dat.data.array) != valid_length:
                 raise ValueError(
@@ -345,7 +336,7 @@ class Surface(CompositeResource):
                         meshlen=valid_length
                     )
                 )
-        return proposal['value']
+        return True
 
 
 __all__ = ['Surface', 'Mesh2D', 'Mesh2DGrid']

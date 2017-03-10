@@ -7,8 +7,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import input
-from builtins import str
 from functools import wraps
 from os import mkdir
 from os import path
@@ -16,12 +14,13 @@ from time import sleep
 
 import requests
 from six import string_types
+from six.moves import input
 from six.moves.urllib.parse import urlparse
 
 from .user import User
 
 
-__version__ = '0.2.14'
+__version__ = '0.3.0'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -61,7 +60,7 @@ If the problem persists:
 
 1) Restart your Python kernel and try again
 2) Update steno3d with `pip install --upgrade steno3d`
-3) Ask for <help@steno3d.com>
+3) Ask for <support@steno3d.com>
 4) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """
@@ -126,10 +125,10 @@ def needs_login(func):
     """Wrapper used around functions that need you to be logged in"""
     @wraps(func)
     def func_wrapper(*args, **kwargs):
-        if not Comms.user.logged_in:
-            print("Please login: 'steno3d.login()'")
-        else:
+        if Comms.user.logged_in:
             return func(*args, **kwargs)
+        elif kwargs.get('verbose', True):
+            print("Please login: 'steno3d.login()'")
     return func_wrapper
 
 
@@ -175,7 +174,7 @@ class _Comms(object):
         self._base_url = value
 
     def login(self, devel_key=None, credentials_file=None,
-              skip_credentials=False, endpoint=None):
+              skip_credentials=False, endpoint=None, verbose=True):
         """Login to steno3d.com to allow uploading resources. To obtain an
         API developer key, you need a Steno3D account:
 
@@ -206,23 +205,26 @@ class _Comms(object):
 
         # Check user
         if self.user.logged_in:
-            print(ALREADY_LOGGED_IN.format(user=self.user.username))
+            if verbose:
+                print(ALREADY_LOGGED_IN.format(user=self.user.username))
             return
 
         # Set endpoint
         if endpoint is not None:
-            self.base_url = str(endpoint)
+            self.base_url = endpoint
 
         # Check client version
-        if not self._version_ok():
-            print('Login failed.')
+        if not self._version_ok(verbose):
+            if verbose:
+                print('Login failed.')
             return
 
-        print(WELCOME_MESSAGE)
+        if verbose:
+            print(WELCOME_MESSAGE)
 
         # Assess credential file options.
         if skip_credentials:
-            self._login_with(devel_key)
+            self._login_with(devel_key, verbose)
             return
 
         # Extract credential file
@@ -250,27 +252,31 @@ class _Comms(object):
                 '{}: credentials file must be a file'.format(credentials_file)
             )
         if path.isfile(credentials_file):
-            print('Credentials file found: {}'.format(credentials_file))
+            if verbose:
+                print('Credentials file found: {}'.format(credentials_file))
             with open(credentials_file, 'r') as cred:
                 devel_keys = cred.readlines()
             devel_keys = [dk.strip() for dk in devel_keys
                           if self.is_key(dk.strip())]
             usernames = [dk.split('//')[0] for dk in devel_keys]
         else:
-            print('Creating new credentials file: {}'.format(credentials_file))
+            if verbose:
+                print('Creating new credentials file: {}'.format(credentials_file))
             devel_keys = []
             usernames = []
 
         # Get key from credential file
         if devel_key in usernames:
-            print('Accessing API developer key for @{}'.format(devel_key))
+            if verbose:
+                print('Accessing API developer key for @{}'.format(devel_key))
             devel_key = devel_keys[usernames.index(devel_key)]
 
         if devel_key is None and len(devel_keys) > 0:
-            print('Accessing API developer key for @{}'.format(usernames[0]))
+            if verbose:
+                print('Accessing API developer key for @{}'.format(usernames[0]))
             devel_key = devel_keys[0]
 
-        self._login_with(devel_key)
+        self._login_with(devel_key, verbose)
 
         # Update credential file
         if self.user.logged_in:
@@ -283,7 +289,7 @@ class _Comms(object):
             with open(credentials_file, 'w') as cred:
                 cred.writelines(['{}\n'.format(k) for k in updated_devel_keys])
 
-    def _version_ok(self):
+    def _version_ok(self, verbose=True):
         """Check current Steno3D client version in the database"""
         try:
             resp = requests.post(
@@ -291,7 +297,8 @@ class _Comms(object):
                 dict(version=__version__)
             )
         except requests.ConnectionError:
-            print(NOT_CONNECTED)
+            if verbose:
+                print(NOT_CONNECTED)
             return False
         if resp.status_code == 200:
             resp_json = resp.json()
@@ -302,22 +309,24 @@ class _Comms(object):
             if resp_json['valid'] or curr_ver_str == '0.0.0':
                 return True
             elif your_ver[0] == curr_ver[0] and your_ver[1] == curr_ver[1]:
-                print(INVALID_VERSION.format(
-                    your_version='Your version: ' + your_ver_str,
-                    current_version='Current version: ' + curr_ver_str
-                ))
+                if verbose:
+                    print(INVALID_VERSION.format(
+                        your_version='Your version: ' + your_ver_str,
+                        current_version='Current version: ' + curr_ver_str
+                    ))
                 return True
             else:
-                print(INVALID_VERSION.format(
-                    your_version='Your version: ' + your_ver_str,
-                    current_version='Required version: ' + curr_ver_str
-                ))
+                if verbose:
+                    print(INVALID_VERSION.format(
+                        your_version='Your version: ' + your_ver_str,
+                        current_version='Required version: ' + curr_ver_str
+                    ))
                 if your_ver[0] < curr_ver[0]:
                     return False
                 if your_ver[0] == curr_ver[0] and your_ver[1] < curr_ver[1]:
                     return False
                 return True
-        elif resp.status_code == 400:
+        elif resp.status_code == 400 and verbose:
             resp_json = resp.json()
             if 'b' in __version__.split('.')[2]:
                 print(BETA_TEST)
@@ -328,16 +337,15 @@ class _Comms(object):
                 ))
         return True
 
-    def _login_with(self, devel_key):
+    def _login_with(self, devel_key, verbose=True):
         """Login with devel_key"""
         if devel_key is None:
-            print(FIRST_LOGIN.format(base_url=self.base_url))
-            try:
-                devel_key = raw_input(DEVKEY_PROMPT)
-            except NameError:
-                devel_key = input(DEVKEY_PROMPT)
+            if verbose:
+                print(FIRST_LOGIN.format(base_url=self.base_url))
+            devel_key = input(DEVKEY_PROMPT)
         if not self.is_key(devel_key):
-            print(BAD_API_KEY.format(base_url=self.base_url))
+            if verbose:
+                print(BAD_API_KEY.format(base_url=self.base_url))
             return
         try:
             resp = requests.get(
@@ -346,20 +354,23 @@ class _Comms(object):
                          'client': 'steno3dpy:{}'.format(__version__)}
             )
         except requests.ConnectionError:
-            print(NOT_CONNECTED)
+            if verbose:
+                print(NOT_CONNECTED)
             return
         if resp.status_code is not 200:
-            print(LOGIN_FAILED.format(base_url=self.base_url))
+            if verbose:
+                print(LOGIN_FAILED.format(base_url=self.base_url))
             self.logout()
             return
         self.user.login_with_json(resp.json())
         self.user.set_key(devel_key)
         self._cookies = dict(resp.cookies)
-        print(
-            'Welcome to Steno3D! You are logged in as @{name}'.format(
-                name=self.user.username
+        if verbose:
+            print(
+                'Welcome to Steno3D! You are logged in as @{name}'.format(
+                    name=self.user.username
+                )
             )
-        )
 
     @staticmethod
     def is_key(devel_key):
@@ -369,12 +380,14 @@ class _Comms(object):
         split_key = devel_key.split('//')
         return len(split_key) == 2 and len(split_key[1]) == 36
 
-    def logout(self):
+    def logout(self, verbose=True):
         """Logout current user"""
         if self.user.logged_in:
-            print('Logging out of steno3d...')
+            if verbose:
+                print('Logging out of steno3d...')
             _Comms.get('signout')
-            print('Goodbye, @{}.'.format(self.user.username))
+            if verbose:
+                print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL
         self.user.logout()
 

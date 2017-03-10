@@ -14,8 +14,8 @@ Steno3D
 .. image:: http://mybinder.org/badge.svg
     :target: http://mybinder.org/repo/3ptscience/steno3d-notebooks
 
-Welcome to the Python client library for `Steno3D <https://www.steno3d.com>`_
-by `3point Science <https://www.3ptscience.com>`_.
+Welcome to the Python client library for `Steno3D <https://steno3d.com>`_
+by `ARANZ Geo Limited <https://aranzgeo.com>`_.
 
 .. image:: https://raw.githubusercontent.com/3ptscience/steno3dpy/master/docs/images/steno3dpy_screenshot.png
     :width: 100%

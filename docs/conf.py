@@ -54,8 +54,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'steno3d'
-copyright = u'2016, 3point Science'
-author = u'3point Science'
+copyright = u'2017, ARANZ Geo Limited'
+author = u'ARANZ Geo Limited'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -244,7 +244,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'steno3d.tex', u'steno3d Documentation',
-     u'3point Science', 'manual'),
+     u'ARANZ Geo Limited', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

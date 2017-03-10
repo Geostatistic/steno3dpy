@@ -40,9 +40,9 @@ from .vector import *
 from .volume import *
 
 __version__ = '0.3.0b0'
-__author__ = '3point Science'
+__author__ = 'ARANZ Geo Limited'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2017 3point Science'
+__copyright__ = 'Copyright 2017 ARANZ Geo Limited'
 
 login = client.Comms.login
 logout = client.Comms.logout

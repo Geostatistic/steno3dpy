@@ -39,7 +39,7 @@ from .texture import *
 from .vector import *
 from .volume import *
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 __author__ = 'ARANZ Geo Limited'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017 ARANZ Geo Limited'

@@ -71,8 +71,8 @@ class Project(UserContent):
                   'steno3d.com.')
         if verbose:
             print('\rStarting upload: {}'.format(self.title), end='')
-        UserContent._upload_size = 0
-        UserContent._upload_total_size = self._nbytes()
+        UserContent._upload_size = 1
+        UserContent._upload_total_size = self._nbytes() + 1
         UserContent._upload_count = 0
         UserContent._upload_total_count = len(self.resources) + 1
         self._upload(**kwargs)

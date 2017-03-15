@@ -1,8 +1,12 @@
 .. _index:
 
+Steno3D Python Client
+=====================
+
 .. include:: ../README.rst
 
-**Contents:**
+Contents
+********
 
 .. toctree::
    :maxdepth: 2

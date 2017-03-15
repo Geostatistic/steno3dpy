@@ -107,7 +107,11 @@ class BaseParser(_with_metaclass(_ParserMetaClass,
         if not _isfile(file_name):
             raise ParseError('{}: File not found.'.format(file_name))
         fnsplit = file_name.split('.')
-        if len(fnsplit) < 2 or fnsplit[-1] not in self.extensions:
+        if (
+                len(fnsplit) < 2 or
+                fnsplit[-1].upper() not in [ext.upper() for ext
+                                            in self.extensions]
+        ):
             raise ParseError('{name}: Unsupported extension. Supported '
                              'extensions are {exts}'.format(
                                  name=file_name,
@@ -204,7 +208,7 @@ class AllParsers(_with_metaclass(_AllParserMetaClass,
                                                ', ' + globals()[k].__name__)
         fnsplit = file_name.split('.')
         for ext in cls.extensions:
-            if len(fnsplit) > 1 and fnsplit[-1] == ext:
+            if len(fnsplit) > 1 and fnsplit[-1].upper() == ext.upper():
                 if issubclass(type(cls.extensions[ext]), _ParserMetaClass):
                     return cls.extensions[ext](file_name, **kwargs)
 

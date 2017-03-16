@@ -71,8 +71,8 @@ class Project(UserContent):
                   'steno3d.com.')
         if verbose:
             print('\rStarting upload: {}'.format(self.title), end='')
-        UserContent._upload_size = 0
-        UserContent._upload_total_size = self._nbytes()
+        UserContent._upload_size = 1
+        UserContent._upload_total_size = self._nbytes() + 1
         UserContent._upload_count = 0
         UserContent._upload_total_count = len(self.resources) + 1
         self._upload(**kwargs)
@@ -266,7 +266,7 @@ class Project(UserContent):
     def from_omf(cls, omf_input):
         if isinstance(omf_input, six.string_types):
             from omf import OMFReader
-            omf_input = OMFReader(omf_input)
+            omf_input = OMFReader(omf_input).get_project()
         if omf_input.__class__.__name__ != 'Project':
             raise ValueError('input must be omf file or Project')
         return cls._build_from_omf(omf_input)

@@ -39,6 +39,7 @@ class DataArray(BaseData):
         min_length=1,
         max_length=256,
         required=False,
+        default=properties.undefined,
     )
 
     def __init__(self, array=None, **kwargs):

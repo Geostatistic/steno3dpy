@@ -33,6 +33,13 @@ class DataArray(BaseData):
         },
         default='c',
     )
+    colormap = properties.List(
+        doc='Colormap applied to data range',
+        prop=properties.Color(''),
+        min_length=1,
+        max_length=256,
+        required=False,
+    )
 
     def __init__(self, array=None, **kwargs):
         super(DataArray, self).__init__(**kwargs)
@@ -61,6 +68,8 @@ class DataArray(BaseData):
         dirty = self._dirty_props
         if 'order' in dirty or force:
             datadict['order'] = self.order
+        if self.colormap is not None and 'colormap' in dirty or force:
+            datadict['colormap'] = self.colormap
         return datadict
 
     def _get_dirty_files(self, force=False):
@@ -80,6 +89,8 @@ class DataArray(BaseData):
                 json['array'],
             )
         )
+        if json.get('colormap'):
+            data.colormap = json['colormap']
         return data
 
     @classmethod
@@ -95,4 +106,59 @@ class DataArray(BaseData):
         )
         return data
 
-__all__ = ['DataArray']
+
+class DataCategory(DataArray):
+    _resource_class = 'category'  # ...? or same on the backend...?
+    array = properties.Array(
+        doc='Category index values at every point in the mesh',
+        shape=('*',),
+        dtype=(int,),
+        serializer=array_serializer,
+        deserializer=array_download(('*',), (int,)),
+    )
+    categories = properties.List(
+        doc='List of string categories',
+        prop=properties.String(''),
+        min_length=1,
+        max_length=256,
+    )
+    colormap = properties.List(
+        doc='Colors corresponding to categories',
+        prop=properties.Color(''),
+        min_length=1,
+        max_length=256,
+    )
+
+    @properties.validator
+    def _categories_and_colormap(self):
+        if len(self.categories) != len(self.colormap):
+            raise ValueError('categories and colormap must be equal length')
+
+    @properties.validator
+    def _categories_and_array(self):
+        if min(self.array) < 0 or max(self.array) >= len(self.categories):
+            raise ValueError('indices must be >= 0 and < len(categories)')
+
+    def _get_dirty_data(self, force=False):
+        datadict = super(DataCategory, self)._get_dirty_data(force)
+        dirty = self._dirty_props
+        if 'categories' in dirty or force:
+            datadict['categories'] = self.categories
+        return datadict
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        data = DataCategory(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            order=json['order'],
+            array=cls._props['array'].deserialize(
+                json['array'],
+            ),
+            colormap=json['colormap'],
+            categories=json['categories'],
+        )
+        return data
+
+
+__all__ = ['DataArray', 'DataCategory']

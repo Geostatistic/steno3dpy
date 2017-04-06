@@ -149,12 +149,15 @@ class DataCategory(DataArray):
 
     @properties.validator
     def _populate_colormap(self):
+        if self.colormap:
+            return
         self._categories_and_array()
-        if self.colormap is None:
-            self.colormap = self._random_colormap()
+        self.colormap = self._random_colormap()
 
     @properties.validator
     def _populate_categories(self):
+        if self.categories:
+            return
         self._categories_and_array()
         if self.categories:
             cat_len = len(self.categories)

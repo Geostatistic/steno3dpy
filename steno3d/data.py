@@ -5,6 +5,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from json import dumps
+import random
 from six import string_types
 
 from numpy import ndarray
@@ -34,7 +36,7 @@ class DataArray(BaseData):
         default='c',
     )
     colormap = properties.List(
-        doc='Colormap applied to data range',
+        doc='Colormap applied to data range or categories',
         prop=properties.Color(''),
         min_length=1,
         max_length=256,
@@ -69,8 +71,8 @@ class DataArray(BaseData):
         dirty = self._dirty_props
         if 'order' in dirty or force:
             datadict['order'] = self.order
-        if self.colormap is not None and 'colormap' in dirty or force:
-            datadict['colormap'] = self.colormap
+        if self.colormap and ('colormap' in dirty or force):
+            datadict['colormap'] = dumps(self.colormap)
         return datadict
 
     def _get_dirty_files(self, force=False):
@@ -122,29 +124,45 @@ class DataCategory(DataArray):
         prop=properties.String(''),
         min_length=1,
         max_length=256,
-    )
-    colormap = properties.List(
-        doc='Colors corresponding to categories',
-        prop=properties.Color(''),
-        min_length=1,
-        max_length=256,
+        required=False,
+        default=properties.undefined,
     )
 
     @properties.validator
     def _categories_and_colormap(self):
-        if len(self.categories) != len(self.colormap):
+        if (
+                (self.categories and self.colormap) and
+                len(self.categories) != len(self.colormap)
+        ):
             raise ValueError('categories and colormap must be equal length')
 
     @properties.validator
     def _categories_and_array(self):
-        if min(self.array) < 0 or max(self.array) >= len(self.categories):
-            raise ValueError('indices must be >= 0 and < len(categories)')
+        if min(self.array) < 0:
+            raise ValueError('array indices must be >= 0')
+        if max(self.array) >= 256:
+            raise ValueError('array indices must be < 256')
+        if self.categories and max(self.array) >= len(self.categories):
+            raise ValueError('array indices must be < len(categories)')
+        if self.colormap and max(self.array) >= len(self.colormap):
+            raise ValueError('array indices must be < len(colormap)')
+
+    @properties.validator
+    def _populate_colormap(self):
+        self._categories_and_array()
+        if self.colormap is None:
+            self.colormap = self._random_colormap()
+
+    @properties.validator('array')
+    def _array_gt_zero(self, change):
+        if min(change['value']) < 0:
+            raise ValueError('array indices must be >= 0')
 
     def _get_dirty_data(self, force=False):
         datadict = super(DataCategory, self)._get_dirty_data(force)
         dirty = self._dirty_props
         if 'categories' in dirty or force:
-            datadict['categories'] = self.categories
+            datadict['categories'] = dumps(self.categories)
         return datadict
 
     @classmethod
@@ -160,6 +178,28 @@ class DataCategory(DataArray):
             categories=json['categories'],
         )
         return data
+
+    def _random_colormap(self):
+        if self.categories:
+            map_len = len(self.categories)
+        elif self.array is not None:
+            map_len = max(self.array) + 1
+        else:
+            raise ValueError('categories or array indeces are required for '
+                             'random colormap')
+        if map_len <= len(properties.basic.COLORS_20):
+            return random.sample(properties.basic.COLORS_20, map_len)
+        if map_len <= len(properties.basic.COLORS_NAMED):
+            return random.sample(list(properties.basic.COLORS_NAMED), map_len)
+        if map_len > 256**3:
+            raise ValueError('max colormap length must be less than 256**3')
+        map_ints = random.sample(range(256**3), map_len)
+        def color_from_int(value):
+            r = int(value % 256)
+            g = int((value-r)/256 % 256)
+            b = int(((value-r)/256-g)/256 % 256)
+            return (r, g, b)
+        return [color_from_int(value) for value in map_ints]
 
 
 __all__ = ['DataArray', 'DataCategory']

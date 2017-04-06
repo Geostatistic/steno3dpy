@@ -153,6 +153,15 @@ class DataCategory(DataArray):
         if self.colormap is None:
             self.colormap = self._random_colormap()
 
+    @properties.validator
+    def _populate_categories(self):
+        self._categories_and_array()
+        if self.categories:
+            cat_len = len(self.categories)
+        else:
+            cat_len = max(self.array) + 1
+        self.categories = ['']*cat_len
+
     @properties.validator('array')
     def _array_gt_zero(self, change):
         if min(change['value']) < 0:

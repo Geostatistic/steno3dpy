@@ -181,8 +181,6 @@ class Volume(CompositeResource):
     @properties.validator
     def _validate_data(self):
         """Check if resource is built correctly"""
-        if len(self.data) == 0:
-            raise ValueError('volume must have data')
         for ii, dat in enumerate(self.data):
             assert dat.location == 'CC'  # in ('N', 'CC')
             valid_length = (

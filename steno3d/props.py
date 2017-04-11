@@ -90,8 +90,6 @@ def image_download(url, **kwargs):
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
 
 
-
-
 def array_serializer(data, **kwargs):
     """Convert the array data to a serialized binary format"""
     if isinstance(data.flatten()[0], np.floating):
@@ -111,6 +109,7 @@ def array_serializer(data, **kwargs):
     data.astype(use_dtype).tofile(data_file.file)
     data_file.seek(0)
     return FileProp(data_file, use_dtype)
+
 
 class array_download(object):
 
@@ -149,4 +148,3 @@ class array_download(object):
         arr = arr.reshape(shape)
         data_file.close()
         return arr
-

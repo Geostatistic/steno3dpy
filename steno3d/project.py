@@ -81,7 +81,7 @@ class Project(UserContent):
             print('\nComplete!')
         if verbose and kwargs.get('print_url', True):
             print(self._url)
-        return self._url
+        return self._upload_data['uid']
 
     def _trigger_ACL_fix(self):
         self._put({})

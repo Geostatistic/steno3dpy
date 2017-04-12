@@ -252,7 +252,6 @@ class Mesh2DGrid(BaseMesh):
         except:
             mesh.Z = []
 
-
         return mesh
 
     @classmethod

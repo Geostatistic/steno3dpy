@@ -31,7 +31,7 @@ setup(
         'pypng',
         'requests',
         'six',
-        'properties>=0.3.2',
+        'properties>=0.3.3',
         'vectormath',
     ],
     author='ARANZ Geo Limited',

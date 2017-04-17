@@ -29,7 +29,14 @@ from atexit import register
 from . import parsers
 from . import query
 from . import client
-from .base import ResourceSizeError
+from .base import (
+    FileSizeLimitExceeded,
+    ProjectQuotaExceeded,
+    ProjectResourceLimitExceeded,
+    ProjectSizeLimitExceeded,
+    ResourceSizeError,
+    UploadError,
+)
 from .project import *
 from .data import *
 from .line import *

@@ -10,7 +10,9 @@ from __future__ import unicode_literals
 import six
 import properties
 
-from .base import CompositeResource, ResourceSizeError, UserContent
+from .base import (CompositeResource, ProjectQuotaExceeded,
+                   ProjectResourceLimitExceeded,
+                   ProjectSizeLimitExceeded, UserContent)
 from .client import Comms, needs_login, plot
 
 
@@ -106,7 +108,7 @@ class Project(UserContent):
                 res = self.resources
             res_limit = Comms.user.project_resource_limit
             if len(res) > res_limit:
-                raise ResourceSizeError(
+                raise ProjectResourceLimitExceeded(
                     'Total number of resources in project ({res}) '
                     'exceeds limit: {lim}'.format(res=len(self.resources),
                                                   lim=res_limit)
@@ -114,7 +116,7 @@ class Project(UserContent):
             size_limit = Comms.user.project_size_limit
             sz = self._nbytes()
             if sz > size_limit:
-                raise ResourceSizeError(
+                raise ProjectSizeLimitExceeded(
                     'Total project size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(file=sz,
                                          lim=size_limit)
@@ -171,7 +173,8 @@ class Project(UserContent):
         if resp['quota'] == 'Unlimited':
             pass
         elif resp['count'] >= resp['quota']:
-            raise Exception(QUOTA_REACHED.format(
+            resp.get('message', QUOTA_REACHED)
+            raise ProjectQuotaExceeded(QUOTA_REACHED.format(
                                 priv=privacy,
                                 num=resp['quota']
                             ))

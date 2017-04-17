@@ -103,7 +103,7 @@ def array_serializer(data, **kwargs):
         assert (data.astype(use_dtype) == data).all(), \
             'Converting the type should not screw things up.'
     else:
-        raise Exception('Must be a float or an int: {}'.format(data.dtype))
+        raise TypeError('Must be a float or an int: {}'.format(data.dtype))
 
     data_file = NamedTemporaryFile('rb+', suffix='.dat')
     data.astype(use_dtype).tofile(data_file.file)

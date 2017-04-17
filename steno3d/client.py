@@ -169,7 +169,7 @@ class _Comms(object):
         # Check for HTTPS
         parsed = urlparse(value)
         if '.com' in parsed.hostname and parsed.scheme != 'https':
-            raise Exception('Live endpoints require HTTPS.')
+            raise ValueError('Live endpoints require HTTPS.')
 
         self._base_url = value
 

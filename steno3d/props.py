@@ -76,7 +76,7 @@ class HasSteno3DProps(properties.HasProperties):
 
 
 def image_download(url, **kwargs):
-    im_resp = get(url)
+    im_resp = get(url, timeout=10)
     if im_resp.status_code != 200:
         raise IOError('Failed to download image.')
     output = BytesIO()
@@ -118,7 +118,7 @@ class array_download(object):
         self.dtype = dtype
 
     def __call__(self, url, **kwargs):
-        arr_resp = get(url)
+        arr_resp = get(url, timeout=10)
         if arr_resp.status_code != 200:
             raise IOError('Failed to download array.')
         data_file = NamedTemporaryFile()

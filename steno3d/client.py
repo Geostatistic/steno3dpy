@@ -294,7 +294,8 @@ class _Comms(object):
         try:
             resp = requests.post(
                 self.base_url + 'api/client/steno3dpy',
-                dict(version=__version__)
+                dict(version=__version__),
+                timeout=10,
             )
         except requests.ConnectionError:
             if verbose:
@@ -351,7 +352,8 @@ class _Comms(object):
             resp = requests.get(
                 self.base_url + 'api/me',
                 headers={'sshKey': devel_key,
-                         'client': 'steno3dpy:{}'.format(__version__)}
+                         'client': 'steno3dpy:{}'.format(__version__)},
+                timeout=10,
             )
         except requests.ConnectionError:
             if verbose:
@@ -424,7 +426,8 @@ class _Comms(object):
             files=filedict,
             headers={'sshKey': Comms.user.devel_key,
                      'client': 'steno3dpy:{}'.format(__version__)},
-            cookies=Comms._cookies
+            cookies=Comms._cookies,
+            timeout=10,
         )
         if req.status_code < 210:
             Comms._cookies.update(req.cookies)

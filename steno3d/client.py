@@ -420,12 +420,15 @@ class _Comms(object):
                 filedict[filename + 'Type'] = files[filename].dtype
             else:
                 filedict[filename] = files[filename]
+        headers = {'sshKey': Comms.user.devel_key,
+                   'client': 'steno3dpy:{}'.format(__version__)}
+        if getattr(Comms, 'extra_headers', None):
+            headers.update(Comms.extra_headers)
         req = request_fcn(
             Comms.base_url + url,
             data=data,
             files=filedict,
-            headers={'sshKey': Comms.user.devel_key,
-                     'client': 'steno3dpy:{}'.format(__version__)},
+            headers=headers,
             cookies=Comms._cookies,
             timeout=10,
         )

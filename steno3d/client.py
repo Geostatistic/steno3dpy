@@ -169,7 +169,7 @@ class _Comms(object):
         # Check for HTTPS
         parsed = urlparse(value)
         if '.com' in parsed.hostname and parsed.scheme != 'https':
-            raise Exception('Live endpoints require HTTPS.')
+            raise ValueError('Live endpoints require HTTPS.')
 
         self._base_url = value
 
@@ -294,7 +294,8 @@ class _Comms(object):
         try:
             resp = requests.post(
                 self.base_url + 'api/client/steno3dpy',
-                dict(version=__version__)
+                dict(version=__version__),
+                timeout=(10, 60),
             )
         except requests.ConnectionError:
             if verbose:
@@ -351,7 +352,8 @@ class _Comms(object):
             resp = requests.get(
                 self.base_url + 'api/me',
                 headers={'sshKey': devel_key,
-                         'client': 'steno3dpy:{}'.format(__version__)}
+                         'client': 'steno3dpy:{}'.format(__version__)},
+                timeout=(10, 60),
             )
         except requests.ConnectionError:
             if verbose:
@@ -418,13 +420,17 @@ class _Comms(object):
                 filedict[filename + 'Type'] = files[filename].dtype
             else:
                 filedict[filename] = files[filename]
+        headers = {'sshKey': Comms.user.devel_key,
+                   'client': 'steno3dpy:{}'.format(__version__)}
+        if getattr(Comms, 'extra_headers', None):
+            headers.update(Comms.extra_headers)
         req = request_fcn(
             Comms.base_url + url,
             data=data,
             files=filedict,
-            headers={'sshKey': Comms.user.devel_key,
-                     'client': 'steno3dpy:{}'.format(__version__)},
-            cookies=Comms._cookies
+            headers=headers,
+            cookies=Comms._cookies,
+            timeout=(10, 60),
         )
         if req.status_code < 210:
             Comms._cookies.update(req.cookies)

@@ -10,20 +10,22 @@ from __future__ import unicode_literals
 import six
 import properties
 
-from .base import CompositeResource, ResourceSizeError, UserContent
+from .base import (CompositeResource, ProjectQuotaExceeded,
+                   ProjectResourceLimitExceeded,
+                   ProjectSizeLimitExceeded, UserContent)
 from .client import Comms, needs_login, plot
 
 
 QUOTA_REACHED = """
 Uploading this {priv} project will put you over your quota
 of {num} {priv} project(s). For more projects and space, consider
-upgrading your account: https://steno3d.com/settings/plan
+upgrading your account: {base_url}settings/plan
 """
 
 QUOTA_IMPENDING = """
 After this project, you may upload {remaining} more {priv} project(s) before
 reaching your {priv} project quota. For more projects and space
-consider upgrading your account: https://steno3d.com/settings/plan
+consider upgrading your account: {base_url}settings/plan
 """
 
 
@@ -68,7 +70,7 @@ class Project(UserContent):
             print('Local privacy changes cannot be applied to '
                   'projects that are already uploaded. To make '
                   'these changes, please use the dashboard on '
-                  'steno3d.com.')
+                  '{base_url}'.format(base_url=Comms.base_url))
         if verbose:
             print('\rStarting upload: {}'.format(self.title), end='')
         UserContent._upload_size = 1
@@ -106,7 +108,7 @@ class Project(UserContent):
                 res = self.resources
             res_limit = Comms.user.project_resource_limit
             if len(res) > res_limit:
-                raise ResourceSizeError(
+                raise ProjectResourceLimitExceeded(
                     'Total number of resources in project ({res}) '
                     'exceeds limit: {lim}'.format(res=len(self.resources),
                                                   lim=res_limit)
@@ -114,7 +116,7 @@ class Project(UserContent):
             size_limit = Comms.user.project_size_limit
             sz = self._nbytes()
             if sz > size_limit:
-                raise ResourceSizeError(
+                raise ProjectSizeLimitExceeded(
                     'Total project size ({file} bytes) exceeds limit: '
                     '{lim} bytes'.format(file=sz,
                                          lim=size_limit)
@@ -171,15 +173,18 @@ class Project(UserContent):
         if resp['quota'] == 'Unlimited':
             pass
         elif resp['count'] >= resp['quota']:
-            raise Exception(QUOTA_REACHED.format(
-                                priv=privacy,
-                                num=resp['quota']
-                            ))
+            quota_message = resp.get('message', QUOTA_REACHED)
+            raise ProjectQuotaExceeded(quota_message.format(
+                priv=privacy,
+                num=resp['quota'],
+                base_url=Comms.base_url,
+            ))
         elif verbose and (resp['quota'] - resp['count'] - 1) < 4:
             print(QUOTA_IMPENDING.format(
-                    remaining=resp['quota'] - resp['count'] - 1,
-                    priv=privacy
-                  ))
+                remaining=resp['quota'] - resp['count'] - 1,
+                priv=privacy,
+                base_url=Comms.base_url,
+            ))
         if verbose and self.public:
             print('This PUBLIC project will be viewable by everyone.')
 
@@ -191,7 +196,7 @@ class Project(UserContent):
     @property
     @needs_login
     def url(self):
-        """steno3d.com url of project if uploaded"""
+        """url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
             print('Project not uploaded: Please upload() '
                   'before accessing the URL.')
@@ -234,7 +239,7 @@ class Project(UserContent):
                 pub='PUBLIC' if pub else 'private'
             ))
             print('>> NOTE: Any changes you upload will overwrite the '
-                  'project on steno3d.com')
+                  'project online')
             print('>> ', end='')
             if len(json['perspectiveUids']) > 0:
                 print('and existing perspectives may be invalidated. ', end='')

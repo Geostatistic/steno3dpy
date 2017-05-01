@@ -169,8 +169,16 @@ class Project(UserContent):
         if verbose:
             print('Verifying your quota for ' + privacy + ' projects...')
         resp = Comms.get('api/check/quota?test=ProjectSteno3D')
-        resp = resp['json'][privacy]
-        if resp['quota'] == 'Unlimited':
+        resp = resp['json']
+        mode = resp.get('mode', None)
+        if not mode or mode == 'split':
+            key = privacy
+        else:
+            key = mode
+        resp = resp.get(key, None)
+        if not resp or 'quota' not in resp or 'count' not in resp:
+            pass
+        elif resp['quota'] == 'Unlimited':
             pass
         elif resp['count'] >= resp['quota']:
             quota_message = resp.get('message', QUOTA_REACHED)

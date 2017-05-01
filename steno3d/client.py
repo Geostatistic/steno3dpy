@@ -66,14 +66,14 @@ If the problem persists:
 """
 
 NOT_CONNECTED = """
->> Oh no! We could not connect to the Steno3D server. Please ensure that you are:
+>> Oh no! We could not connect to the server. Please ensure that you are:
 
 1) Connected to the Internet
-2) Can connect to Steno3D at https://steno3d.com
+2) Can connect to {base_url}
 3) If you are getting an InsecurePlatformWarning while using pip try:
     a) Upgrading to Python 2.7.9 or above
     b) Or `pip install --upgrade requests[security]`
-4) Ask for <help@steno3d.com>
+4) Ask for <support@steno3d.com>
 5) Open an issue https://github.com/3ptscience/steno3dpy/issues
 
 """
@@ -299,7 +299,7 @@ class _Comms(object):
             )
         except requests.ConnectionError:
             if verbose:
-                print(NOT_CONNECTED)
+                print(NOT_CONNECTED.format(base_url=self.base_url))
             return False
         if resp.status_code == 200:
             resp_json = resp.json()
@@ -357,7 +357,7 @@ class _Comms(object):
             )
         except requests.ConnectionError:
             if verbose:
-                print(NOT_CONNECTED)
+                print(NOT_CONNECTED.format(base_url=self.base_url))
             return
         if resp.status_code is not 200:
             if verbose:

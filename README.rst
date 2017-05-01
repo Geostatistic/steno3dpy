@@ -61,5 +61,5 @@ with `?` and tab completion.
     :alt: Steno3D in action
     :target: https://steno3d.com/
 
-The latest version of Steno3D is 0.3.1. Detailed release notes are available
+The latest version of Steno3D is 0.3.2. Detailed release notes are available
 on `github <https://github.com/3ptscience/steno3dpy/releases>`_.

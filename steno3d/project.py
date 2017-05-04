@@ -12,7 +12,7 @@ import properties
 
 from .base import (CompositeResource, ProjectQuotaExceeded,
                    ProjectResourceLimitExceeded,
-                   ProjectSizeLimitExceeded, UserContent)
+                   ProjectSizeLimitExceeded, UploadError, UserContent)
 from .client import Comms, needs_login, plot
 
 
@@ -61,7 +61,6 @@ class Project(UserContent):
         verbose = kwargs.get('verbose', True)
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
-
             self._check_project_quota(verbose)
             self._public_online = self.public
         elif verbose and self._public_online:
@@ -84,6 +83,14 @@ class Project(UserContent):
         if verbose and kwargs.get('print_url', True):
             print(self._url)
         return self._upload_data['uid']
+
+    def _post(self, datadict=None, files=None):
+        try:
+            return super(Project, self)._post(datadict, files)
+        except UploadError:
+            if getattr(self, '_upload_data', None) is None:
+                self._check_project_quota(False)
+            raise
 
     def _trigger_ACL_fix(self):
         self._put({})

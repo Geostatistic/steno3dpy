@@ -167,7 +167,7 @@ class UserContent(HasSteno3DProps):
                     except ValueError:
                         resp = rq
 
-                    raise Exception(
+                    raise UploadError(
                         'Upload failed: {location}'.format(
                             location=url,
                         ) +
@@ -182,7 +182,7 @@ class UserContent(HasSteno3DProps):
             self._upload_data = [rq['json'] for rq in req]
         else:
             if req['status_code'] != 200:
-                raise Exception(
+                raise UploadError(
                     'Upload failed: {location}'.format(
                         location=url,
                     ) +
@@ -264,14 +264,15 @@ class BaseResource(UserContent):
 
 
     def _validate_file_size(self, name, arr):
-        file_limit = Comms.user.file_size_limit
-        if self._nbytes(arr) > file_limit:
-            raise ResourceSizeError(
-                '{name} file size ({file} bytes) exceeds limit: '
-                '{lim} bytes'.format(name=name,
-                                     file=self._nbytes(arr),
-                                     lim=file_limit)
-            )
+        if Comms.user.logged_in:
+            file_limit = Comms.user.file_size_limit
+            if self._nbytes(arr) > file_limit:
+                raise FileSizeLimitExceeded(
+                    '{name} file size ({file} bytes) exceeds limit: '
+                    '{lim} bytes'.format(name=name,
+                                         file=self._nbytes(arr),
+                                         lim=file_limit)
+                )
         return True
 
 
@@ -491,14 +492,15 @@ class BaseMesh(BaseResource):
 
     @properties.validator
     def _validate_mesh(self):
-        file_limit = Comms.user.file_size_limit
-        if self._nbytes() > file_limit:
-            raise ResourceSizeError(
-                '{name} size ({file} bytes) exceeds limit: '
-                '{lim} bytes'.format(name=self.__class__.__name__,
-                                     file=self._nbytes(),
-                                     lim=file_limit)
-            )
+        if Comms.user.logged_in:
+            file_limit = Comms.user.file_size_limit
+            if self._nbytes() > file_limit:
+                raise FileSizeLimitExceeded(
+                    '{name} size ({file} bytes) exceeds limit: '
+                    '{lim} bytes'.format(name=self.__class__.__name__,
+                                         file=self._nbytes(),
+                                         lim=file_limit)
+                )
         return True
 
 class BaseData(BaseResource):
@@ -532,3 +534,23 @@ class BaseTexture2D(BaseResource):
 
 class ResourceSizeError(Exception):
     """Exception for exceeding size limits"""
+
+
+class FileSizeLimitExceeded(ResourceSizeError):
+    """Exception when a file to upload exceeds limits"""
+
+
+class ProjectResourceLimitExceeded(ResourceSizeError):
+    """Exception when number of resources in a project exceeds limits"""
+
+
+class ProjectSizeLimitExceeded(ResourceSizeError):
+    """Exception when total size of project exceeds limits"""
+
+
+class ProjectQuotaExceeded(Exception):
+    """Exception when an upload past the project quota is attempted"""
+
+
+class UploadError(Exception):
+    """Exception when upload fails"""

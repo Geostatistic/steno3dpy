@@ -4,6 +4,9 @@
     :target: https://steno3d.com/
     :alt: Steno3D
 
+|
+|
+
 .. image:: https://travis-ci.org/3ptscience/steno3dpy.svg?branch=master
     :target: https://travis-ci.org/3ptscience/steno3dpy
 
@@ -18,7 +21,7 @@
     :target: http://mybinder.org/repo/3ptscience/steno3d-notebooks
 
 Welcome to the Python client library for `Steno3D <https://steno3d.com>`_
-by `ARANZ Geo Limited <https://aranzgeo.com>`_. Explore and collaborate on your 3D data!
+by `ARANZ Geo Limited <https://www.aranzgeo.com>`_. Explore and collaborate on your 3D data!
 
 Demo Video
 ----------
@@ -36,8 +39,8 @@ If you have not yet installed `Steno3D <https://steno3d.com>`_, simply
 
     pip install steno3d
 
-You also need to `sign up for a Steno3D account <https://www.steno3d.com/signup>`_.
-From there, you can `request a developer API key <https://www.steno3d.com/settings/developer>`_.
+You also need to `sign up for a Steno3D account <https://steno3d.com/signup>`_.
+From there, you can `request a developer API key <https://steno3d.com/settings/developer>`_.
 
 At that point, you can
 
@@ -58,5 +61,5 @@ with `?` and tab completion.
     :alt: Steno3D in action
     :target: https://steno3d.com/
 
-The latest version of Steno3D is 0.3.0. Detailed release notes are available
+The latest version of Steno3D is 0.3.2b0. Detailed release notes are available
 on `github <https://github.com/3ptscience/steno3dpy/releases>`_.

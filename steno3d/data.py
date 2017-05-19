@@ -17,7 +17,13 @@ from .props import array_serializer, array_download
 
 
 class DataArray(BaseData):
-    """Data array with unique values at every point in the mesh"""
+    """Data array with unique values at every point in the mesh
+
+    .. note:
+
+        DataArray custom colormap is currently unsupported on
+        steno3d.com
+    """
     _resource_class = 'array'
     array = properties.Array(
         doc='Data, unique values at every point in the mesh',
@@ -111,7 +117,11 @@ class DataArray(BaseData):
 
 
 class DataCategory(DataArray):
-    _resource_class = 'category'  # ...? or same on the backend...?
+    """Data array with indices and corresponding string categories
+
+    If unspecified, colormap colors will be randomized
+    """
+    _resource_class = 'category'
     array = properties.Array(
         doc='Category index values at every point in the mesh',
         shape=('*',),

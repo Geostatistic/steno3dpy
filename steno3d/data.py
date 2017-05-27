@@ -9,7 +9,7 @@ from json import dumps
 import random
 from six import string_types
 
-from numpy import ndarray
+import numpy as np
 import properties
 
 from .base import BaseData
@@ -58,7 +58,7 @@ class DataArray(BaseData):
     def _nbytes(self, arr=None):
         if arr is None or (isinstance(arr, string_types) and arr == 'array'):
             arr = self.array
-        if isinstance(arr, ndarray):
+        if isinstance(arr, np.ndarray):
             return arr.astype('f4').nbytes
         raise ValueError('DataArray cannot calculate the number of '
                          'bytes of {}'.format(arr))
@@ -116,18 +116,43 @@ class DataArray(BaseData):
         return data
 
 
+def index_serializer(data, **kwargs):
+    """Serializes int indices as floats, where -1 is replaced with NaN"""
+    data = data.astype(float)
+    data = np.where(data == -1.0, np.nan, data)
+    return array_serializer(data, **kwargs)
+
+
+class index_download(array_download):
+    """Download index array as floats and convert to ints
+
+    This replaces NaN values with -1
+    """
+
+    def __init__(self, shape):
+        self.shape = shape
+        self.dtype = (float,)
+
+    def __call__(self, url, **kwargs):
+        arr = super(index_download, self).__call__(url, **kwargs)
+        arr = np.where(np.isnan(arr), -1, arr)
+        arr = arr.astype(int)
+        return arr
+
+
 class DataCategory(DataArray):
     """Data array with indices and corresponding string categories
 
-    If unspecified, colormap colors will be randomized
+    For locations with no data, use -1 for index.
+    If colormap is unspecified, colors will be randomized.
     """
     _resource_class = 'category'
     array = properties.Array(
         doc='Category index values at every point in the mesh',
         shape=('*',),
         dtype=(int,),
-        serializer=array_serializer,
-        deserializer=array_download(('*',), (int,)),
+        serializer=index_serializer,
+        deserializer=index_download(('*',)),
     )
     categories = properties.List(
         doc='List of string categories',
@@ -148,8 +173,8 @@ class DataCategory(DataArray):
 
     @properties.validator
     def _categories_and_array(self):
-        if min(self.array) < 0:
-            raise ValueError('array indices must be >= 0')
+        if min(self.array) < -1:
+            raise ValueError('array indices must be >= -1')
         if max(self.array) >= 256:
             raise ValueError('array indices must be < 256')
         if self.categories and max(self.array) >= len(self.categories):
@@ -177,8 +202,8 @@ class DataCategory(DataArray):
 
     @properties.validator('array')
     def _array_gt_zero(self, change):
-        if min(change['value']) < 0:
-            raise ValueError('array indices must be >= 0')
+        if min(change['value']) < -1:
+            raise ValueError('array indices must be >= -1')
 
     def _get_dirty_data(self, force=False):
         datadict = super(DataCategory, self)._get_dirty_data(force)

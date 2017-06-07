@@ -37,15 +37,12 @@ class User(properties.HasProperties):
 
     file_size_limit = properties.GettableProperty(
         doc='Inidividual file limit',
-        default=25000000,
     )
     project_size_limit = properties.GettableProperty(
         doc='Project size limit',
-        default=100000000,
     )
     project_resource_limit = properties.GettableProperty(
         doc='Maximum resources in a project',
-        default=100,
     )
 
     def login_with_json(self, login_json):
@@ -55,6 +52,15 @@ class User(properties.HasProperties):
         self._backend['url'] = login_json['url']
         self._backend['affiliation'] = login_json['affiliation']
         self._backend['location'] = login_json['location']
+        self._backend['file_size_limit'] = login_json.get(
+            'file_size_limit', 25000000
+        )
+        self._backend['project_size_limit'] = login_json.get(
+            'project_size_limit', 100000000
+        )
+        self._backend['project_resource_limit'] = login_json.get(
+            'project_resource_limit', 100
+        )
 
     def set_key(self, devel_key):
         self._backend['devel_key'] = devel_key
@@ -67,6 +73,9 @@ class User(properties.HasProperties):
         self._backend.pop('affiliation', None)
         self._backend.pop('location', None)
         self._backend.pop('devel_key', None)
+        self._backend.pop('file_size_limit', None)
+        self._backend.pop('project_size_limit', None)
+        self._backend.pop('project_resource_limit', None)
 
     @property
     def logged_in(self):

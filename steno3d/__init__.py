@@ -29,7 +29,14 @@ from atexit import register
 from . import parsers
 from . import query
 from . import client
-from .base import ResourceSizeError
+from .base import (
+    FileSizeLimitExceeded,
+    ProjectQuotaExceeded,
+    ProjectResourceLimitExceeded,
+    ProjectSizeLimitExceeded,
+    ResourceSizeError,
+    UploadError,
+)
 from .project import *
 from .data import *
 from .line import *
@@ -39,7 +46,7 @@ from .texture import *
 from .vector import *
 from .volume import *
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 __author__ = 'ARANZ Geo Limited'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017 ARANZ Geo Limited'

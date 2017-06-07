@@ -10,20 +10,22 @@ from __future__ import unicode_literals
 import six
 import properties
 
-from .base import CompositeResource, ResourceSizeError, UserContent
+from .base import (CompositeResource, ProjectQuotaExceeded,
+                   ProjectResourceLimitExceeded,
+                   ProjectSizeLimitExceeded, UploadError, UserContent)
 from .client import Comms, needs_login, plot
 
 
 QUOTA_REACHED = """
 Uploading this {priv} project will put you over your quota
 of {num} {priv} project(s). For more projects and space, consider
-upgrading your account: https://steno3d.com/settings/plan
+upgrading your account: {base_url}settings/plan
 """
 
 QUOTA_IMPENDING = """
 After this project, you may upload {remaining} more {priv} project(s) before
 reaching your {priv} project quota. For more projects and space
-consider upgrading your account: https://steno3d.com/settings/plan
+consider upgrading your account: {base_url}settings/plan
 """
 
 
@@ -59,7 +61,6 @@ class Project(UserContent):
         verbose = kwargs.get('verbose', True)
         if getattr(self, '_upload_data', None) is None:
             assert self.validate()
-
             self._check_project_quota(verbose)
             self._public_online = self.public
         elif verbose and self._public_online:
@@ -68,7 +69,7 @@ class Project(UserContent):
             print('Local privacy changes cannot be applied to '
                   'projects that are already uploaded. To make '
                   'these changes, please use the dashboard on '
-                  'steno3d.com.')
+                  '{base_url}'.format(base_url=Comms.base_url))
         if verbose:
             print('\rStarting upload: {}'.format(self.title), end='')
         UserContent._upload_size = 1
@@ -81,7 +82,15 @@ class Project(UserContent):
             print('\nComplete!')
         if verbose and kwargs.get('print_url', True):
             print(self._url)
-        return self._url
+        return self._upload_data['uid']
+
+    def _post(self, datadict=None, files=None):
+        try:
+            return super(Project, self)._post(datadict, files)
+        except UploadError:
+            if getattr(self, '_upload_data', None) is None:
+                self._check_project_quota(False)
+            raise
 
     def _trigger_ACL_fix(self):
         self._put({})
@@ -101,23 +110,24 @@ class Project(UserContent):
         return sum(r._nbytes() for r in self.resources)
 
     def _validate_project_size(self, res=None):
-        if res is None:
-            res = self.resources
-        res_limit = Comms.user.project_resource_limit
-        if len(res) > res_limit:
-            raise ResourceSizeError(
-                'Total number of resources in project ({res}) '
-                'exceeds limit: {lim}'.format(res=len(self.resources),
-                                              lim=res_limit)
-            )
-        size_limit = Comms.user.project_size_limit
-        sz = self._nbytes()
-        if sz > size_limit:
-            raise ResourceSizeError(
-                'Total project size ({file} bytes) exceeds limit: '
-                '{lim} bytes'.format(file=sz,
-                                     lim=size_limit)
-            )
+        if Comms.user.logged_in:
+            if res is None:
+                res = self.resources
+            res_limit = Comms.user.project_resource_limit
+            if len(res) > res_limit:
+                raise ProjectResourceLimitExceeded(
+                    'Total number of resources in project ({res}) '
+                    'exceeds limit: {lim}'.format(res=len(self.resources),
+                                                  lim=res_limit)
+                )
+            size_limit = Comms.user.project_size_limit
+            sz = self._nbytes()
+            if sz > size_limit:
+                raise ProjectSizeLimitExceeded(
+                    'Total project size ({file} bytes) exceeds limit: '
+                    '{lim} bytes'.format(file=sz,
+                                         lim=size_limit)
+                )
         return True
 
     @properties.observer('resources')
@@ -166,19 +176,30 @@ class Project(UserContent):
         if verbose:
             print('Verifying your quota for ' + privacy + ' projects...')
         resp = Comms.get('api/check/quota?test=ProjectSteno3D')
-        resp = resp['json'][privacy]
-        if resp['quota'] == 'Unlimited':
+        resp = resp['json']
+        mode = resp.get('mode', None)
+        if not mode or mode == 'split':
+            key = privacy
+        else:
+            key = mode
+        resp = resp.get(key, None)
+        if not resp or 'quota' not in resp or 'count' not in resp:
+            pass
+        elif resp['quota'] == 'Unlimited':
             pass
         elif resp['count'] >= resp['quota']:
-            raise Exception(QUOTA_REACHED.format(
-                                priv=privacy,
-                                num=resp['quota']
-                            ))
+            quota_message = resp.get('message', QUOTA_REACHED)
+            raise ProjectQuotaExceeded(quota_message.format(
+                priv=privacy,
+                num=resp['quota'],
+                base_url=Comms.base_url,
+            ))
         elif verbose and (resp['quota'] - resp['count'] - 1) < 4:
             print(QUOTA_IMPENDING.format(
-                    remaining=resp['quota'] - resp['count'] - 1,
-                    priv=privacy
-                  ))
+                remaining=resp['quota'] - resp['count'] - 1,
+                priv=privacy,
+                base_url=Comms.base_url,
+            ))
         if verbose and self.public:
             print('This PUBLIC project will be viewable by everyone.')
 
@@ -190,7 +211,7 @@ class Project(UserContent):
     @property
     @needs_login
     def url(self):
-        """steno3d.com url of project if uploaded"""
+        """url of project if uploaded"""
         if getattr(self, '_upload_data', None) is None:
             print('Project not uploaded: Please upload() '
                   'before accessing the URL.')
@@ -233,7 +254,7 @@ class Project(UserContent):
                 pub='PUBLIC' if pub else 'private'
             ))
             print('>> NOTE: Any changes you upload will overwrite the '
-                  'project on steno3d.com')
+                  'project online')
             print('>> ', end='')
             if len(json['perspectiveUids']) > 0:
                 print('and existing perspectives may be invalidated. ', end='')

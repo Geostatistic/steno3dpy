@@ -5,9 +5,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from json import dumps
+import random
 from six import string_types
 
-from numpy import ndarray
+import numpy as np
 import properties
 
 from .base import BaseData
@@ -15,7 +17,13 @@ from .props import array_serializer, array_download
 
 
 class DataArray(BaseData):
-    """Data array with unique values at every point in the mesh"""
+    """Data array with unique values at every point in the mesh
+
+    .. note:
+
+        DataArray custom colormap is currently unsupported on
+        steno3d.com
+    """
     _resource_class = 'array'
     array = properties.Array(
         doc='Data, unique values at every point in the mesh',
@@ -33,6 +41,14 @@ class DataArray(BaseData):
         },
         default='c',
     )
+    colormap = properties.List(
+        doc='Colormap applied to data range or categories',
+        prop=properties.Color(''),
+        min_length=1,
+        max_length=256,
+        required=False,
+        default=properties.undefined,
+    )
 
     def __init__(self, array=None, **kwargs):
         super(DataArray, self).__init__(**kwargs)
@@ -42,7 +58,7 @@ class DataArray(BaseData):
     def _nbytes(self, arr=None):
         if arr is None or (isinstance(arr, string_types) and arr == 'array'):
             arr = self.array
-        if isinstance(arr, ndarray):
+        if isinstance(arr, np.ndarray):
             return arr.astype('f4').nbytes
         raise ValueError('DataArray cannot calculate the number of '
                          'bytes of {}'.format(arr))
@@ -61,6 +77,8 @@ class DataArray(BaseData):
         dirty = self._dirty_props
         if 'order' in dirty or force:
             datadict['order'] = self.order
+        if self.colormap and ('colormap' in dirty or force):
+            datadict['colormap'] = dumps(self.colormap)
         return datadict
 
     def _get_dirty_files(self, force=False):
@@ -80,6 +98,8 @@ class DataArray(BaseData):
                 json['array'],
             )
         )
+        if json.get('colormap'):
+            data.colormap = json['colormap']
         return data
 
     @classmethod
@@ -95,4 +115,138 @@ class DataArray(BaseData):
         )
         return data
 
-__all__ = ['DataArray']
+
+def index_serializer(data, **kwargs):
+    """Serializes int indices as floats, where -1 is replaced with NaN"""
+    data = data.astype(float)
+    data = np.where(data == -1.0, np.nan, data)
+    return array_serializer(data, **kwargs)
+
+
+class index_download(array_download):
+    """Download index array as floats and convert to ints
+
+    This replaces NaN values with -1
+    """
+
+    def __init__(self, shape):
+        self.shape = shape
+        self.dtype = (float,)
+
+    def __call__(self, url, **kwargs):
+        arr = super(index_download, self).__call__(url, **kwargs)
+        arr = np.where(np.isnan(arr), -1, arr)
+        arr = arr.astype(int)
+        return arr
+
+
+class DataCategory(DataArray):
+    """Data array with indices and corresponding string categories
+
+    For locations with no data, use -1 for index.
+    If colormap is unspecified, colors will be randomized.
+    """
+    _resource_class = 'category'
+    array = properties.Array(
+        doc='Category index values at every point in the mesh',
+        shape=('*',),
+        dtype=(int,),
+        serializer=index_serializer,
+        deserializer=index_download(('*',)),
+    )
+    categories = properties.List(
+        doc='List of string categories',
+        prop=properties.String(''),
+        min_length=1,
+        max_length=256,
+        required=False,
+        default=properties.undefined,
+    )
+
+    @properties.validator
+    def _categories_and_colormap(self):
+        if (
+                (self.categories and self.colormap) and
+                len(self.categories) != len(self.colormap)
+        ):
+            raise ValueError('categories and colormap must be equal length')
+
+    @properties.validator
+    def _categories_and_array(self):
+        if min(self.array) < -1:
+            raise ValueError('array indices must be >= -1')
+        if max(self.array) >= 256:
+            raise ValueError('array indices must be < 256')
+        if self.categories and max(self.array) >= len(self.categories):
+            raise ValueError('array indices must be < len(categories)')
+        if self.colormap and max(self.array) >= len(self.colormap):
+            raise ValueError('array indices must be < len(colormap)')
+
+    @properties.validator
+    def _populate_colormap(self):
+        if self.colormap:
+            return
+        self._categories_and_array()
+        self.colormap = self._random_colormap()
+
+    @properties.validator
+    def _populate_categories(self):
+        if self.categories:
+            return
+        self._categories_and_array()
+        if self.categories:
+            cat_len = len(self.categories)
+        else:
+            cat_len = max(self.array) + 1
+        self.categories = ['']*cat_len
+
+    @properties.validator('array')
+    def _array_gt_zero(self, change):
+        if min(change['value']) < -1:
+            raise ValueError('array indices must be >= -1')
+
+    def _get_dirty_data(self, force=False):
+        datadict = super(DataCategory, self)._get_dirty_data(force)
+        dirty = self._dirty_props
+        if 'categories' in dirty or force:
+            datadict['categories'] = dumps(self.categories)
+        return datadict
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        data = DataCategory(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            order=json['order'],
+            array=cls._props['array'].deserialize(
+                json['array'],
+            ),
+            colormap=json['colormap'],
+            categories=json['categories'],
+        )
+        return data
+
+    def _random_colormap(self):
+        if self.categories:
+            map_len = len(self.categories)
+        elif self.array is not None:
+            map_len = max(self.array) + 1
+        else:
+            raise ValueError('categories or array indeces are required for '
+                             'random colormap')
+        if map_len <= len(properties.basic.COLORS_20):
+            return random.sample(properties.basic.COLORS_20, map_len)
+        if map_len <= len(properties.basic.COLORS_NAMED):
+            return random.sample(list(properties.basic.COLORS_NAMED), map_len)
+        if map_len > 256**3:
+            raise ValueError('max colormap length must be less than 256**3')
+        map_ints = random.sample(range(256**3), map_len)
+        def color_from_int(value):
+            r = int(value % 256)
+            g = int((value-r)/256 % 256)
+            b = int(((value-r)/256-g)/256 % 256)
+            return (r, g, b)
+        return [color_from_int(value) for value in map_ints]
+
+
+__all__ = ['DataArray', 'DataCategory']

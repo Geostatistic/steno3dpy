@@ -76,7 +76,7 @@ class HasSteno3DProps(properties.HasProperties):
 
 
 def image_download(url, **kwargs):
-    im_resp = get(url)
+    im_resp = get(url, timeout=60)
     if im_resp.status_code != 200:
         raise IOError('Failed to download image.')
     output = BytesIO()
@@ -88,8 +88,6 @@ def image_download(url, **kwargs):
 
 
 FileProp = namedtuple('FileProp', ['file', 'dtype'])
-
-
 
 
 def array_serializer(data, **kwargs):
@@ -105,12 +103,13 @@ def array_serializer(data, **kwargs):
         assert (data.astype(use_dtype) == data).all(), \
             'Converting the type should not screw things up.'
     else:
-        raise Exception('Must be a float or an int: {}'.format(data.dtype))
+        raise TypeError('Must be a float or an int: {}'.format(data.dtype))
 
     data_file = NamedTemporaryFile('rb+', suffix='.dat')
     data.astype(use_dtype).tofile(data_file.file)
     data_file.seek(0)
     return FileProp(data_file, use_dtype)
+
 
 class array_download(object):
 
@@ -119,7 +118,7 @@ class array_download(object):
         self.dtype = dtype
 
     def __call__(self, url, **kwargs):
-        arr_resp = get(url)
+        arr_resp = get(url, timeout=60)
         if arr_resp.status_code != 200:
             raise IOError('Failed to download array.')
         data_file = NamedTemporaryFile()
@@ -149,4 +148,3 @@ class array_download(object):
         arr = arr.reshape(shape)
         data_file.close()
         return arr
-

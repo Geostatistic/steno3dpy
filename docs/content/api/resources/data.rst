@@ -52,3 +52,5 @@ For in-depth examples of binding data to resources please refer to the
 `example notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
 
 .. autoclass:: steno3d.data.DataArray
+
+.. autoclass:: steno3d.data.DataCategory

@@ -9,7 +9,7 @@ Line
 
 Steno3D Lines are 1D resources. The steps to construct the line resource
 pictured above can be found online in the
-`example notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
+`example notebooks <https://github.com/aranzgeo/steno3d-notebooks>`_.
 
 .. autoclass:: steno3d.line.Line
 

@@ -7,7 +7,7 @@ What is Steno3D
 
 Steno3D_ is designed for you to explore and share your 3D data. Below is a
 visual overview of this library. An interactive tutorial is also available
-online as a `Jupyter notebook <https://github.com/3ptscience/steno3d-notebooks>`_
+online as a `Jupyter notebook <https://github.com/aranzgeo/steno3d-notebooks>`_
 
 .. TODO: structure image and some explanation
 

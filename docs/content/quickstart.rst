@@ -35,8 +35,7 @@ or install from `source <https://github.com/aranzgeo/steno3dpy>`_:
 
 Example `Jupyter notebooks <http://jupyter.readthedocs.io/en/latest/install.html>`_
 can be `cloned <https://github.com/aranzgeo/steno3d-notebooks>`_
-or you can follow along `online <http://mybinder.org/repo/aranzgeo/steno3d-notebooks>`_
-with the First Project below
+so you can follow along with the First Project below
 
 .. code::
 
@@ -49,15 +48,14 @@ A First Project
 ---------------
 
 Let's get started using Steno3D. The following demo project is available
-online in a Jupyter notebook at `mybinder.org <http://mybinder.org/repo/aranzgeo/steno3d-notebooks>`_,
-no installation required.
+in the `example Jupyter notebooks <https://github.com/aranzgeo/steno3d-notebooks>`_.
 
 Here, we will create a public project containing a surface, upload it, and explore it with Steno3D!
 
 .. image:: /images/steno3dpy_screenshot.png
     :width: 80%
     :align: center
-    :target: http://mybinder.org/repo/aranzgeo/steno3d-notebooks
+    :target: https://github.com/aranzgeo/steno3d-notebooks
 
 Start by importing Steno3D. If you are using the online notebooks
 your environment should already be set up; otherwise, Steno3D is

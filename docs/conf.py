@@ -309,8 +309,7 @@ texinfo_documents = [
 intersphinx_mapping = {'https://docs.python.org/': None,
                        'http://propertiespy.readthedocs.io/en/latest/': None}
 
-linkcheck_ignore = ['http://mybinder.org/repo/aranzgeo/steno3d-notebooks',
-                    'http://docs.scipy.org/doc/numpy/reference/']
+linkcheck_ignore = ['http://docs.scipy.org/doc/numpy/reference/']
 linkcheck_retries = 10
 
 

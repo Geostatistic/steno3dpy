@@ -219,12 +219,20 @@ class Project(UserContent):
 
     @needs_login
     def plot(self):
-        """Display the 3D representation of the content"""
+        """Display the 3D representation of the content
+
+        You must be logged in to steno3d.com for the plot to display
+        """
         if getattr(self, '_upload_data', None) is None:
             print('Project not uploaded: Please upload() '
                   'before plotting.')
             return
-        return plot(self._url)
+        url = '{base}{mapi}/{uid}'.format(
+            base=Comms.base_url,
+            mapi='embed',
+            uid=self._upload_data['uid'],
+        )
+        return plot(url)
 
     @classmethod
     def _build(cls, uid, copy=True, tab_level='', verbose=True):

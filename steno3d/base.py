@@ -391,11 +391,11 @@ class CompositeResource(BaseResource):
     @needs_login
     def plot(self):
         """Display the 3D representation of the content"""
-        if getattr(self, '_upload_data', None) is None:
+        if getattr(self.project, '_upload_data', None) is None:
             print('Resource not uploaded: Please upload() '
                   'before plotting.')
             return
-        return plot(self._url)
+        return self.project.plot()
 
     @classmethod
     def _build_from_json(cls, json, copy=True, tab_level='', **kwargs):

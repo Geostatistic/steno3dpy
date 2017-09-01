@@ -281,7 +281,8 @@ class Project(UserContent):
                 src=longuid.split(':')[1],
                 copy=copy,
                 tab_level=tab_level + '    ',
-                project=proj
+                project=proj,
+                using='ProjectSteno3D:{}'.format(uid),
             )]
         if not copy:
             proj._public_online = pub

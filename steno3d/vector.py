@@ -25,7 +25,7 @@ class Vector(CompositeResource):
     mesh = properties.Instance(
         doc='Mesh',
         instance_class=Mesh0D,
-        auto_create=True,
+        default=Mesh0D,
     )
     vectors = properties.Array(
         doc='Vector',
@@ -43,7 +43,7 @@ class Vector(CompositeResource):
     opts = properties.Instance(
         doc='Options',
         instance_class=_VectorOptions,
-        auto_create=True,
+        default=_VectorOptions,
     )
 
     def _nbytes(self):

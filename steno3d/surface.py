@@ -53,7 +53,7 @@ class Mesh2D(BaseMesh):
     opts = properties.Instance(
         doc='Mesh2D Options',
         instance_class=_Mesh2DOptions,
-        auto_create=True,
+        default=_Mesh2DOptions,
     )
 
     @property
@@ -164,7 +164,7 @@ class Mesh2DGrid(BaseMesh):
     opts = properties.Instance(
         doc='Mesh2D Options',
         instance_class=_Mesh2DOptions,
-        auto_create=True,
+        default=_Mesh2DOptions,
     )
 
     @property
@@ -280,7 +280,7 @@ class _SurfaceBinder(HasSteno3DProps):
     data = properties.Instance(
         doc='Data',
         instance_class=DataArray,
-        auto_create=True,
+        default=DataArray,
     )
 
 
@@ -289,7 +289,7 @@ class Surface(CompositeResource):
     mesh = properties.Union(
         doc='Mesh',
         props=(
-            properties.Instance('', Mesh2D, auto_create=True),
+            properties.Instance('', Mesh2D, default=Mesh2D),
             properties.Instance('', Mesh2DGrid)
         )
     )
@@ -308,7 +308,7 @@ class Surface(CompositeResource):
     opts = properties.Instance(
         doc='Options',
         instance_class=_SurfaceOptions,
-        auto_create=True,
+        default=_SurfaceOptions,
     )
 
     def _nbytes(self):

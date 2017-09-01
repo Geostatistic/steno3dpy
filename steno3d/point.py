@@ -39,7 +39,7 @@ class Mesh0D(BaseMesh):
     opts = properties.Instance(
         doc='Mesh0D Options',
         instance_class=_Mesh0DOptions,
-        auto_create=True,
+        default=_Mesh0DOptions,
     )
 
     @property
@@ -108,7 +108,7 @@ class _PointBinder(HasSteno3DProps):
     data = properties.Instance(
         doc='Data',
         instance_class=DataArray,
-        auto_create=True,
+        default=DataArray,
     )
 
 
@@ -117,7 +117,7 @@ class Point(CompositeResource):
     mesh = properties.Instance(
         doc='Mesh',
         instance_class=Mesh0D,
-        auto_create=True,
+        default=Mesh0D,
     )
     data = properties.List(
         doc='Data',
@@ -134,7 +134,7 @@ class Point(CompositeResource):
     opts = properties.Instance(
         doc='Options',
         instance_class=_PointOptions,
-        auto_create=True,
+        default=_PointOptions,
     )
 
     def _nbytes(self):

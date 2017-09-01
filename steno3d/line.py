@@ -55,7 +55,7 @@ class Mesh1D(BaseMesh):
     opts = properties.Instance(
         doc='Options',
         instance_class=_Mesh1DOptions,
-        auto_create=True,
+        default=_Mesh1DOptions,
     )
 
     @property
@@ -141,7 +141,7 @@ class _LineBinder(HasSteno3DProps):
     data = properties.Instance(
         doc='Data',
         instance_class=DataArray,
-        auto_create=True,
+        default=DataArray,
     )
 
 
@@ -150,7 +150,7 @@ class Line(CompositeResource):
     mesh = properties.Instance(
         doc='Mesh',
         instance_class=Mesh1D,
-        auto_create=True,
+        default=Mesh1D,
     )
     data = properties.List(
         doc='Data',
@@ -161,7 +161,7 @@ class Line(CompositeResource):
     opts = properties.Instance(
         doc='Options',
         instance_class=_LineOptions,
-        auto_create=True,
+        default=_LineOptions,
     )
 
     def _nbytes(self):

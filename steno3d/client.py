@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -295,7 +295,7 @@ class _Comms(object):
             resp = requests.post(
                 self.base_url + 'api/client/steno3dpy',
                 dict(version=__version__),
-                timeout=60,
+                timeout=120,
             )
         except requests.ConnectionError:
             if verbose:
@@ -353,7 +353,7 @@ class _Comms(object):
                 self.base_url + 'api/me',
                 headers={'sshKey': devel_key,
                          'client': 'steno3dpy:{}'.format(__version__)},
-                timeout=60,
+                timeout=120,
             )
         except requests.ConnectionError:
             if verbose:
@@ -430,7 +430,7 @@ class _Comms(object):
             files=filedict,
             headers=headers,
             cookies=Comms._cookies,
-            timeout=60,
+            timeout=120,
         )
         if req.status_code < 210:
             Comms._cookies.update(req.cookies)

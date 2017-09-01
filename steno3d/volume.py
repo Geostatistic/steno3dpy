@@ -64,7 +64,7 @@ class Mesh3DGrid(BaseMesh):
     opts = properties.Instance(
         doc='Mesh3D Options',
         instance_class=_Mesh3DOptions,
-        auto_create=True,
+        default=_Mesh3DOptions,
     )
 
     @property
@@ -152,7 +152,7 @@ class _VolumeBinder(HasSteno3DProps):
     data = properties.Instance(
         doc='Data',
         instance_class=DataArray,
-        auto_create=True,
+        default=DataArray,
     )
 
 
@@ -161,7 +161,7 @@ class Volume(CompositeResource):
     mesh = properties.Instance(
         doc='Mesh',
         instance_class=Mesh3DGrid,
-        auto_create=True,
+        default=Mesh3DGrid,
     )
     data = properties.List(
         doc='Data',
@@ -172,7 +172,7 @@ class Volume(CompositeResource):
     opts = properties.Instance(
         doc='Options',
         instance_class=_VolumeOptions,
-        auto_create=True,
+        default=_VolumeOptions,
     )
 
     def _nbytes(self):

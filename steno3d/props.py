@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from io import BytesIO
 from tempfile import NamedTemporaryFile
 
@@ -13,6 +13,8 @@ import properties
 
 
 class HasSteno3DProps(properties.HasProperties):
+
+    _REGISTRY = OrderedDict()
 
     def __init__(self, **metadata):
         self._dirty_props = set()

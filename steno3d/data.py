@@ -259,8 +259,8 @@ class DataDiscrete(DataArray):
     _resource_class = 'discrete'
 
     visibility = properties.List(
-        'True if color category is visible',
-        prop=properties.Bool(''),
+        'True (1) if color category is visible',
+        prop=properties.Int('', cast=True),
         required=False,
         default=properties.undefined,
     )
@@ -271,8 +271,8 @@ class DataDiscrete(DataArray):
         default=properties.undefined,
     )
     end_incl = properties.List(
-        'True if end values are inclusive for lower range',
-        prop=properties.Bool(''),
+        'True (1) if end values are inclusive for lower range',
+        prop=properties.Int('', cast=True),
         required=False,
         default=properties.undefined,
     )

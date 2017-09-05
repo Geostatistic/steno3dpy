@@ -139,6 +139,21 @@ class index_download(array_download):
         arr = arr.astype(int)
         return arr
 
+def generate_colormap(map_len):
+    """Generate a random colormap given length map_len"""
+    if map_len <= len(properties.basic.COLORS_20):
+        return random.sample(properties.basic.COLORS_20, map_len)
+    if map_len <= len(properties.basic.COLORS_NAMED):
+        return random.sample(list(properties.basic.COLORS_NAMED), map_len)
+    if map_len > 256**3:
+        raise ValueError('max colormap length must be less than 256**3')
+    map_ints = random.sample(range(256**3), map_len)
+    def color_from_int(value):
+        r = int(value % 256)
+        g = int((value-r)/256 % 256)
+        b = int(((value-r)/256-g)/256 % 256)
+        return (r, g, b)
+    return [color_from_int(value) for value in map_ints]
 
 class DataCategory(DataArray):
     """Data array with indices and corresponding string categories
@@ -234,19 +249,85 @@ class DataCategory(DataArray):
         else:
             raise ValueError('categories or array indeces are required for '
                              'random colormap')
-        if map_len <= len(properties.basic.COLORS_20):
-            return random.sample(properties.basic.COLORS_20, map_len)
-        if map_len <= len(properties.basic.COLORS_NAMED):
-            return random.sample(list(properties.basic.COLORS_NAMED), map_len)
-        if map_len > 256**3:
-            raise ValueError('max colormap length must be less than 256**3')
-        map_ints = random.sample(range(256**3), map_len)
-        def color_from_int(value):
-            r = int(value % 256)
-            g = int((value-r)/256 % 256)
-            b = int(((value-r)/256-g)/256 % 256)
-            return (r, g, b)
-        return [color_from_int(value) for value in map_ints]
+        return generate_colormap(map_len)
 
 
-__all__ = ['DataArray', 'DataCategory']
+
+class DataDiscrete(DataArray):
+    """Continuous data array with discreet color spans"""
+
+    _resource_class = 'discrete'
+
+    visibility = properties.List(
+        'True if color category is visible',
+        prop=properties.Bool(''),
+        required=False,
+        default=properties.undefined,
+    )
+    end_values = properties.List(
+        'end values of discrete categories; '
+        '-inf/inf are lower/upper bounds',
+        prop=properties.Float('', cast=True),
+        default=properties.undefined,
+    )
+    end_incl = properties.List(
+        'True if end values are inclusive for lower range',
+        prop=properties.Bool(''),
+        required=False,
+        default=properties.undefined,
+    )
+
+    @properties.validator('end_values')
+    def _end_values_increasing(self, change):
+        vals = np.array(change['value'])
+        if not np.all(np.isfinite(vals)):
+            raise ValueError('All end values must be finite')
+        diffs = vals[1:] - vals[:-1]
+        if np.any(diffs <= 0):
+            raise ValueError('All end values must be increasing')
+
+    @properties.validator
+    def _generate_props_validate_lengths(self):
+        if self.end_incl is None:
+            self.end_incl = [True]*len(self.end_values)
+        if self.visibility is None:
+            self.visibility = [True]*(len(self.end_values)+1)
+        if self.colormap is None:
+            self.colormap = generate_colormap(len(self.end_values)+1)
+        if len(self.colormap) != len(self.end_values) + 1:
+            raise ValueError('If end_values is length N, colormap must '
+                             'be length N + 1')
+        if len(self.visibility) != len(self.end_values) + 1:
+            raise ValueError('If end_values is length N, visibility must '
+                             'be length N + 1')
+        if len(self.end_incl) != len(self.end_values):
+            raise ValueError('Length of end_incl must equal length end_values')
+
+    def _get_dirty_data(self, force=False):
+        datadict = super(DataDiscrete, self)._get_dirty_data(force)
+        dirty = self._dirty_props
+        if 'end_values' in dirty or force:
+            datadict['end_values'] = dumps(self.end_values)
+        if 'end_incl' in dirty or force:
+            datadict['end_incl'] = dumps(self.end_incl)
+        if 'visibility' in dirty or force:
+            datadict['visibility'] = dumps(self.visibility)
+        return datadict
+
+    @classmethod
+    def _build_from_json(cls, json, **kwargs):
+        data = DataDiscrete(
+            title=kwargs['title'],
+            description=kwargs['description'],
+            order=json['order'],
+            array=cls._props['array'].deserialize(
+                json['array'],
+            ),
+            colormap=json['colormap'],
+            end_values=json['end_values'],
+            end_incl=json['end_incl'],
+            visibility=json['visibility'],
+        )
+        return data
+
+__all__ = ['DataArray', 'DataCategory', 'DataDiscrete']

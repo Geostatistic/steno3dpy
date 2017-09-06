@@ -258,9 +258,9 @@ class DataDiscrete(DataArray):
 
     _resource_class = 'discrete'
 
-    visibility = properties.List(
+    range_visibility = properties.List(
         'True (1) if color category is visible',
-        prop=properties.Int('', cast=True),
+        prop=properties.Integer('', cast=True),
         required=False,
         default=properties.undefined,
     )
@@ -270,9 +270,9 @@ class DataDiscrete(DataArray):
         prop=properties.Float('', cast=True),
         default=properties.undefined,
     )
-    end_incl = properties.List(
+    end_inclusive = properties.List(
         'True (1) if end values are inclusive for lower range',
-        prop=properties.Int('', cast=True),
+        prop=properties.Integer('', cast=True),
         required=False,
         default=properties.undefined,
     )
@@ -288,30 +288,30 @@ class DataDiscrete(DataArray):
 
     @properties.validator
     def _generate_props_validate_lengths(self):
-        if self.end_incl is None:
-            self.end_incl = [True]*len(self.end_values)
-        if self.visibility is None:
-            self.visibility = [True]*(len(self.end_values)+1)
+        if self.end_inclusive is None:
+            self.end_inclusive = [True]*len(self.end_values)
+        if self.range_visibility is None:
+            self.range_visibility = [True]*(len(self.end_values)+1)
         if self.colormap is None:
             self.colormap = generate_colormap(len(self.end_values)+1)
         if len(self.colormap) != len(self.end_values) + 1:
             raise ValueError('If end_values is length N, colormap must '
                              'be length N + 1')
-        if len(self.visibility) != len(self.end_values) + 1:
-            raise ValueError('If end_values is length N, visibility must '
+        if len(self.range_visibility) != len(self.end_values) + 1:
+            raise ValueError('If end_values is length N, range_visibility must '
                              'be length N + 1')
-        if len(self.end_incl) != len(self.end_values):
-            raise ValueError('Length of end_incl must equal length end_values')
+        if len(self.end_inclusive) != len(self.end_values):
+            raise ValueError('Length of end_inclusive must equal length end_values')
 
     def _get_dirty_data(self, force=False):
         datadict = super(DataDiscrete, self)._get_dirty_data(force)
         dirty = self._dirty_props
         if 'end_values' in dirty or force:
             datadict['end_values'] = dumps(self.end_values)
-        if 'end_incl' in dirty or force:
-            datadict['end_incl'] = dumps(self.end_incl)
-        if 'visibility' in dirty or force:
-            datadict['visibility'] = dumps(self.visibility)
+        if 'end_inclusive' in dirty or force:
+            datadict['end_inclusive'] = dumps(self.end_inclusive)
+        if 'range_visibility' in dirty or force:
+            datadict['range_visibility'] = dumps(self.range_visibility)
         return datadict
 
     @classmethod
@@ -325,8 +325,8 @@ class DataDiscrete(DataArray):
             ),
             colormap=json['colormap'],
             end_values=json['end_values'],
-            end_incl=json['end_incl'],
-            visibility=json['visibility'],
+            end_inclusive=json['end_inclusive'],
+            range_visibility=json['range_visibility'],
         )
         return data
 

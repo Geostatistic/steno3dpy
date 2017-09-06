@@ -286,6 +286,12 @@ class DataDiscrete(DataArray):
         if np.any(diffs <= 0):
             raise ValueError('All end values must be increasing')
 
+    @properties.validator(['range_visibility', 'end_inclusive'])
+    def _int_arrays_are_bools(self, change):
+        if not all([v in (0, 1) for v in change['value']]):
+            raise ValueError('range_visibility and end_inclusive must be '
+                             '1s or 0s')
+
     @properties.validator
     def _generate_props_validate_lengths(self):
         if self.end_inclusive is None:

@@ -104,7 +104,6 @@ class DataArray(BaseData):
 
     @classmethod
     def _build_from_omf(cls, omf_data):
-        assert omf_data.__class__.__name__ in ('ScalarData', 'MappedData')
         data = dict(
             location='N' if omf_data.location == 'vertices' else 'CC',
             data=DataArray(
@@ -113,6 +112,27 @@ class DataArray(BaseData):
                 array=omf_data.array.array
             )
         )
+        if omf_data.colormap:
+            dlims = np.linspace(
+                np.nanmin(omf_data.array.array),
+                np.nanmax(omf_data.array.array),
+                257
+            )
+            dlims = (dlims[:-1] + dlims[1:])/2
+            omf_dlims = np.linspace(
+                omf_data.colormap.limits[0],
+                omf_data.colormap.limits[1],
+                len(omf_data.colormap.gradient.array) + 1,
+            )
+            omf_dlims = (omf_dlims[:-1] + omf_dlims[1:])/2
+            colormap = []
+            for dval in dlims:
+                colormap += [
+                    omf_data.colormap.gradient.array[
+                        np.argmin(np.abs(omf_dlims - dval))
+                    ]
+                ]
+            data['data'].colormap = colormap
         return data
 
 
@@ -250,6 +270,28 @@ class DataCategory(DataArray):
             raise ValueError('categories or array indeces are required for '
                              'random colormap')
         return generate_colormap(map_len)
+
+    @classmethod
+    def _build_from_omf(cls, omf_data):
+        data = dict(
+            location='N' if omf_data.location == 'vertices' else 'CC',
+            data=DataCategory(
+                title=omf_data.name,
+                description=omf_data.description,
+                array=omf_data.array.array
+            )
+        )
+        for legend in omf_data.legends:
+            if legend.values.__class__.__name__ == 'ColorArray':
+                data['data'].colormap = legend.values.array
+                break
+        for legend in omf_data.legends:
+            if legend.values.__class__.__name__ != 'ColorArray':
+                data['data'].categories = [
+                    str(val) for val in legend.values.array
+                ]
+                break
+        return data
 
 
 

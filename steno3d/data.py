@@ -283,8 +283,8 @@ class DataDiscrete(DataArray):
         if not np.all(np.isfinite(vals)):
             raise ValueError('All end values must be finite')
         diffs = vals[1:] - vals[:-1]
-        if np.any(diffs <= 0):
-            raise ValueError('All end values must be increasing')
+        if np.any(diffs < 0):
+            raise ValueError('End values must not decrease')
 
     @properties.validator(['range_visibility', 'end_inclusive'])
     def _int_arrays_are_bools(self, change):

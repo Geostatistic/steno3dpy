@@ -54,3 +54,5 @@ For in-depth examples of binding data to resources please refer to the
 .. autoclass:: steno3d.data.DataArray
 
 .. autoclass:: steno3d.data.DataCategory
+
+.. autoclass:: steno3d.data.DataDiscrete

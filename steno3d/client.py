@@ -387,7 +387,15 @@ class _Comms(object):
         if self.user.logged_in:
             if verbose:
                 print('Logging out of steno3d...')
-            _Comms.get('signout')
+            headers = {'sshKey': Comms.user.devel_key,
+                       'client': 'steno3dpy:{}'.format(__version__)}
+            requests.get(
+                Comms.base_url + 'signout',
+                headers=headers,
+                cookies=Comms._cookies,
+                timeout=120,
+            )
+
             if verbose:
                 print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL

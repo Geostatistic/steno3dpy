@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -387,7 +387,15 @@ class _Comms(object):
         if self.user.logged_in:
             if verbose:
                 print('Logging out of steno3d...')
-            _Comms.get('signout')
+            headers = {'sshKey': Comms.user.devel_key,
+                       'client': 'steno3dpy:{}'.format(__version__)}
+            requests.get(
+                Comms.base_url + 'signout',
+                headers=headers,
+                cookies=Comms._cookies,
+                timeout=120,
+            )
+
             if verbose:
                 print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL

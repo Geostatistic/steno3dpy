@@ -298,12 +298,14 @@ class Surface(CompositeResource):
         prop=_SurfaceBinder,
         coerce=True,
         required=False,
+        default=list,
     )
     textures = properties.List(
         doc='Textures',
         prop=Texture2DImage,
         coerce=True,
         required=False,
+        default=list,
     )
     opts = properties.Instance(
         doc='Options',

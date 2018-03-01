@@ -157,6 +157,7 @@ class Line(CompositeResource):
         prop=_LineBinder,
         coerce=True,
         required=False,
+        default=list,
     )
     opts = properties.Instance(
         doc='Options',

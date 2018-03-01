@@ -47,7 +47,6 @@ class DataArray(BaseData):
         min_length=1,
         max_length=256,
         required=False,
-        default=properties.undefined,
     )
 
     def __init__(self, array=None, **kwargs):
@@ -175,7 +174,6 @@ class DataCategory(DataArray):
         min_length=1,
         max_length=256,
         required=False,
-        default=properties.undefined,
     )
 
     @properties.validator
@@ -262,19 +260,16 @@ class DataDiscrete(DataArray):
         'True (1) if color category is visible',
         prop=properties.Integer('', cast=True),
         required=False,
-        default=properties.undefined,
     )
     end_values = properties.List(
         'end values of discrete categories; '
         '-inf/inf are lower/upper bounds',
         prop=properties.Float('', cast=True),
-        default=properties.undefined,
     )
     end_inclusive = properties.List(
         'True (1) if end values are inclusive for lower range',
         prop=properties.Integer('', cast=True),
         required=False,
-        default=properties.undefined,
     )
 
     @properties.validator('end_values')

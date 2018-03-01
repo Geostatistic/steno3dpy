@@ -283,6 +283,7 @@ class CompositeResource(BaseResource):
         doc='Project containing the resource',
         prop=UserContent,
         coerce=True,
+        default=list,
     )
 
     def __init__(self, project=None, **kwargs):

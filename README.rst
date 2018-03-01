@@ -18,7 +18,7 @@
     :target: https://pypi.python.org/pypi/steno3d
 
 Welcome to the Python client library for `Steno3D <https://steno3d.com>`_
-by `ARANZ Geo Limited <https://www.aranzgeo.com>`_. Explore and collaborate on your 3D data!
+by `Seequent <https://www.seequent.com>`_. Explore and collaborate on your 3D data!
 
 Demo Video
 ----------

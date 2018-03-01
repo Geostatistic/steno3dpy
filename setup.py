@@ -34,7 +34,7 @@ setup(
         'properties==0.4.0',
         'vectormath',
     ],
-    author='ARANZ Geo Limited',
+    author='Seequent',
     author_email='support@steno3d.com',
     description='Steno3D Python client library',
     long_description=LONG_DESCRIPTION,

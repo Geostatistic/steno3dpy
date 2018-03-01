@@ -37,9 +37,10 @@ class Project(UserContent):
         doc='Project Resources',
         prop=CompositeResource,
         coerce=True,
+        default=list,
     )
 
-    public = properties.Bool(
+    public = properties.Boolean(
         doc='Public visibility of project',
         default=False
     )

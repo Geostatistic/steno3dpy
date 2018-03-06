@@ -39,6 +39,7 @@ class Vector(CompositeResource):
         prop=_PointBinder,
         coerce=True,
         required=False,
+        default=list,
     )
     opts = properties.Instance(
         doc='Options',

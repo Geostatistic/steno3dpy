@@ -24,17 +24,17 @@ with open('README.rst') as f:
 
 setup(
     name='steno3d',
-    version='0.3.5',
+    version='0.3.6',
     packages=find_packages(),
     install_requires=[
         'numpy>=1.7',
         'pypng',
         'requests',
         'six',
-        'properties>=0.3.5',
+        'properties==0.4.0',
         'vectormath',
     ],
-    author='ARANZ Geo Limited',
+    author='Seequent',
     author_email='support@steno3d.com',
     description='Steno3D Python client library',
     long_description=LONG_DESCRIPTION,

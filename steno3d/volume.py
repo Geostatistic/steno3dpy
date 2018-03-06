@@ -167,7 +167,8 @@ class Volume(CompositeResource):
         doc='Data',
         prop=_VolumeBinder,
         coerce=True,
-        required=False
+        required=False,
+        default=list,
     )
     opts = properties.Instance(
         doc='Options',

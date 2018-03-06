@@ -46,7 +46,7 @@ class ColorOptions(Options):
 
 class MeshOptions(Options):
     """Options related to mesh display"""
-    wireframe = properties.Bool(
+    wireframe = properties.Boolean(
         doc='Wireframe',
         default=False,
         required=False

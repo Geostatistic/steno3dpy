@@ -40,7 +40,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     keywords='visualization',
     url='https://steno3d.com/',
-    download_url='http://github.com/aranzgeo/steno3dpy',
+    download_url='http://github.com/seequent/steno3dpy',
     classifiers=CLASSIFIERS,
     platforms=['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix'],
     license='MIT License',

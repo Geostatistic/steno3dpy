@@ -17,8 +17,8 @@ install:
   - pip install steno3d_obj
   - pip install steno3d_stl
 
-  - git clone http://github.com/aranzgeo/steno3d-obj.git
-  - git clone http://github.com/aranzgeo/steno3d-stl.git
+  - git clone http://github.com/seequent/steno3d-obj.git
+  - git clone http://github.com/seequent/steno3d-stl.git
 
 script:
   - make tests

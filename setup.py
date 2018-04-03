@@ -25,7 +25,7 @@ with open('README.rst') as f:
 setup(
     name='steno3d',
     version='0.3.6',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests',)),
     install_requires=[
         'numpy>=1.7',
         'pypng',

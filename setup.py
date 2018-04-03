@@ -25,7 +25,7 @@ with open('README.rst') as f:
 setup(
     name='steno3d',
     version='0.3.6',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests',)),
     install_requires=[
         'numpy>=1.7',
         'pypng',
@@ -40,7 +40,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     keywords='visualization',
     url='https://steno3d.com/',
-    download_url='http://github.com/aranzgeo/steno3dpy',
+    download_url='http://github.com/seequent/steno3dpy',
     classifiers=CLASSIFIERS,
     platforms=['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix'],
     license='MIT License',

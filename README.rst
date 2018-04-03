@@ -1,4 +1,4 @@
-.. image:: https://raw.githubusercontent.com/aranzgeo/steno3dpy/master/docs/images/steno3d_logo.png
+.. image:: https://raw.githubusercontent.com/seequent/steno3dpy/master/docs/images/steno3d_logo.png
     :width: 240
     :align: center
     :target: https://steno3d.com/
@@ -7,12 +7,12 @@
 |
 |
 
-.. image:: https://travis-ci.org/aranzgeo/steno3dpy.svg?branch=master
-    :target: https://travis-ci.org/aranzgeo/steno3dpy
+.. image:: https://travis-ci.org/seequent/steno3dpy.svg?branch=master
+    :target: https://travis-ci.org/seequent/steno3dpy
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
     :alt: MIT License
-    :target: https://github.com/aranzgeo/steno3dpy/blob/master/LICENSE
+    :target: https://github.com/seequent/steno3dpy/blob/master/LICENSE
 
 .. image:: https://img.shields.io/badge/download-PyPI-yellow.svg
     :target: https://pypi.python.org/pypi/steno3d
@@ -48,15 +48,15 @@ At that point, you can
 
 then start building your 3D project. API documentation is available on
 `online <https://steno3d.com/docs>`_. Tutorials and
-Examples are available as `Jupyter notebooks <https://github.com/aranzgeo/steno3d-notebooks>`_.
+Examples are available as `Jupyter notebooks <https://github.com/seequent/steno3d-notebooks>`_.
 Class documentation can also be accessed in the IPython environment
 with `?` and tab completion.
 
-.. image:: https://raw.githubusercontent.com/aranzgeo/steno3dpy/master/docs/images/steno3dpy_screenshot.png
+.. image:: https://raw.githubusercontent.com/seequent/steno3dpy/master/docs/images/steno3dpy_screenshot.png
     :width: 100%
     :align: center
     :alt: Steno3D in action
     :target: https://steno3d.com/
 
 The latest version of Steno3D is 0.3.6. Detailed release notes are available
-on `github <https://github.com/aranzgeo/steno3dpy/releases>`_.
+on `github <https://github.com/seequent/steno3dpy/releases>`_.

@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.3.6'
+__version__ = '0.3.7'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -61,7 +61,7 @@ If the problem persists:
 1) Restart your Python kernel and try again
 2) Update steno3d with `pip install --upgrade steno3d`
 3) Ask for <support@steno3d.com>
-4) Open an issue https://github.com/aranzgeo/steno3dpy/issues
+4) Open an issue https://github.com/seequent/steno3dpy/issues
 
 """
 
@@ -74,7 +74,7 @@ NOT_CONNECTED = """
     a) Upgrading to Python 2.7.9 or above
     b) Or `pip install --upgrade requests[security]`
 4) Ask for <support@steno3d.com>
-5) Open an issue https://github.com/aranzgeo/steno3dpy/issues
+5) Open an issue https://github.com/seequent/steno3dpy/issues
 
 """
 
@@ -105,7 +105,7 @@ It looks like you are using a beta version of steno3d. Thank you for
 trying it out!
 
 Please, if you run into any problems or have any feedback, open an
-issue at https://github.com/aranzgeo/steno3dpy/issues
+issue at https://github.com/seequent/steno3dpy/issues
 
 If you would like to switch to the most recent stable version:
 > pip uninstall steno3d

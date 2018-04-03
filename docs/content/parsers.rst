@@ -24,11 +24,11 @@ An example parser for Wavefront .obj files is available on
 
     pip install steno3d_obj
 
-or install from `source <https://github.com/aranzgeo/steno3d-obj>`__:
+or install from `source <https://github.com/seequent/steno3d-obj>`__:
 
 .. code::
 
-    git clone https://github.com/aranzgeo/steno3d-obj.git
+    git clone https://github.com/seequent/steno3d-obj.git
     python setup.py install
 
 Usage of all parsers should be the same as the obj parser.
@@ -69,13 +69,13 @@ Links to Parsers
 -----------------------------
 
 - obj parser for Wavefront .obj files
-  (`github <https://github.com/aranzgeo/steno3d-obj>`__,
+  (`github <https://github.com/seequent/steno3d-obj>`__,
   `pip <https://pypi.python.org/pypi/steno3d_obj>`__)
 - stl parser for binary and ASCII stereolithography .stl files
-  (`github <https://github.com/aranzgeo/steno3d-stl>`__,
+  (`github <https://github.com/seequent/steno3d-stl>`__,
   `pip <https://pypi.python.org/pypi/steno3d_stl>`__)
 - Surfer grd file parser for Surfer 6 & 7 binary and ASCII .grd files
-  (`github <https://github.com/aranzgeo/steno3d-surfer>`__,
+  (`github <https://github.com/seequent/steno3d-surfer>`__,
   `pip <https://pypi.python.org/pypi/steno3d_surfer>`__)
 
 
@@ -101,7 +101,7 @@ Additional details for writing a parser follow :ref:`below <implementation>`.
 If you are interested in a new parser parser or have feedback about an
 existing parser but are unable to contribute, please at least submit an
 issue to
-`steno3d <https://github.com/aranzgeo/steno3dpy/issues>`_
+`steno3d <https://github.com/seequent/steno3dpy/issues>`_
 or the specific parser's github page.
 
 .. _implementation:
@@ -110,7 +110,7 @@ Implementation
 ++++++++++++++
 
 The following steps describe how to implement a Steno3D parser. Please
-refer to the `obj parser source code <https://github.com/aranzgeo/steno3d-obj>`__
+refer to the `obj parser source code <https://github.com/seequent/steno3d-obj>`__
 as an example.
 
 Class Definition
@@ -238,4 +238,4 @@ You can then use this as:
     >> ex3_parser = steno3d.parsers.exN('file.ex3')
 
 
-If you run into issues, `report them on github <https://github.com/aranzgeo/steno3dpy/issues/new>`_.
+If you run into issues, `report them on github <https://github.com/seequent/steno3dpy/issues/new>`_.

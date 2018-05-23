@@ -128,6 +128,19 @@ class Mesh1D(BaseMesh):
         )
         return mesh
 
+    def _to_omf(self):
+        import omf
+        from omf.data import Int2Array
+        geometry = omf.LineSetGeometry(
+            vertices=omf.Vector3Array(
+                self.vertices,
+            ),
+            segments=Int2Array(
+                self.segments,
+            ),
+        )
+        return geometry
+
 
 class _LineBinder(HasSteno3DProps):
     """Contains the data on a 1D line set with location information"""
@@ -188,6 +201,32 @@ class Line(CompositeResource):
                     )
                 )
         return True
+
+    def _to_omf(self):
+        import omf
+        element = omf.LineSetElement(
+            name=self.title or '',
+            description=self.description or '',
+            geometry=self.mesh._to_omf(),
+            color=self.opts.color or 'random',
+            data=[],
+        )
+        try:
+            subtype = self.mesh.opts.view_type
+            if subtype == 'tube':
+                subtype = 'borehole'
+            element.subtype = subtype
+        except (AttributeError, ValueError):
+            pass
+        for data in self.data:
+            if data.location == 'CC':
+                location = 'segments'
+            else:
+                location = 'vertices'
+            omf_data = data.data._to_omf()
+            omf_data.location = location
+            element.data.append(omf_data)
+        return element
 
 
 __all__ = ['Line', 'Mesh1D']

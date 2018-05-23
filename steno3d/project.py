@@ -324,6 +324,22 @@ class Project(UserContent):
             ]
         return proj
 
+    try:
+        import omf
+        def to_omf(self, filename=None):
+            import omf
+            project = omf.Project(
+                name=self.title or '',
+                description=self.description or '',
+                elements=[res._to_omf() for res in self.resources],
+            )
+            if filename is not None:
+                omf.OMFWriter(project, filename)
+            return project
+        except ImportError:
+            pass
+
+
 CompositeResource._props['project'].prop.instance_class = Project
 
 

@@ -64,8 +64,8 @@ def my_projects(n=None, queue=100, verbose=True):
 
 
 @needs_login
-def project_by_uid(uid, copy=None):
-    return Project._build(uid, copy)
+def project_by_uid(uid, copy=None, verbose=True):
+    return Project._build(uid, copy, verbose=verbose)
 
 
 @needs_login

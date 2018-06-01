@@ -336,8 +336,8 @@ class Project(UserContent):
             if filename is not None:
                 omf.OMFWriter(project, filename)
             return project
-        except ImportError:
-            pass
+    except ImportError:
+        pass
 
 
 CompositeResource._props['project'].prop.instance_class = Project

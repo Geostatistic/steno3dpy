@@ -170,7 +170,6 @@ class Mesh2DGrid(BaseMesh):
         doc='Node topography',
         shape=('*',),
         dtype=float,
-        default=list,
         required=False,
         serializer=array_serializer,
         deserializer=array_download(('*',), (float,)),

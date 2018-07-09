@@ -290,7 +290,7 @@ class Mesh2DGrid(BaseMesh):
             origin=self.O,
             offset_w=omf.ScalarArray(
                 self.Z,
-            ) if self.Z else properties.undefined,
+            ) if self.Z is not None else properties.undefined,
         )
         return geometry
 

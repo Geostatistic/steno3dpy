@@ -202,6 +202,15 @@ class Line(CompositeResource):
                 )
         return True
 
+    @classmethod
+    def _build_from_omf(cls, omf_element, omf_project, project, verbose=False):
+        res = super(Line, cls)._build_From_omf(
+            omf_element, omf_project, project, verbose
+        )
+        if omf_element.subtype == 'borehole':
+            res.mesh.opts.view_type = 'tube'
+        return res
+
     def _to_omf(self):
         import omf
         element = omf.LineSetElement(

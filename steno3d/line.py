@@ -204,7 +204,7 @@ class Line(CompositeResource):
 
     @classmethod
     def _build_from_omf(cls, omf_element, omf_project, project, verbose=False):
-        res = super(Line, cls)._build_From_omf(
+        res = super(Line, cls)._build_from_omf(
             omf_element, omf_project, project, verbose
         )
         if omf_element.subtype == 'borehole':

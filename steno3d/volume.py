@@ -138,6 +138,19 @@ class Mesh3DGrid(BaseMesh):
         )
         return mesh
 
+    def _to_omf(self):
+        import omf
+        geometry = omf.VolumeGridGeometry(
+            tensor_u=self.h1,
+            tensor_v=self.h2,
+            tensor_w=self.h3,
+            axis_u=self.U,
+            axis_v=self.V,
+            axis_w=self.W,
+            origin=self.O,
+        )
+        return geometry
+
 
 class _VolumeBinder(HasSteno3DProps):
     """Contains the data on a 3D volume with location information"""
@@ -199,6 +212,25 @@ class Volume(CompositeResource):
                     )
                 )
         return True
+
+    def _to_omf(self):
+        import omf
+        element = omf.VolumeElement(
+            name=self.title or '',
+            description=self.description or '',
+            geometry=self.mesh._to_omf(),
+            color=self.opts.color or 'random',
+            data=[],
+        )
+        for data in self.data:
+            if data.location == 'CC':
+                location = 'cells'
+            else:
+                location = 'vertices'
+            omf_data = data.data._to_omf()
+            omf_data.location = location
+            element.data.append(omf_data)
+        return element
 
 
 __all__ = ['Volume', 'Mesh3DGrid']

@@ -114,6 +114,27 @@ class DataArray(BaseData):
         )
         return data
 
+    def _to_omf(self):
+        if self.order != 'c':
+            raise ValueError('OMF data must be "c" order')
+        import omf
+        data = omf.ScalarData(
+            name=self.title or '',
+            description=self.description or '',
+            array=omf.ScalarArray(
+                self.array
+            ),
+        )
+        if self.colormap:
+            data.colormap = omf.ScalarColormap(
+                gradient=omf.ColorArray(
+                    self.colormap,
+                ),
+                limits=[np.min(self.array), np.max(self.array)],
+            )
+        return data
+
+
 
 def index_serializer(data, **kwargs):
     """Serializes int indices as floats, where -1 is replaced with NaN"""
@@ -248,6 +269,32 @@ class DataCategory(DataArray):
             raise ValueError('categories or array indeces are required for '
                              'random colormap')
         return generate_colormap(map_len)
+
+    def _to_omf(self):
+        if self.order != 'c':
+            raise ValueError('OMF data must be "c" order')
+        import omf
+        data = omf.MappedData(
+            name=self.title or '',
+            description=self.description or '',
+            array=omf.ScalarArray(
+                self.array
+            ),
+            legends=[],
+        )
+        if self.colormap:
+            data.legends += omf.Legend(
+                values=omf.ColorArray(
+                    self.colormap,
+                ),
+            )
+        if self.categories:
+            data.legends += omf.Legend(
+                values=omf.StringArray(
+                    self.categories,
+                ),
+            )
+        return data
 
 
 

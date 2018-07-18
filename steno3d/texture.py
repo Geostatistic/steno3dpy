@@ -110,5 +110,17 @@ class Texture2DImage(BaseTexture2D):
         )
         return tex
 
+    def _to_omf(self):
+        import omf
+        tex = omf.ImageTexture(
+            name=self.title or '',
+            description=self.description or '',
+            origin=self.O,
+            axis_u=self.U,
+            axis_v=self.V,
+            image=self.image,
+        )
+        return tex
+
 
 __all__ = ['Texture2DImage']

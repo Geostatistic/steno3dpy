@@ -76,6 +76,11 @@ class HasSteno3DProps(properties.HasProperties):
         return {k: v for k, v in self._props.items()
                 if not isinstance(v, properties.Renamed)}
 
+    def _to_omf(self):
+        raise ValueError('OMF does not support class: {}'.format(
+            self.__class__.__name__
+        ))
+
 
 def image_download(url, **kwargs):
     im_resp = get(url, timeout=60)

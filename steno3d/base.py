@@ -475,17 +475,22 @@ class CompositeResource(BaseResource):
                     )
                 ]
         if hasattr(omf_element, 'data'):
+            data_map = {
+                'ScalarData': 'DataArray',
+                'MappedData': 'DataCategory',
+            }
             res.data = []
             for dat in omf_element.data:
-                if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
+                if dat.__class__.__name__ not in data_map:
                     if verbose:
                         print('Data of class {} ignored'.format(
                             dat.__class__.__name__
                         ))
                     continue
-                res.data += [
-                    UserContent._REGISTRY['DataArray']._build_from_omf(dat)
-                ]
+                data_class = UserContent._REGISTRY[data_map[
+                    dat.__class__.__name__
+                ]]
+                res.data += [data_class._build_from_omf(dat)]
         return res
 
 

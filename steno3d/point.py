@@ -95,6 +95,15 @@ class Mesh0D(BaseMesh):
         )
         return mesh
 
+    def _to_omf(self):
+        import omf
+        geometry = omf.PointSetGeometry(
+            vertices=omf.Vector3Array(
+                self.vertices,
+            ),
+        )
+        return geometry
+
 
 class _PointBinder(HasSteno3DProps):
     """Contains the data on a 0D point cloud"""
@@ -161,6 +170,23 @@ class Point(CompositeResource):
                     )
                 )
         return True
+
+    def _to_omf(self):
+        import omf
+        element = omf.PointSetElement(
+            name=self.title or '',
+            description=self.description or '',
+            geometry=self.mesh._to_omf(),
+            color=self.opts.color or 'random',
+            data=[],
+            textures=[tex._to_omf() for tex in self.textures]
+        )
+        for data in self.data:
+            location = 'vertices'
+            omf_data = data.data._to_omf()
+            omf_data.location = location
+            element.data.append(omf_data)
+        return element
 
 
 __all__ = ['Point', 'Mesh0D']

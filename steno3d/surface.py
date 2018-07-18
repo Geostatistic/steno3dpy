@@ -126,6 +126,20 @@ class Mesh2D(BaseMesh):
         )
         return mesh
 
+    def _to_omf(self):
+        import omf
+        from omf.data import Int3Array
+        geometry = omf.SurfaceGeometry(
+            vertices=omf.Vector3Array(
+                self.vertices,
+            ),
+            triangles=Int3Array(
+                self.triangles,
+            ),
+        )
+        return geometry
+
+
 
 class Mesh2DGrid(BaseMesh):
     """Contains spatial information of a 2D grid."""
@@ -156,7 +170,6 @@ class Mesh2DGrid(BaseMesh):
         doc='Node topography',
         shape=('*',),
         dtype=float,
-        default=[],
         required=False,
         serializer=array_serializer,
         deserializer=array_download(('*',), (float,)),
@@ -267,6 +280,20 @@ class Mesh2DGrid(BaseMesh):
             mesh.Z = omf_geom.offset_w.array
         return mesh
 
+    def _to_omf(self):
+        import omf
+        geometry = omf.SurfaceGridGeometry(
+            tensor_u=self.h1,
+            tensor_v=self.h2,
+            axis_u=self.U,
+            axis_v=self.V,
+            origin=self.O,
+            offset_w=omf.ScalarArray(
+                self.Z,
+            ) if self.Z is not None else properties.undefined,
+        )
+        return geometry
+
 
 class _SurfaceBinder(HasSteno3DProps):
     """Contains the data on a 2D surface with location information"""
@@ -338,6 +365,26 @@ class Surface(CompositeResource):
                     )
                 )
         return True
+
+    def _to_omf(self):
+        import omf
+        element = omf.SurfaceElement(
+            name=self.title or '',
+            description=self.description or '',
+            geometry=self.mesh._to_omf(),
+            color=self.opts.color or 'random',
+            data=[],
+            textures=[tex._to_omf() for tex in self.textures]
+        )
+        for data in self.data:
+            if data.location == 'CC':
+                location = 'faces'
+            else:
+                location = 'vertices'
+            omf_data = data.data._to_omf()
+            omf_data.location = location
+            element.data.append(omf_data)
+        return element
 
 
 __all__ = ['Surface', 'Mesh2D', 'Mesh2DGrid']

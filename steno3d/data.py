@@ -94,7 +94,7 @@ class DataArray(BaseData):
             description=kwargs['description'],
             order=json['order'],
             array=cls._props['array'].deserialize(
-                json['array'],
+                json['array'], input_dtype=json.get('arrayType', None),
             )
         )
         if json.get('colormap'):
@@ -410,7 +410,7 @@ class DataDiscrete(DataArray):
             description=kwargs['description'],
             order=json['order'],
             array=cls._props['array'].deserialize(
-                json['array'],
+                json['array'], input_dtype=json.get('arrayType', None),
             ),
             colormap=json['colormap'],
             end_values=json['end_values'],

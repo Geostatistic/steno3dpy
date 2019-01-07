@@ -242,7 +242,7 @@ class Mesh2DGrid(BaseMesh):
     def _get_dirty_files(self, force=False):
         files = super(Mesh2DGrid, self)._get_dirty_files(force)
         dirty = self._dirty_props
-        if 'Z' in dirty or (force and getattr(self, 'Z', []) != []):
+        if self.Z is not None and len(self.Z) > 0 and  ('Z' in dirty or force):
             files['Z'] = self._props['Z'].serialize(self.Z)
         return files
 

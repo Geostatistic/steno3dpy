@@ -124,7 +124,7 @@ class array_download(object):
         self.shape = shape
         self.dtype = dtype
 
-    def __call__(self, url, **kwargs):
+    def __call__(self, url, input_dtype=None, **kwargs):
         arr_resp = get(url, timeout=60)
         if arr_resp.status_code != 200:
             raise IOError('Failed to download array.')
@@ -132,7 +132,9 @@ class array_download(object):
         for chunk in arr_resp:
             data_file.write(chunk)
         data_file.seek(0)
-        if self.dtype[0] is int:
+        if input_dtype:
+            dtype = input_dtype
+        elif self.dtype[0] is int:
             dtype = '<i4'
         elif self.dtype[0] is float:
             dtype = '<f4'

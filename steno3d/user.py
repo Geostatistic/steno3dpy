@@ -53,10 +53,10 @@ class User(properties.HasProperties):
         self._backend['affiliation'] = login_json['affiliation']
         self._backend['location'] = login_json['location']
         self._backend['file_size_limit'] = login_json.get(
-            'file_size_limit', 25000000
+            'file_size_limit', 26214400
         )
         self._backend['project_size_limit'] = login_json.get(
-            'project_size_limit', 100000000
+            'project_size_limit', 104857600
         )
         self._backend['project_resource_limit'] = login_json.get(
             'project_resource_limit', 100

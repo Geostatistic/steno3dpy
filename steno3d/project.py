@@ -37,9 +37,10 @@ class Project(UserContent):
         doc='Project Resources',
         prop=CompositeResource,
         coerce=True,
+        default=list,
     )
 
-    public = properties.Bool(
+    public = properties.Boolean(
         doc='Public visibility of project',
         default=False
     )
@@ -219,12 +220,20 @@ class Project(UserContent):
 
     @needs_login
     def plot(self):
-        """Display the 3D representation of the content"""
+        """Display the 3D representation of the content
+
+        You must be logged in to steno3d.com for the plot to display
+        """
         if getattr(self, '_upload_data', None) is None:
             print('Project not uploaded: Please upload() '
                   'before plotting.')
             return
-        return plot(self._url)
+        url = '{base}{mapi}/{uid}'.format(
+            base=Comms.base_url,
+            mapi='embed',
+            uid=self._upload_data['uid'],
+        )
+        return plot(url)
 
     @classmethod
     def _build(cls, uid, copy=True, tab_level='', verbose=True):
@@ -273,7 +282,8 @@ class Project(UserContent):
                 src=longuid.split(':')[1],
                 copy=copy,
                 tab_level=tab_level + '    ',
-                project=proj
+                project=proj,
+                using='ProjectSteno3D:{}'.format(uid),
             )]
         if not copy:
             proj._public_online = pub
@@ -313,6 +323,22 @@ class Project(UserContent):
                 res_class._build_from_omf(elem, omf_project, proj)
             ]
         return proj
+
+    try:
+        import omf
+        def to_omf(self, filename=None):
+            import omf
+            project = omf.Project(
+                name=self.title or '',
+                description=self.description or '',
+                elements=[res._to_omf() for res in self.resources],
+            )
+            if filename is not None:
+                omf.OMFWriter(project, filename)
+            return project
+    except ImportError:
+        pass
+
 
 CompositeResource._props['project'].prop.instance_class = Project
 

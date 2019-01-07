@@ -205,12 +205,13 @@ class UserContent(HasSteno3DProps):
         return json
 
     @classmethod
-    def _json_from_uid(cls, uid):
+    def _json_from_uid(cls, uid, using=None):
         if not isinstance(uid, string_types) or len(uid) != 20:
             raise ValueError('{}: invalid uid'.format(uid))
-        resp = Comms.get('api/{mapi}/{uid}'.format(
+        resp = Comms.get('api/{mapi}/{uid}{using}'.format(
             mapi=cls._model_api_location,
-            uid=uid
+            uid=uid,
+            using='?using={}'.format(using) if using else '',
         ))
         if resp['status_code'] != 200:
             raise ValueError('{uid}: {cls} query failed'.format(
@@ -230,7 +231,7 @@ class UserContent(HasSteno3DProps):
                 cls=cls._resource_class
             ), end=': ')
         if isinstance(src, string_types):
-            json = cls._json_from_uid(src)
+            json = cls._json_from_uid(src, using=kwargs.get('using', None))
         else:
             json = src
         title = '' if json['title'] is None else json['title']
@@ -282,6 +283,7 @@ class CompositeResource(BaseResource):
         doc='Project containing the resource',
         prop=UserContent,
         coerce=True,
+        default=list,
     )
 
     def __init__(self, project=None, **kwargs):
@@ -391,11 +393,11 @@ class CompositeResource(BaseResource):
     @needs_login
     def plot(self):
         """Display the 3D representation of the content"""
-        if getattr(self, '_upload_data', None) is None:
+        if getattr(self.project, '_upload_data', None) is None:
             print('Resource not uploaded: Please upload() '
                   'before plotting.')
             return
-        return plot(self._url)
+        return self.project.plot()
 
     @classmethod
     def _build_from_json(cls, json, copy=True, tab_level='', **kwargs):
@@ -413,7 +415,8 @@ class CompositeResource(BaseResource):
         )
         mesh_class = UserContent._REGISTRY[mesh_string]
 
-        res.mesh = mesh_class._build(mesh_uid, copy, tab_level + '    ')
+        res.mesh = mesh_class._build(mesh_uid, copy, tab_level + '    ',
+                                     using=kwargs.get('using', None))
 
         if 'textures' in json:
             res.textures = []
@@ -423,7 +426,8 @@ class CompositeResource(BaseResource):
                 )
                 tex_class = UserContent._REGISTRY[tex_string]
                 res.textures += [tex_class._build(
-                    tex_uid, copy, tab_level + '    '
+                    tex_uid, copy, tab_level + '    ',
+                    using=kwargs.get('using', None),
                 )]
 
         if 'data' in json:
@@ -436,7 +440,8 @@ class CompositeResource(BaseResource):
                 res.data += [dict(
                     location=d['location'],
                     data=data_class._build(
-                        data_uid, copy, tab_level + '    '
+                        data_uid, copy, tab_level + '    ',
+                        using=kwargs.get('using', None),
                     )
                 )]
 
@@ -470,17 +475,22 @@ class CompositeResource(BaseResource):
                     )
                 ]
         if hasattr(omf_element, 'data'):
+            data_map = {
+                'ScalarData': 'DataArray',
+                'MappedData': 'DataCategory',
+            }
             res.data = []
             for dat in omf_element.data:
-                if dat.__class__.__name__ not in ('ScalarData', 'MappedData'):
+                if dat.__class__.__name__ not in data_map:
                     if verbose:
                         print('Data of class {} ignored'.format(
                             dat.__class__.__name__
                         ))
                     continue
-                res.data += [
-                    UserContent._REGISTRY['DataArray']._build_from_omf(dat)
-                ]
+                data_class = UserContent._REGISTRY[data_map[
+                    dat.__class__.__name__
+                ]]
+                res.data += [data_class._build_from_omf(dat)]
         return res
 
 

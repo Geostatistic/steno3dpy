@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlparse
 from .user import User
 
 
-__version__ = '0.3.2b0'
+__version__ = '0.3.10b0'
 
 PRODUCTION_BASE_URL = 'https://steno3d.com/'
 SLEEP_TIME = .75
@@ -61,7 +61,7 @@ If the problem persists:
 1) Restart your Python kernel and try again
 2) Update steno3d with `pip install --upgrade steno3d`
 3) Ask for <support@steno3d.com>
-4) Open an issue https://github.com/3ptscience/steno3dpy/issues
+4) Open an issue https://github.com/seequent/steno3dpy/issues
 
 """
 
@@ -74,7 +74,7 @@ NOT_CONNECTED = """
     a) Upgrading to Python 2.7.9 or above
     b) Or `pip install --upgrade requests[security]`
 4) Ask for <support@steno3d.com>
-5) Open an issue https://github.com/3ptscience/steno3dpy/issues
+5) Open an issue https://github.com/seequent/steno3dpy/issues
 
 """
 
@@ -105,7 +105,7 @@ It looks like you are using a beta version of steno3d. Thank you for
 trying it out!
 
 Please, if you run into any problems or have any feedback, open an
-issue at https://github.com/3ptscience/steno3dpy/issues
+issue at https://github.com/seequent/steno3dpy/issues
 
 If you would like to switch to the most recent stable version:
 > pip uninstall steno3d
@@ -295,7 +295,7 @@ class _Comms(object):
             resp = requests.post(
                 self.base_url + 'api/client/steno3dpy',
                 dict(version=__version__),
-                timeout=(10, 60),
+                timeout=120,
             )
         except requests.ConnectionError:
             if verbose:
@@ -353,7 +353,7 @@ class _Comms(object):
                 self.base_url + 'api/me',
                 headers={'sshKey': devel_key,
                          'client': 'steno3dpy:{}'.format(__version__)},
-                timeout=(10, 60),
+                timeout=120,
             )
         except requests.ConnectionError:
             if verbose:
@@ -387,7 +387,15 @@ class _Comms(object):
         if self.user.logged_in:
             if verbose:
                 print('Logging out of steno3d...')
-            _Comms.get('signout')
+            headers = {'sshKey': Comms.user.devel_key,
+                       'client': 'steno3dpy:{}'.format(__version__)}
+            requests.get(
+                Comms.base_url + 'signout',
+                headers=headers,
+                cookies=Comms._cookies,
+                timeout=120,
+            )
+
             if verbose:
                 print('Goodbye, @{}.'.format(self.user.username))
         self._base_url = PRODUCTION_BASE_URL
@@ -430,7 +438,7 @@ class _Comms(object):
             files=filedict,
             headers=headers,
             cookies=Comms._cookies,
-            timeout=(10, 60),
+            timeout=120,
         )
         if req.status_code < 210:
             Comms._cookies.update(req.cookies)

@@ -46,10 +46,10 @@ from .texture import *
 from .vector import *
 from .volume import *
 
-__version__ = '0.3.2b0'
-__author__ = 'ARANZ Geo Limited'
+__version__ = '0.3.10b0'
+__author__ = 'Seequent'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2017 ARANZ Geo Limited'
+__copyright__ = 'Copyright 2018 Seequent'
 
 login = client.Comms.login
 logout = client.Comms.logout

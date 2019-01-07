@@ -9,7 +9,7 @@ Project API
 
 Steno3D projects organize :ref:`resources <resources_api>` so they can be viewed.
 The steps to construct the project pictured above can be found online in the
-`example notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
+`example notebooks <https://github.com/seequent/steno3d-notebooks>`_.
 
 .. autoclass:: steno3d.project.Project
 

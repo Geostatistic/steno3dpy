@@ -11,7 +11,7 @@ public projects.
 - :ref:`a_first_project`
 - :ref:`try_steno3d`
 
-If you run into issues: `report them on github <https://github.com/3ptscience/steno3dpy/issues/new>`_.
+If you run into issues: `report them on github <https://github.com/seequent/steno3dpy/issues/new>`_.
 
 
 .. _install_steno3d:
@@ -26,21 +26,20 @@ Want to start using Steno3D with your own data? It is available on
 
     pip install steno3d
 
-or install from `source <https://github.com/3ptscience/steno3dpy>`_:
+or install from `source <https://github.com/seequent/steno3dpy>`_:
 
 .. code::
 
-    git clone https://github.com/3ptscience/steno3dpy.git
+    git clone https://github.com/seequent/steno3dpy.git
     python setup.py install
 
 Example `Jupyter notebooks <http://jupyter.readthedocs.io/en/latest/install.html>`_
-can be `cloned <https://github.com/3ptscience/steno3d-notebooks>`_
-or you can follow along `online <http://mybinder.org/repo/3ptscience/steno3d-notebooks>`_
-with the First Project below
+can be `cloned <https://github.com/seequent/steno3d-notebooks>`_
+so you can follow along with the First Project below
 
 .. code::
 
-    git clone https://github.com/3ptscience/steno3d-notebooks.git
+    git clone https://github.com/seequent/steno3d-notebooks.git
 
 
 .. _a_first_project:
@@ -49,15 +48,14 @@ A First Project
 ---------------
 
 Let's get started using Steno3D. The following demo project is available
-online in a Jupyter notebook at `mybinder.org <http://mybinder.org/repo/3ptscience/steno3d-notebooks>`_,
-no installation required.
+in the `example Jupyter notebooks <https://github.com/seequent/steno3d-notebooks>`_.
 
 Here, we will create a public project containing a surface, upload it, and explore it with Steno3D!
 
 .. image:: /images/steno3dpy_screenshot.png
     :width: 80%
     :align: center
-    :target: http://mybinder.org/repo/3ptscience/steno3d-notebooks
+    :target: https://github.com/seequent/steno3d-notebooks
 
 Start by importing Steno3D. If you are using the online notebooks
 your environment should already be set up; otherwise, Steno3D is

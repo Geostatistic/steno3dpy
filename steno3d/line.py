@@ -55,7 +55,7 @@ class Mesh1D(BaseMesh):
     opts = properties.Instance(
         doc='Options',
         instance_class=_Mesh1DOptions,
-        auto_create=True,
+        default=_Mesh1DOptions,
     )
 
     @property
@@ -128,6 +128,19 @@ class Mesh1D(BaseMesh):
         )
         return mesh
 
+    def _to_omf(self):
+        import omf
+        from omf.data import Int2Array
+        geometry = omf.LineSetGeometry(
+            vertices=omf.Vector3Array(
+                self.vertices,
+            ),
+            segments=Int2Array(
+                self.segments,
+            ),
+        )
+        return geometry
+
 
 class _LineBinder(HasSteno3DProps):
     """Contains the data on a 1D line set with location information"""
@@ -141,7 +154,7 @@ class _LineBinder(HasSteno3DProps):
     data = properties.Instance(
         doc='Data',
         instance_class=DataArray,
-        auto_create=True,
+        default=DataArray,
     )
 
 
@@ -150,18 +163,19 @@ class Line(CompositeResource):
     mesh = properties.Instance(
         doc='Mesh',
         instance_class=Mesh1D,
-        auto_create=True,
+        default=Mesh1D,
     )
     data = properties.List(
         doc='Data',
         prop=_LineBinder,
         coerce=True,
         required=False,
+        default=list,
     )
     opts = properties.Instance(
         doc='Options',
         instance_class=_LineOptions,
-        auto_create=True,
+        default=_LineOptions,
     )
 
     def _nbytes(self):
@@ -187,6 +201,41 @@ class Line(CompositeResource):
                     )
                 )
         return True
+
+    @classmethod
+    def _build_from_omf(cls, omf_element, omf_project, project, verbose=False):
+        res = super(Line, cls)._build_from_omf(
+            omf_element, omf_project, project, verbose
+        )
+        if omf_element.subtype == 'borehole':
+            res.mesh.opts.view_type = 'tube'
+        return res
+
+    def _to_omf(self):
+        import omf
+        element = omf.LineSetElement(
+            name=self.title or '',
+            description=self.description or '',
+            geometry=self.mesh._to_omf(),
+            color=self.opts.color or 'random',
+            data=[],
+        )
+        try:
+            subtype = self.mesh.opts.view_type
+            if subtype == 'tube':
+                subtype = 'borehole'
+            element.subtype = subtype
+        except (AttributeError, ValueError):
+            pass
+        for data in self.data:
+            if data.location == 'CC':
+                location = 'segments'
+            else:
+                location = 'vertices'
+            omf_data = data.data._to_omf()
+            omf_data.location = location
+            element.data.append(omf_data)
+        return element
 
 
 __all__ = ['Line', 'Mesh1D']

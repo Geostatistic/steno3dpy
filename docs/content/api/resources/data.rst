@@ -49,6 +49,10 @@ align data this way, you may start with a numpy array that is size (x, y) for
 with default order 'C'. Alternatively, if your data uses Fortran- or
 Matlab-style, column-major ordering, you may specify data :code:`order='f'`.
 For in-depth examples of binding data to resources please refer to the
-`example notebooks <https://github.com/3ptscience/steno3d-notebooks>`_.
+`example notebooks <https://github.com/seequent/steno3d-notebooks>`_.
 
 .. autoclass:: steno3d.data.DataArray
+
+.. autoclass:: steno3d.data.DataCategory
+
+.. autoclass:: steno3d.data.DataDiscrete

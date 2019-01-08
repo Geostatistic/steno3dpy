@@ -273,7 +273,7 @@ class DataCategory(DataArray):
             description=kwargs['description'],
             order=json['order'],
             array=cls._props['array'].deserialize(
-                json['array'],
+                json['array'], input_dtype=json.get('arrayType', None),
             ),
             colormap=json['colormap'],
             categories=json['categories'],

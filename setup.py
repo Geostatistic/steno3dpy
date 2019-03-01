@@ -24,14 +24,14 @@ with open('README.rst') as f:
 
 setup(
     name='steno3d',
-    version='0.3.11',
+    version='0.3.12',
     packages=find_packages(exclude=('tests',)),
     install_requires=[
         'numpy>=1.7',
         'pypng',
         'requests',
         'six',
-        'properties==0.4.0',
+        'properties>=0.4.0',
         'vectormath',
     ],
     author='Seequent',

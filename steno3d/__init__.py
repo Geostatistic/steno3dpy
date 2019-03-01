@@ -46,7 +46,7 @@ from .texture import *
 from .vector import *
 from .volume import *
 
-__version__ = '0.3.11'
+__version__ = '0.3.12'
 __author__ = 'Seequent'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Seequent'
